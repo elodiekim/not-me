@@ -23,6 +23,7 @@
 - [x] Reward
 - [x] Searching
 - [x] Mission
+- [x] Complete
 - [ ] Profile
 
 ## Phase 4

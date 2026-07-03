@@ -1,9 +1,12 @@
+import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, MissionCard } from '../../components/ui';
 import { StatusTimeline } from './components/StatusTimeline';
 
 export function MissionScreen() {
+  const router = useRouter();
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="px-6 py-4">
@@ -25,7 +28,11 @@ export function MissionScreen() {
         <StatusTimeline currentStep={2} />
       </View>
       <View className="px-6 pb-6">
-        <Button label="Mission Complete" variant="secondary" />
+        <Button
+          label="Mission Complete"
+          variant="secondary"
+          onPress={() => router.replace('/complete')}
+        />
       </View>
     </SafeAreaView>
   );
