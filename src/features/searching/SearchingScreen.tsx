@@ -8,7 +8,7 @@ export function SearchingScreen() {
   const router = useRouter();
 
   useEffect(() => {
-    const timer = setTimeout(() => router.replace('/mission'), 2500);
+    const timer = setTimeout(() => router.replace('/mission-status'), 2500);
     return () => clearTimeout(timer);
   }, [router]);
 

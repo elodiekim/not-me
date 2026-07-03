@@ -19,6 +19,8 @@ export function MissionScreen() {
           subtitle="Cockroach Removal · 바퀴벌레 제거"
           statusLabel="On the way"
           statusVariant="info"
+          rating={4.9}
+          reviewCount={128}
         />
 
         <Text className="text-center text-sm text-text-secondary">

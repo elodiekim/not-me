@@ -14,7 +14,7 @@
 - [x] Button
 - [x] Card
 - [x] Input
-- [ ] Bottom Navigation
+- [x] Bottom Navigation
 
 ## Phase 3
 
@@ -24,7 +24,7 @@
 - [x] Searching
 - [x] Mission
 - [x] Complete
-- [ ] Profile
+- [x] Profile
 
 ## Phase 4
 

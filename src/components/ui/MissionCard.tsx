@@ -1,6 +1,7 @@
 import { Image, ImageSourcePropType, Text, View } from 'react-native';
 import { Badge } from './Badge';
 import { Card } from './Card';
+import { RatingRow } from './RatingRow';
 
 type MissionCardStatus = 'success' | 'warning' | 'danger' | 'info' | 'neutral';
 
@@ -10,6 +11,8 @@ interface MissionCardProps {
   subtitle?: string;
   statusLabel: string;
   statusVariant?: MissionCardStatus;
+  rating?: number;
+  reviewCount?: number;
 }
 
 export function MissionCard({
@@ -18,6 +21,8 @@ export function MissionCard({
   subtitle,
   statusLabel,
   statusVariant = 'info',
+  rating,
+  reviewCount,
 }: MissionCardProps) {
   return (
     <Card>
@@ -29,6 +34,7 @@ export function MissionCard({
           <Badge label={statusLabel} variant={statusVariant} />
           <Text className="text-lg font-sans-bold text-text-primary">{title}</Text>
           {subtitle && <Text className="text-sm text-text-secondary">{subtitle}</Text>}
+          {rating !== undefined && <RatingRow rating={rating} reviewCount={reviewCount} />}
         </View>
       </View>
     </Card>
