@@ -36,7 +36,7 @@ export function Button({ label, variant = 'primary', loading = false, icon, disa
       ) : (
         <View className="flex-row items-center gap-2">
           {icon}
-          <Text className={`text-base font-semibold ${styles.text}`}>{label}</Text>
+          <Text className={`text-base font-sans-semibold ${styles.text}`}>{label}</Text>
         </View>
       )}
     </Pressable>

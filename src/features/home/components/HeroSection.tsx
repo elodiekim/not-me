@@ -9,10 +9,10 @@ export function HeroSection() {
   return (
     <View className="gap-6">
       <View className="gap-2">
-        <Text className="text-3xl font-bold leading-tight text-text-primary">
+        <Text className="text-3xl font-sans-bold leading-tight text-text-primary">
           A cockroach{'\n'}just appeared.
         </Text>
-        <Text className="text-3xl font-bold leading-tight text-primary">Get help now.</Text>
+        <Text className="text-3xl font-sans-bold leading-tight text-primary">Get help now.</Text>
         <Text className="text-sm text-text-secondary">
           바퀴벌레가 나타났어요? 지금 <Text className="text-primary underline">도움을 요청하세요</Text>!
         </Text>
@@ -34,7 +34,7 @@ export function HeroSection() {
           onPress={() => router.push('/request')}
         />
         <View className="items-center">
-          <Text className="text-sm font-medium text-text-primary">It takes 10 seconds</Text>
+          <Text className="text-sm font-sans-medium text-text-primary">It takes 10 seconds</Text>
           <Text className="text-xs text-text-secondary">요청까지 단 10초</Text>
         </View>
       </View>

@@ -327,6 +327,8 @@ When generating code:
 - Ask before adding new dependencies.
 - Follow the existing project conventions.
 
+Always report task results to the user in Korean (한글), regardless of the language used internally for code, comments, or commit messages.
+
 ---
 
 # What NOT to Build

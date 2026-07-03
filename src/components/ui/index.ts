@@ -5,4 +5,5 @@ export * from './Card';
 export * from './Chip';
 export * from './Input';
 export * from './LoadingIndicator';
+export * from './MissionCard';
 export * from './SectionHeader';

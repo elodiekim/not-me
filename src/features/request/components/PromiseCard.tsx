@@ -13,7 +13,7 @@ export function PromiseCard() {
               <View key={item.id} className="flex-row items-start gap-3">
                 <Image source={item.icon} style={{ width: 24, height: 24 }} resizeMode="contain" />
                 <View className="flex-1 gap-0.5">
-                  <Text className="text-sm font-semibold text-text-primary">{item.title}</Text>
+                  <Text className="text-sm font-sans-semibold text-text-primary">{item.title}</Text>
                   <Text className="text-xs text-text-secondary">{item.koDescription}</Text>
                 </View>
               </View>

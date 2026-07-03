@@ -172,7 +172,7 @@ Information
 
 Font Family
 
-Inter
+Poppins
 
 Fallback
 

@@ -1,13 +1,37 @@
 import '../src/styles/global.css';
 
+import {
+  Poppins_400Regular,
+  Poppins_500Medium,
+  Poppins_600SemiBold,
+  Poppins_700Bold,
+  useFonts,
+} from '@expo-google-fonts/poppins';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { Text } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 const queryClient = new QueryClient();
 
+// Apply Poppins as the app-wide default font (see DESIGN.md Typography).
+const RNText = Text as unknown as { defaultProps?: { style?: unknown } };
+RNText.defaultProps = RNText.defaultProps ?? {};
+RNText.defaultProps.style = [{ fontFamily: 'Poppins_400Regular' }, RNText.defaultProps.style];
+
 export default function RootLayout() {
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_500Medium,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+  });
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>

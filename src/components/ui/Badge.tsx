@@ -19,7 +19,7 @@ export function Badge({ label, variant = 'neutral' }: BadgeProps) {
   const styles = VARIANT_STYLES[variant];
   return (
     <View className={`self-start rounded-full px-3 py-1 ${styles.container}`}>
-      <Text className={`text-xs font-medium ${styles.text}`}>{label}</Text>
+      <Text className={`text-xs font-sans-medium ${styles.text}`}>{label}</Text>
     </View>
   );
 }

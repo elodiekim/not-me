@@ -19,9 +19,10 @@
 ## Phase 3
 
 - [x] Home
-- [ ] Request
-- [ ] Searching
-- [ ] Mission
+- [x] Request
+- [x] Reward
+- [x] Searching
+- [x] Mission
 - [ ] Profile
 
 ## Phase 4
