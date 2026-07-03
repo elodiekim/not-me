@@ -28,9 +28,9 @@
 
 ## Phase 4
 
-- [ ] Hero Mode
-- [ ] Nearby Missions
-- [ ] Accept Mission
+- [x] Hero Mode
+- [x] Nearby Missions
+- [x] Accept Mission
 
 ## Phase 5
 
