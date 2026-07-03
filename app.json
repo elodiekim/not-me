@@ -3,6 +3,7 @@
     "name": "NotMe",
     "slug": "notme-app",
     "version": "1.0.0",
+    "scheme": "notme",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
     "ios": {
@@ -11,6 +12,11 @@
     "android": {
       "predictiveBackGestureEnabled": false
     },
-    "web": {}
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ]
   }
 }

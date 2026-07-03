@@ -3,22 +3,22 @@
 ## Phase 1
 
 - [x] Expo 생성
-- [ ] NativeWind 설치
-- [ ] Zustand 설치
-- [ ] TanStack Query 설치
+- [x] NativeWind 설치
+- [x] Zustand 설치
+- [x] TanStack Query 설치
 - [ ] Supabase 연결
 
 ## Phase 2
 
-- [ ] Design System
-- [ ] Button
-- [ ] Card
-- [ ] Input
+- [x] Design System
+- [x] Button
+- [x] Card
+- [x] Input
 - [ ] Bottom Navigation
 
 ## Phase 3
 
-- [ ] Home
+- [x] Home
 - [ ] Request
 - [ ] Searching
 - [ ] Mission
