@@ -1,16 +1,27 @@
-import { Text, View } from 'react-native';
-import { Button } from '../../../components/ui';
+import { Feather } from '@expo/vector-icons';
+import { Image, Pressable, Text, View } from 'react-native';
+import { Card } from '../../../components/ui';
+import { COLORS } from '../../../constants/colors';
 
-export function BecomeHeroSection() {
+interface BecomeHeroSectionProps {
+  onPress?: () => void;
+}
+
+export function BecomeHeroSection({ onPress }: BecomeHeroSectionProps) {
   return (
-    <View className="items-center gap-2 border-t border-surface pt-6">
-      <Text className="text-base font-semibold text-text-secondary">Want to become a Hero?</Text>
-      <Text className="text-center text-sm text-text-secondary">
-        Help people nearby solve weird problems and earn rewards.
-      </Text>
-      <View className="mt-2 w-full">
-        <Button label="Become a Hero" variant="secondary" />
-      </View>
-    </View>
+    <Pressable accessibilityRole="button" accessibilityLabel="Become a Hero" onPress={onPress}>
+      <Card>
+        <View className="flex-row items-center gap-4">
+          <View className="items-center justify-center rounded-full bg-primary/20 p-3">
+            <Image source={require('../../../../assets/icons/star.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
+          </View>
+          <View className="flex-1 gap-1">
+            <Text className="text-base font-sans-bold text-text-primary">Wanna be a Hero?</Text>
+            <Text className="font-sans text-sm text-text-secondary">Nearby chaos? You got this.</Text>
+          </View>
+          <Feather name="chevron-right" size={20} color={COLORS.primary} />
+        </View>
+      </Card>
+    </Pressable>
   );
 }

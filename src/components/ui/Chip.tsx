@@ -16,7 +16,7 @@ export function Chip({ label, selected = false, onPress }: ChipProps) {
         selected ? 'border-primary bg-primary' : 'border-text-disabled bg-background'
       }`}
     >
-      <Text className={`text-sm font-medium ${selected ? 'text-text-primary' : 'text-text-secondary'}`}>
+      <Text className={`text-sm font-sans-medium ${selected ? 'text-text-primary' : 'text-text-secondary'}`}>
         {label}
       </Text>
     </Pressable>

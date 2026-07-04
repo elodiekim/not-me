@@ -1,0 +1,46 @@
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { Text, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { Button, MissionCard } from '../../components/ui';
+import { StatusTimeline } from './components/StatusTimeline';
+
+export function MissionScreen() {
+  const router = useRouter();
+  const { amount } = useLocalSearchParams<{ amount?: string }>();
+
+  return (
+    <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <View className="px-6 py-4">
+        <Text className="text-lg font-sans-semibold text-text-primary">Mission Status</Text>
+      </View>
+      <View className="flex-1 gap-8 px-6">
+        <MissionCard
+          avatar={require('../../../assets/icons/profile.png')}
+          title="Minjun is on the way"
+          subtitle={
+            amount
+              ? `Cockroach Removal · 바퀴벌레 제거 · $${amount}`
+              : 'Cockroach Removal · 바퀴벌레 제거'
+          }
+          statusLabel="On the way"
+          statusVariant="info"
+          rating={4.9}
+          reviewCount={128}
+        />
+
+        <Text className="font-sans text-center text-sm text-text-secondary">
+          Arriving in about 8 minutes{'\n'}약 8분 후 도착
+        </Text>
+
+        <StatusTimeline currentStep={2} />
+      </View>
+      <View className="px-6 pb-6">
+        <Button
+          label="Mission Complete"
+          variant="secondary"
+          onPress={() => router.replace({ pathname: '/complete', params: { amount } })}
+        />
+      </View>
+    </SafeAreaView>
+  );
+}

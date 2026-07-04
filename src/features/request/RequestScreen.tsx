@@ -15,10 +15,10 @@ export function RequestScreen() {
         <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
           <Feather name="arrow-left" size={24} color="#111111" />
         </Pressable>
-        <Text className="ml-4 text-lg font-semibold text-text-primary">Request Help</Text>
+        <Text className="ml-4 text-lg font-sans-semibold text-text-primary">Request Help</Text>
       </View>
       <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
-        <MainMissionCard />
+        <MainMissionCard onPress={() => router.push('/reward')} />
         <WeirdProblemsSection />
         <PromiseCard />
       </ScrollView>

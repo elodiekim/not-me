@@ -39,3 +39,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# personal Claude Code skills (not shared with the team)
+.claude/skills/
