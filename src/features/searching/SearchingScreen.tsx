@@ -16,7 +16,7 @@ export function SearchingScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-1 items-center justify-center gap-6 px-6">
         <Image
-          source={require('../../../assets/characters/hero-cat.png')}
+          source={require('../../../assets/characters/binoculars-cat.png')}
           style={{ width: 160, height: 160 }}
           resizeMode="contain"
         />
