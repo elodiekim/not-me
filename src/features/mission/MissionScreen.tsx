@@ -15,7 +15,7 @@ export function MissionScreen() {
       </View>
       <View className="flex-1 gap-8 px-6">
         <MissionCard
-          avatar={require('../../../assets/characters/avatar-cat.png')}
+          avatar={require('../../../assets/icons/profile.png')}
           title="Minjun is on the way"
           subtitle={
             amount
