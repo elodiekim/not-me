@@ -127,6 +127,24 @@ Responsibilities
 
 ---
 
+# Trust & Reviews
+
+MVP Policy: Reviews are **one-directional**, User → Hero only.
+
+Hero-earned rating and review count are the only public trust signal in the MVP.
+
+Users do not receive a public rating from Heroes.
+
+## Known Gap
+
+Because Heroes physically enter a User's home for sensitive tasks (pest removal, etc.), Hero-side safety risk is arguably higher than typical marketplaces (Uber, Airbnb both rate both directions for this reason).
+
+The MVP intentionally ships without a Hero-facing trust signal for Users (no-show tracking, safety flags, etc.) to keep scope small.
+
+**Revisit this once categories expand beyond cockroach removal or Hero-reported incidents appear.** Do not build this proactively; wait for signal.
+
+---
+
 # MVP
 
 The MVP focuses on validating one hypothesis.

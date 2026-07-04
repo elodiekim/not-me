@@ -696,6 +696,28 @@ Why are you scared?
 
 ---
 
+# Empty / Incomplete State Copy
+
+Never phrase an empty or incomplete state as something the user is missing or hasn't done.
+
+That reads as guilt-tripping, which conflicts with "never make fun of the user" and "reduce anxiety."
+
+Bad
+
+아직 도움 준 적 없어요!
+
+Good
+
+The roach next door is waiting.
+
+첫 출동 대기 중...
+
+Frame it as an invitation to a future state, not a gap in the user's past behavior.
+
+Humor should come from the brand's core material (bugs, the cat mascot, the mission itself), never from the user's inaction.
+
+---
+
 # Responsive Design
 
 Reference Device

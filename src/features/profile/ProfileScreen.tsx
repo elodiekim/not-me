@@ -3,6 +3,7 @@ import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, RatingRow, SectionHeader } from '../../components/ui';
 import { COLORS } from '../../constants/colors';
+import { MISSION_HISTORY } from '../missions/data/missionHistory';
 
 const SETTINGS_ITEMS: { icon: keyof typeof Feather.glyphMap; label: string; koLabel: string }[] = [
   { icon: 'user', label: 'Account', koLabel: '계정' },
@@ -10,7 +11,12 @@ const SETTINGS_ITEMS: { icon: keyof typeof Feather.glyphMap; label: string; koLa
   { icon: 'help-circle', label: 'Help', koLabel: '도움말' },
 ];
 
+const HERO_RATING = { rating: 4.9, reviewCount: 128 };
+
 export function ProfileScreen() {
+  const requestedCount = MISSION_HISTORY.filter((item) => item.role === 'user').length;
+  const helpedCount = MISSION_HISTORY.filter((item) => item.role === 'hero').length;
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
@@ -20,19 +26,31 @@ export function ProfileScreen() {
             style={{ width: 88, height: 88, borderRadius: 44 }}
           />
           <Text className="text-xl font-sans-bold text-text-primary">Yuna</Text>
-          <RatingRow rating={4.9} reviewCount={128} />
+          {helpedCount > 0 ? (
+            <RatingRow rating={HERO_RATING.rating} reviewCount={HERO_RATING.reviewCount} />
+          ) : (
+            <View className="items-center">
+              <Text className="font-sans-semibold text-xs text-primary">The roach next door is waiting.</Text>
+              <Text className="font-sans text-xs text-text-secondary">첫 출동 대기 중...</Text>
+            </View>
+          )}
         </View>
 
         <View className="flex-row gap-3">
           <Card style={{ flex: 1 }}>
-            <Text className="text-2xl font-sans-bold text-text-primary">12</Text>
-            <Text className="font-sans text-xs text-text-secondary">Missions · 완료</Text>
+            <Text className="text-2xl font-sans-bold text-text-primary">{requestedCount}</Text>
+            <Text className="font-sans text-xs text-text-secondary">Requested · 요청</Text>
           </Card>
           <Card style={{ flex: 1 }}>
-            <Text className="text-2xl font-sans-bold text-text-primary">Jan 2026</Text>
-            <Text className="font-sans text-xs text-text-secondary">Member since · 가입일</Text>
+            <Text className="text-2xl font-sans-bold text-text-primary">{helpedCount}</Text>
+            <Text className="font-sans text-xs text-text-secondary">Helped · 도움</Text>
           </Card>
         </View>
+
+        <Card>
+          <Text className="text-sm font-sans-semibold text-text-primary">Jan 2026</Text>
+          <Text className="font-sans text-xs text-text-secondary">Member since · 가입일</Text>
+        </Card>
 
         <View className="gap-3">
           <SectionHeader title="Settings" />
