@@ -1,5 +1,6 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Pressable, View } from 'react-native';
+import { COLORS } from '../../../constants/colors';
 
 const STAR_COUNT = 5;
 
@@ -22,7 +23,11 @@ export function StarRating({ rating, onChange }: StarRatingProps) {
             accessibilityLabel={`Rate ${starValue} star`}
             onPress={() => onChange(starValue)}
           >
-            <Ionicons name={filled ? 'star' : 'star-outline'} size={32} color={filled ? '#FFB400' : '#AAAAAA'} />
+            <Ionicons
+              name={filled ? 'star' : 'star-outline'}
+              size={32}
+              color={filled ? COLORS.primary : COLORS.textDisabled}
+            />
           </Pressable>
         );
       })}

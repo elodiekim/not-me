@@ -33,7 +33,7 @@ export function RewardScreen() {
         <View className="flex-1 gap-6 px-6">
           <View className="gap-1">
             <Text className="text-2xl font-sans-bold text-text-primary">How much will you offer?</Text>
-            <Text className="text-sm text-text-secondary">
+            <Text className="font-sans text-sm text-text-secondary">
               Offering a reward helps you get help faster.{'\n'}리워드를 제안하면 더 빠르게 도움을 받을 수 있어요.
             </Text>
           </View>
@@ -70,7 +70,7 @@ export function RewardScreen() {
             label={amount ? `Request Help · $${amount}` : 'Request Help'}
             variant="primary"
             disabled={!amount}
-            onPress={() => router.push('/searching')}
+            onPress={() => router.push({ pathname: '/searching', params: { amount: String(amount) } })}
           />
         </View>
       </Pressable>

@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Image, Pressable, Text, View } from 'react-native';
 import { Card, SectionHeader } from '../../../components/ui';
+import { COLORS } from '../../../constants/colors';
 
 interface MainMissionCardProps {
   onPress?: () => void;
@@ -24,9 +25,9 @@ export function MainMissionCard({ onPress }: MainMissionCardProps) {
               <Text className="text-xl font-sans-bold leading-tight text-text-primary">
                 Roach{'\n'}Catcher
               </Text>
-              <Text className="text-sm text-text-secondary">바퀴잡이</Text>
+              <Text className="font-sans text-sm text-text-secondary">바퀴잡이</Text>
             </View>
-            <Feather name="chevron-right" size={20} color="#FFB400" />
+            <Feather name="chevron-right" size={20} color={COLORS.primary} />
           </View>
         </Card>
       </Pressable>

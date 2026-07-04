@@ -1,6 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { Image, Pressable, Text, View } from 'react-native';
 import { Card } from '../../../components/ui';
+import { COLORS } from '../../../constants/colors';
 
 interface BecomeHeroSectionProps {
   onPress?: () => void;
@@ -16,9 +17,9 @@ export function BecomeHeroSection({ onPress }: BecomeHeroSectionProps) {
           </View>
           <View className="flex-1 gap-1">
             <Text className="text-base font-sans-bold text-text-primary">Wanna be a Hero?</Text>
-            <Text className="text-sm text-text-secondary">Nearby chaos? You got this.</Text>
+            <Text className="font-sans text-sm text-text-secondary">Nearby chaos? You got this.</Text>
           </View>
-          <Feather name="chevron-right" size={20} color="#FFB400" />
+          <Feather name="chevron-right" size={20} color={COLORS.primary} />
         </View>
       </Card>
     </Pressable>

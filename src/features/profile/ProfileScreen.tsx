@@ -2,6 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, RatingRow, SectionHeader } from '../../components/ui';
+import { COLORS } from '../../constants/colors';
 
 const SETTINGS_ITEMS: { icon: keyof typeof Feather.glyphMap; label: string; koLabel: string }[] = [
   { icon: 'user', label: 'Account', koLabel: '계정' },
@@ -25,11 +26,11 @@ export function ProfileScreen() {
         <View className="flex-row gap-3">
           <Card style={{ flex: 1 }}>
             <Text className="text-2xl font-sans-bold text-text-primary">12</Text>
-            <Text className="text-xs text-text-secondary">Missions · 완료</Text>
+            <Text className="font-sans text-xs text-text-secondary">Missions · 완료</Text>
           </Card>
           <Card style={{ flex: 1 }}>
             <Text className="text-2xl font-sans-bold text-text-primary">Jan 2026</Text>
-            <Text className="text-xs text-text-secondary">Member since · 가입일</Text>
+            <Text className="font-sans text-xs text-text-secondary">Member since · 가입일</Text>
           </Card>
         </View>
 
@@ -42,12 +43,12 @@ export function ProfileScreen() {
                   <View
                     className={`flex-row items-center gap-3 ${index > 0 ? 'border-t border-surface pt-4' : ''}`}
                   >
-                    <Feather name={item.icon} size={18} color="#666666" />
+                    <Feather name={item.icon} size={18} color={COLORS.textSecondary} />
                     <View className="flex-1">
                       <Text className="text-sm font-sans-semibold text-text-primary">{item.label}</Text>
-                      <Text className="text-xs text-text-secondary">{item.koLabel}</Text>
+                      <Text className="font-sans text-xs text-text-secondary">{item.koLabel}</Text>
                     </View>
-                    <Feather name="chevron-right" size={18} color="#AAAAAA" />
+                    <Feather name="chevron-right" size={18} color={COLORS.textDisabled} />
                   </View>
                 </Pressable>
               ))}

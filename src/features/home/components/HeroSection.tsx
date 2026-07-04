@@ -13,8 +13,8 @@ export function HeroSection() {
           A cockroach{'\n'}just appeared.
         </Text>
         <Text className="text-3xl font-sans-bold leading-tight text-primary">Get help now.</Text>
-        <Text className="text-sm text-text-secondary">
-          바퀴벌레가 나타났어요? 지금 <Text className="text-primary underline">도움을 요청하세요</Text>!
+        <Text className="font-sans text-sm text-text-secondary">
+          바퀴벌레가 나타났어요? 지금 <Text className="font-sans text-primary underline">도움을 요청하세요</Text>!
         </Text>
       </View>
 
@@ -35,7 +35,7 @@ export function HeroSection() {
         />
         <View className="items-center">
           <Text className="text-sm font-sans-medium text-text-primary">It takes 10 seconds</Text>
-          <Text className="text-xs text-text-secondary">요청까지 단 10초</Text>
+          <Text className="font-sans text-xs text-text-secondary">요청까지 단 10초</Text>
         </View>
       </View>
     </View>

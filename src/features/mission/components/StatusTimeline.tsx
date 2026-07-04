@@ -31,11 +31,11 @@ export function StatusTimeline({ currentStep }: StatusTimelineProps) {
             />
             <View className="flex-1 flex-row items-baseline gap-2">
               <Text
-                className={`text-sm ${isActive ? 'font-sans-semibold text-text-primary' : 'text-text-disabled'}`}
+                className={`text-sm ${isActive ? 'font-sans-semibold text-text-primary' : 'font-sans text-text-disabled'}`}
               >
                 {step.label}
               </Text>
-              <Text className={`text-xs ${isActive ? 'text-text-secondary' : 'text-text-disabled'}`}>
+              <Text className={`font-sans text-xs ${isActive ? 'text-text-secondary' : 'text-text-disabled'}`}>
                 {step.koLabel}
               </Text>
             </View>

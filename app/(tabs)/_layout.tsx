@@ -1,15 +1,16 @@
 import { Feather } from '@expo/vector-icons';
 import { Tabs } from 'expo-router';
+import { COLORS } from '../../src/constants/colors';
 
 export default function TabsLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#FFB400',
-        tabBarInactiveTintColor: '#AAAAAA',
+        tabBarActiveTintColor: COLORS.primary,
+        tabBarInactiveTintColor: COLORS.textDisabled,
         tabBarLabelStyle: { fontSize: 12, fontFamily: 'Poppins_500Medium' },
-        tabBarStyle: { borderTopColor: '#F8F8F8' },
+        tabBarStyle: { borderTopColor: COLORS.surface },
       }}
     >
       <Tabs.Screen

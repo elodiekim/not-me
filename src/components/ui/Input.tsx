@@ -9,6 +9,7 @@ import {
   TextInputProps,
   View,
 } from 'react-native';
+import { COLORS } from '../../constants/colors';
 
 interface InputProps extends TextInputProps {
   label?: string;
@@ -37,7 +38,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         {leftIcon && <View className="mr-2">{leftIcon}</View>}
         <TextInput
           ref={ref}
-          placeholderTextColor="#AAAAAA"
+          placeholderTextColor={COLORS.textDisabled}
           className="flex-1 font-sans text-base text-text-primary"
           style={{ paddingVertical: 0, textAlignVertical: 'center', includeFontPadding: false }}
           keyboardType={keyboardType}
@@ -46,7 +47,7 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
           {...props}
         />
       </View>
-      {error && <Text className="mt-1 text-xs text-danger">{error}</Text>}
+      {error && <Text className="font-sans mt-1 text-xs text-danger">{error}</Text>}
 
       {showDoneAccessory && (
         <InputAccessoryView nativeID={accessoryId}>

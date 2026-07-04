@@ -33,7 +33,7 @@ export function MissionCard({
         <View className="flex-1 gap-1">
           <Badge label={statusLabel} variant={statusVariant} />
           <Text className="text-lg font-sans-bold text-text-primary">{title}</Text>
-          {subtitle && <Text className="text-sm text-text-secondary">{subtitle}</Text>}
+          {subtitle && <Text className="font-sans text-sm text-text-secondary">{subtitle}</Text>}
           {rating !== undefined && <RatingRow rating={rating} reviewCount={reviewCount} />}
         </View>
       </View>

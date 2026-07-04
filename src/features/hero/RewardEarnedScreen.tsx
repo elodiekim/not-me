@@ -16,7 +16,7 @@ export function RewardEarnedScreen() {
           resizeMode="contain"
         />
         <Text className="text-2xl font-sans-bold text-text-primary">You earned ${amount}!</Text>
-        <Text className="text-center text-sm text-text-secondary">
+        <Text className="font-sans text-center text-sm text-text-secondary">
           Nice work out there.{'\n'}수고하셨어요!
         </Text>
       </View>

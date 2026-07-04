@@ -21,7 +21,7 @@ export function CompleteScreen() {
               resizeMode="contain"
             />
             <Text className="text-2xl font-sans-bold text-text-primary">Mission Complete!</Text>
-            <Text className="text-center text-sm text-text-secondary">
+            <Text className="font-sans text-center text-sm text-text-secondary">
               바퀴벌레 문제 해결 완료!{'\n'}Thanks for using NotMe.
             </Text>
           </View>
