@@ -59,11 +59,20 @@
 - [x] ~~이메일 중복 체크~~ — Supabase Auth의 `auth.users.email` unique 제약으로 이미 처리됨, 별도 구현 불필요
 
 ## 🟠 P1 · 상태 연결 (플로우 간 데이터 전달)
-현재 각 화면이 독립적이라 사용자가 고른 값이 다음 화면으로 이어지지 않음.
-- [ ] Zustand `useRequestStore` — 선택 카테고리 + 리워드 보관
-- [ ] Reward에서 고른 금액을 Searching / Mission Status 로 전달
-- [ ] Mission Status 하드코딩("Minjun", "약 8분", step=2) → 실제 미션 데이터
-- [ ] Searching: 가짜 2.5초 setTimeout → 실제 매칭 (Realtime / 폴링)
+- [x] ~~Zustand `useRequestStore`~~ — 불필요 판단: 카테고리는 바퀴벌레 하나뿐이라 선택지 없음, 리워드는 쿼리 파라미터로 충분
+- [x] **1/5 Reward 확정 → 실제 `missions` row 생성** (`useCreateRequest`), `missionId`를 Searching로 전달 — REST로 실제 insert 확인 완료
+- [x] **2/5 Hero의 Nearby Missions**: mock → 실제 `status='requested'` 미션 조회 (`useNearbyMissions`, `useMission`), 요청자 이름까지 join으로 표시 확인 완료
+  - Nearby Missions/Mission Detail 둘 다 real data — 하지만 **Active Mission 화면은 아직 mock**이라 지금 "Accept Mission" 누르면 그 화면에서 "Mission not found" 뜸 (3/5에서 고침, 예상된 중간 상태)
+- [x] **3/5 Hero 수락 처리**: `useAcceptMission`(hero_id/status='accepted', 이중수락 방지 가드) + `useUpdateMissionStatus`(arrived/completed), Active Mission 화면 real data 전환 — Accept → Arrived → Complete → Reward $ 표시까지 실클릭으로 확인 완료
+  - RLS에 "열린 미션 수락" 정책 추가 필요했음 (`0003_claim_open_mission.sql`) — 기존 정책은 이미 배정된 요청자/히어로만 커버해서 최초 수락 시점엔 안 맞았음
+  - mock 데이터 파일(`hero/data/nearbyMissions.ts`) 삭제 (더 이상 아무도 안 씀)
+- [x] **4/5 Searching**: 가짜 2.5초 setTimeout → 실제 매칭 감지 (`useMission` 2초 폴링) — 두 명 유저로 동시 테스트: Hero가 수락하자 Requester 화면이 자동으로 Mission Status로 이동 확인 완료 (Cancel 버튼은 아직 mission row를 실제로 취소 처리하진 않음, 그냥 홈으로만 이동 — 필요하면 나중에 추가)
+- [x] **5/5 Mission Status**: 하드코딩("Minjun", "약 8분", step=2) → 실제 미션 + 히어로 데이터 (`useMission`에 hero profile join 추가, 3초 폴링으로 상태 실시간 반영, 완료 전엔 "Leave a Review" 버튼 비활성화) — 두 유저로 수락→도착→완료까지 실클릭 확인 완료
+  - `categoryInfo.ts`를 `src/features/hero/`에서 `src/constants/`로 이동 (User/Hero 양쪽에서 공용으로 씀)
+  - 가짜 "약 8분 후 도착" 문구 삭제 — 실제 ETA 계산이 없는데 숫자를 지어내는 건 부정직해서, "히어로가 오고 있어요" 정도로 순화
+
+**P1 상태 연결 5단계 전부 완료. User ↔ Hero 플로우가 처음부터 끝까지 실제 Supabase 데이터로 연결됨.**
+- [ ] (참고) `missions.address`는 아직 위치 입력 화면이 없어 placeholder 텍스트로 저장 중 — P2 위치 작업 때 실제 주소로 교체
 
 ## 🟠 P1 · 리뷰 (Review)
 - [ ] Complete 화면 별점/코멘트 실제 저장 (지금은 저장 없이 홈으로 이동)

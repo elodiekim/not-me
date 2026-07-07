@@ -205,6 +205,16 @@ Use:
 
 Avoid unnecessary backend complexity.
 
+## Concurrency
+
+Mission acceptance must be atomic.
+
+Two Heroes must never be able to accept the same mission.
+
+When a Hero accepts a mission, lock it (e.g. a conditional update that only succeeds while status is still "open," or a Supabase RPC that checks-and-updates in one transaction) so a second Hero accepting the same mission fails cleanly instead of double-booking.
+
+This must be implemented before the Hero "Accept Mission" flow talks to a real backend. Not needed for the current UI-mock stage.
+
 ---
 
 # Database Rules
