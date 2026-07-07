@@ -31,15 +31,16 @@
 
 지금은 `services / stores / hooks / types` 폴더가 전부 비어 있고 모든 데이터가 하드코딩임.
 
-- [ ] Supabase 연동
-  - [ ] `@supabase/supabase-js` 설치
-  - [ ] `.env` + `app.config` 로 URL / anon key 관리 (키 하드코딩 금지)
-  - [ ] `src/services/supabase.ts` 클라이언트 생성
-- [ ] DB 스키마 (모든 테이블 UUID PK · id · created_at · updated_at)
-  - [ ] `profiles` (이름, 평점, 미션 수, 가입일)
-  - [ ] `missions` (category, reward, status, requester_id, hero_id, location, address)
-  - [ ] `reviews` (mission_id, rating, comment, reviewer_id)
-- [ ] `src/types` 채우기: Mission / Profile / Review / MissionStatus
+- [x] Supabase 연동
+  - [x] `@supabase/supabase-js` 설치
+  - [x] `.env` (+ `.env.example`) 로 URL / anon key 관리 (키 하드코딩 금지)
+  - [x] `src/services/supabase.ts` 클라이언트 생성
+- [x] DB 스키마 (모든 테이블 UUID PK · id · created_at · updated_at) — `supabase/migrations/0001_init.sql`, RLS 포함
+  - [x] `profiles` (이름, 히어로 평점/리뷰 수)
+  - [x] `missions` (category, reward, status, requester_id, hero_id, address)
+  - [x] `reviews` (mission_id, rating, comment, reviewer_id, hero_id — User→Hero 단방향)
+  - [x] 실제 Supabase 프로젝트에 마이그레이션 적용 완료, `.env` 실 값으로 교체, REST + RLS 동작 확인 완료
+- [x] `src/types` 채우기: `Mission.ts` / `Profile.ts` / `Review.ts`
 - [ ] TanStack Query 훅 작성 (`src/hooks`)
   - [ ] 조회: useNearbyMissions / useMission / useMissionHistory / useProfile
   - [ ] 변경: useCreateRequest / useAcceptMission / useCompleteMission / useSubmitReview
