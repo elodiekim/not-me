@@ -1,8 +1,10 @@
 import { Feather } from '@expo/vector-icons';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Card, RatingRow, SectionHeader } from '../../components/ui';
+import { Button, Card, LoadingIndicator, RatingRow, SectionHeader } from '../../components/ui';
 import { COLORS } from '../../constants/colors';
+import { useProfile } from '../../hooks/useProfile';
+import { supabase } from '../../services/supabase';
 import { MISSION_HISTORY } from '../missions/data/missionHistory';
 
 const SETTINGS_ITEMS: { icon: keyof typeof Feather.glyphMap; label: string; koLabel: string }[] = [
@@ -11,23 +13,44 @@ const SETTINGS_ITEMS: { icon: keyof typeof Feather.glyphMap; label: string; koLa
   { icon: 'help-circle', label: 'Help', koLabel: '도움말' },
 ];
 
-const HERO_RATING = { rating: 4.9, reviewCount: 128 };
+function formatMemberSince(dateString: string) {
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+}
 
 export function ProfileScreen() {
+  const { data: profile, isLoading, isError } = useProfile();
   const requestedCount = MISSION_HISTORY.filter((item) => item.role === 'user').length;
   const helpedCount = MISSION_HISTORY.filter((item) => item.role === 'hero').length;
+
+  if (isLoading) {
+    return <LoadingIndicator message="Loading your profile..." />;
+  }
+
+  if (isError || !profile) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center gap-2 bg-background px-6" edges={['top']}>
+        <Text className="text-sm text-text-secondary">
+          Something went wrong.{'\n'}Please try again.
+        </Text>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
         <View className="items-center gap-2">
           <Image
-            source={require('../../../assets/characters/avatar-cat.png')}
+            source={
+              profile.avatarUrl
+                ? { uri: profile.avatarUrl }
+                : require('../../../assets/characters/avatar-cat.png')
+            }
             style={{ width: 88, height: 88, borderRadius: 44 }}
           />
-          <Text className="text-xl font-sans-bold text-text-primary">Yuna</Text>
-          {helpedCount > 0 ? (
-            <RatingRow rating={HERO_RATING.rating} reviewCount={HERO_RATING.reviewCount} />
+          <Text className="text-xl font-sans-bold text-text-primary">{profile.name}</Text>
+          {profile.heroReviewCount > 0 && profile.heroRating !== null ? (
+            <RatingRow rating={profile.heroRating} reviewCount={profile.heroReviewCount} />
           ) : (
             <View className="items-center">
               <Text className="font-sans-semibold text-xs text-primary">The roach next door is waiting.</Text>
@@ -48,7 +71,9 @@ export function ProfileScreen() {
         </View>
 
         <Card>
-          <Text className="text-sm font-sans-semibold text-text-primary">Jan 2026</Text>
+          <Text className="text-sm font-sans-semibold text-text-primary">
+            {formatMemberSince(profile.createdAt)}
+          </Text>
           <Text className="font-sans text-xs text-text-secondary">Member since · 가입일</Text>
         </Card>
 
@@ -74,7 +99,7 @@ export function ProfileScreen() {
           </Card>
         </View>
 
-        <Button label="Sign Out" variant="ghost" />
+        <Button label="Sign Out" variant="ghost" onPress={() => supabase.auth.signOut()} />
       </ScrollView>
     </SafeAreaView>
   );

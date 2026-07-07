@@ -8,11 +8,34 @@ import {
   useFonts,
 } from '@expo-google-fonts/poppins';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Stack } from 'expo-router';
+import { Redirect, Stack, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
+import { ReactNode } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useAuthStore } from '../src/stores/useAuthStore';
 
 const queryClient = new QueryClient();
+
+function AuthGate({ children }: { children: ReactNode }) {
+  const { session, initializing } = useAuthStore();
+  const segments = useSegments();
+
+  if (initializing) {
+    return null;
+  }
+
+  const inAuthScreen = segments[0] === 'sign-in';
+
+  if (!session && !inAuthScreen) {
+    return <Redirect href="/sign-in" />;
+  }
+
+  if (session && inAuthScreen) {
+    return <Redirect href="/" />;
+  }
+
+  return children;
+}
 
 export default function RootLayout() {
   const [fontsLoaded] = useFonts({
@@ -29,7 +52,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <QueryClientProvider client={queryClient}>
-        <Stack screenOptions={{ headerShown: false }} />
+        <AuthGate>
+          <Stack screenOptions={{ headerShown: false }} />
+        </AuthGate>
         <StatusBar style="dark" />
       </QueryClientProvider>
     </SafeAreaProvider>

@@ -47,11 +47,16 @@
 - [ ] mock 데이터 → 실제 쿼리로 교체 (`nearbyMissions.ts`, `missionHistory.ts` 제거)
 
 ## 🔴 P0 · 인증 (Authentication)
-- [ ] Supabase Auth 연동
-- [ ] 로그인 / 회원가입 화면
-- [ ] 세션 유지 & 보호 라우팅 (미로그인 시 진입 차단)
-- [ ] Profile 하드코딩("Yuna") → 실제 유저 정보 표시
-- [ ] Sign Out 동작 구현 (현재 onPress 없음)
+- [x] Supabase Auth 연동 (이메일/비밀번호)
+- [x] 로그인 / 회원가입 화면 (`AuthScreen`)
+- [x] 세션 유지 & 보호 라우팅 (미로그인 시 `/sign-in`으로 리다이렉트)
+- [x] Profile 하드코딩("Yuna") → 실제 유저 정보 표시 (`useProfile` 훅)
+- [x] Sign Out 동작 구현
+- [x] 회원가입 시 `profiles` row 자동 생성 (DB 트리거 `handle_new_user`, 클라이언트 insert 아님 — 이메일 미확인 상태에서도 안전하게 동작)
+- [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 꺼둔 상태 — 출시 전 다시 켤 것
+- [ ] 회원가입 폼: 비밀번호 확인(재입력) 필드 추가
+- [ ] 회원가입 폼: 휴대전화 번호 입력 필드 추가 (`profiles`에 `phone` 컬럼 필요)
+- [x] ~~이메일 중복 체크~~ — Supabase Auth의 `auth.users.email` unique 제약으로 이미 처리됨, 별도 구현 불필요
 
 ## 🟠 P1 · 상태 연결 (플로우 간 데이터 전달)
 현재 각 화면이 독립적이라 사용자가 고른 값이 다음 화면으로 이어지지 않음.
