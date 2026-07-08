@@ -3,9 +3,9 @@ import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, LoadingIndicator, RatingRow, SectionHeader } from '../../components/ui';
 import { COLORS } from '../../constants/colors';
+import { useMissionHistory } from '../../hooks/useMissionHistory';
 import { useProfile } from '../../hooks/useProfile';
 import { supabase } from '../../services/supabase';
-import { MISSION_HISTORY } from '../missions/data/missionHistory';
 
 const SETTINGS_ITEMS: { icon: keyof typeof Feather.glyphMap; label: string; koLabel: string }[] = [
   { icon: 'user', label: 'Account', koLabel: '계정' },
@@ -18,11 +18,12 @@ function formatMemberSince(dateString: string) {
 }
 
 export function ProfileScreen() {
-  const { data: profile, isLoading, isError } = useProfile();
-  const requestedCount = MISSION_HISTORY.filter((item) => item.role === 'user').length;
-  const helpedCount = MISSION_HISTORY.filter((item) => item.role === 'hero').length;
+  const { data: profile, isLoading: isProfileLoading, isError } = useProfile();
+  const { data: missions, isLoading: isHistoryLoading } = useMissionHistory();
+  const requestedCount = (missions ?? []).filter((item) => item.role === 'user').length;
+  const helpedCount = (missions ?? []).filter((item) => item.role === 'hero').length;
 
-  if (isLoading) {
+  if (isProfileLoading || isHistoryLoading) {
     return <LoadingIndicator message="Loading your profile..." />;
   }
 

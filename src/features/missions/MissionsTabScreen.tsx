@@ -1,13 +1,36 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { ScrollView, Text, View } from 'react-native';
+import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, MissionCard, SectionHeader } from '../../components/ui';
+import { Button, LoadingIndicator, MissionCard, SectionHeader } from '../../components/ui';
+import { CATEGORY_INFO } from '../../constants/categoryInfo';
 import { COLORS } from '../../constants/colors';
-import { MISSION_HISTORY } from './data/missionHistory';
+import { useMissionHistory } from '../../hooks/useMissionHistory';
+import type { MissionStatus } from '../../types/Mission';
+
+const ACTIVE_STATUS_LABELS: Partial<Record<MissionStatus, string>> = {
+  requested: 'Requested',
+  accepted: 'Accepted',
+  on_the_way: 'On the way',
+  arrived: 'Arrived',
+};
+
+function formatMissionDate(dateString: string) {
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
 
 export function MissionsTabScreen() {
   const router = useRouter();
+  const { data: missions, isLoading } = useMissionHistory();
+
+  if (isLoading) {
+    return <LoadingIndicator message="Loading your missions..." />;
+  }
+
+  const activeMissions = (missions ?? []).filter(
+    (mission) => mission.status !== 'completed' && mission.status !== 'cancelled'
+  );
+  const historyMissions = (missions ?? []).filter((mission) => mission.status === 'completed');
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -18,31 +41,56 @@ export function MissionsTabScreen() {
       <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
         <View className="gap-3">
           <SectionHeader title="Active" />
-          <View className="items-center gap-3 rounded-card bg-surface p-8">
-            <Feather name="check-circle" size={28} color={COLORS.textDisabled} />
-            <Text className="text-sm font-sans-semibold text-text-primary">No active mission</Text>
-            <Text className="font-sans text-center text-xs text-text-secondary">
-              진행 중인 미션이 없어요.{'\n'}Request help or accept a nearby mission to get started.
-            </Text>
-            <Button label="Request Help" variant="secondary" onPress={() => router.push('/request')} />
-          </View>
+          {activeMissions.length === 0 ? (
+            <View className="items-center gap-3 rounded-card bg-surface p-8">
+              <Feather name="check-circle" size={28} color={COLORS.textDisabled} />
+              <Text className="text-sm font-sans-semibold text-text-primary">No active mission</Text>
+              <Text className="font-sans text-center text-xs text-text-secondary">
+                진행 중인 미션이 없어요.{'\n'}Request help or accept a nearby mission to get started.
+              </Text>
+              <Button label="Request Help" variant="secondary" onPress={() => router.push('/request')} />
+            </View>
+          ) : (
+            <View className="gap-3">
+              {activeMissions.map((mission) => (
+                <Pressable
+                  key={mission.id}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Open active mission: ${CATEGORY_INFO[mission.category].title}`}
+                  onPress={() =>
+                    mission.role === 'user'
+                      ? router.push({ pathname: '/mission-status', params: { missionId: mission.id } })
+                      : router.push({ pathname: '/hero/active', params: { id: mission.id } })
+                  }
+                >
+                  <MissionCard
+                    avatar={CATEGORY_INFO[mission.category].icon}
+                    title={CATEGORY_INFO[mission.category].title}
+                    subtitle={`${mission.role === 'user' ? 'Requested' : 'Helping'} · ${formatMissionDate(mission.createdAt)}`}
+                    statusLabel={ACTIVE_STATUS_LABELS[mission.status] ?? 'In progress'}
+                    statusVariant="info"
+                  />
+                </Pressable>
+              ))}
+            </View>
+          )}
         </View>
 
         <View className="gap-3">
           <SectionHeader title="History" />
-          {MISSION_HISTORY.length === 0 ? (
+          {historyMissions.length === 0 ? (
             <View className="items-center gap-2 rounded-card bg-surface p-8">
               <Text className="font-sans text-sm text-text-secondary">No missions yet · 미션 기록이 없어요</Text>
             </View>
           ) : (
             <View className="gap-3">
-              {MISSION_HISTORY.map((item) => (
+              {historyMissions.map((mission) => (
                 <MissionCard
-                  key={item.id}
-                  avatar={item.icon}
-                  title={item.title}
-                  subtitle={`${item.role === 'user' ? 'Requested' : 'Helped'} · ${item.date}`}
-                  statusLabel={`$${item.amount}`}
+                  key={mission.id}
+                  avatar={CATEGORY_INFO[mission.category].icon}
+                  title={CATEGORY_INFO[mission.category].title}
+                  subtitle={`${mission.role === 'user' ? 'Requested' : 'Helped'} · ${formatMissionDate(mission.createdAt)}`}
+                  statusLabel={`$${mission.rewardAmount}`}
                   statusVariant="success"
                 />
               ))}

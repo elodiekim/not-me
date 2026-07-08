@@ -41,10 +41,14 @@
   - [x] `reviews` (mission_id, rating, comment, reviewer_id, hero_id — User→Hero 단방향)
   - [x] 실제 Supabase 프로젝트에 마이그레이션 적용 완료, `.env` 실 값으로 교체, REST + RLS 동작 확인 완료
 - [x] `src/types` 채우기: `Mission.ts` / `Profile.ts` / `Review.ts`
-- [ ] TanStack Query 훅 작성 (`src/hooks`)
-  - [ ] 조회: useNearbyMissions / useMission / useMissionHistory / useProfile
-  - [ ] 변경: useCreateRequest / useAcceptMission / useCompleteMission / useSubmitReview
-- [ ] mock 데이터 → 실제 쿼리로 교체 (`nearbyMissions.ts`, `missionHistory.ts` 제거)
+- [x] TanStack Query 훅 작성 (`src/hooks`)
+  - [x] 조회: useNearbyMissions / useMission / useMissionHistory / useProfile
+  - [x] 변경: useCreateRequest / useAcceptMission / useUpdateMissionStatus(완료 처리 포함) / useSubmitReview
+- [x] mock 데이터 → 실제 쿼리로 교체 (`nearbyMissions.ts`, `missionHistory.ts` 제거)
+  - `useMissionHistory` 추가: 로그인 유저가 requester 또는 hero인 missions 전체 조회 + role('user'/'hero') 판별, `created_at desc`
+  - Mission 탭: Active 섹션(미완료 미션 카드, 탭하면 role 따라 `/mission-status` 또는 `/hero/active`로 이동), History 섹션(완료 미션, `CATEGORY_INFO` 아이콘/제목 재사용) — cancelled는 Active/History 어디에도 표시 안 함
+  - Profile 탭: Requested/Helped 카운트를 role별 실제 건수로 표시 (전 상태 누적), history 로딩 중엔 기존 LoadingIndicator로 함께 대기 (0→N 깜빡임 방지)
+  - 검증: 테스트 계정 3개(요청자/히어로/신규)로 REST 시딩 후 expo web + Playwright 실로그인 — 카운트 2/0·0/1·0/0, History $20 카드, Active 탭→미션 상태 화면 이동, 빈 상태 모두 확인 완료
 
 ## 🔴 P0 · 인증 (Authentication)
 - [x] Supabase Auth 연동 (이메일/비밀번호)
