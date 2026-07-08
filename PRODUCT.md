@@ -194,6 +194,7 @@ These categories are visible to communicate the product vision, but they are not
 ## User
 
 - Create Request
+- Confirm Location (current location default, manual edit fallback)
 - Track Mission
 - View Mission History
 - Leave Review
@@ -222,6 +223,10 @@ Select Problem
 ↓
 
 Create Request
+
+↓
+
+Confirm Location
 
 ↓
 

@@ -3,18 +3,18 @@ import { useEffect } from 'react';
 import { Image, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator } from '../../components/ui';
+import { useMission } from '../../hooks/useMission';
 
 export function SearchingScreen() {
   const router = useRouter();
-  const { amount } = useLocalSearchParams<{ amount?: string }>();
+  const { missionId, amount } = useLocalSearchParams<{ missionId?: string; amount?: string }>();
+  const { data: mission } = useMission(missionId, { refetchInterval: 2000 });
 
   useEffect(() => {
-    const timer = setTimeout(
-      () => router.replace({ pathname: '/mission-status', params: { amount } }),
-      2500
-    );
-    return () => clearTimeout(timer);
-  }, [router, amount]);
+    if (mission && mission.status !== 'requested') {
+      router.replace({ pathname: '/mission-status', params: { missionId: mission.id, amount } });
+    }
+  }, [mission, router, amount]);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>

@@ -1,14 +1,41 @@
-import { useRouter } from 'expo-router';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Image, Keyboard, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input } from '../../components/ui';
+import { Button, Input, LoadingIndicator } from '../../components/ui';
+import { useMission } from '../../hooks/useMission';
+import { useSubmitReview } from '../../hooks/useSubmitReview';
 import { StarRating } from './components/StarRating';
 
 export function CompleteScreen() {
   const router = useRouter();
+  const { missionId } = useLocalSearchParams<{ missionId?: string }>();
+  const { data: mission, isLoading } = useMission(missionId);
+  const submitReview = useSubmitReview();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
+  const [error, setError] = useState<string | null>(null);
+
+  if (isLoading) {
+    return <LoadingIndicator message="Loading mission..." />;
+  }
+
+  const handleSubmit = async () => {
+    if (!mission?.heroId) return;
+    setError(null);
+
+    try {
+      await submitReview.mutateAsync({
+        missionId: mission.id,
+        heroId: mission.heroId,
+        rating,
+        comment,
+      });
+      router.replace('/');
+    } catch {
+      setError('Something went wrong. Please try again.');
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -37,6 +64,7 @@ export function CompleteScreen() {
               onChangeText={setComment}
               multiline
             />
+            {error && <Text className="text-center text-sm text-danger">{error}</Text>}
           </View>
         </View>
 
@@ -44,8 +72,9 @@ export function CompleteScreen() {
           <Button
             label="Submit Review"
             variant="primary"
-            disabled={rating === 0}
-            onPress={() => router.replace('/')}
+            loading={submitReview.isPending}
+            disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
+            onPress={handleSubmit}
           />
         </View>
       </Pressable>
