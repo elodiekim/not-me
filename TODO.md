@@ -75,7 +75,10 @@
 - [ ] (참고) `missions.address`는 아직 위치 입력 화면이 없어 placeholder 텍스트로 저장 중 — P2 위치 작업 때 실제 주소로 교체
 
 ## 🟠 P1 · 리뷰 (Review)
-- [ ] Complete 화면 별점/코멘트 실제 저장 (지금은 저장 없이 홈으로 이동)
+- [x] Complete 화면 별점/코멘트 실제 저장 (`useSubmitReview`, `missionId`를 Mission Status → Complete로 전달)
+  - `reviews` INSERT RLS 강화: 완료된 미션 + 실제 요청자/히어로 매칭 확인 (`0004_review_trigger_and_rls.sql`)
+  - 리뷰 insert 시 `profiles.hero_rating`/`hero_review_count` 자동 재계산 트리거(`handle_new_review`) 추가
+  - 테스트 계정 2개로 실제 미션 2건 완료 + 리뷰 2건(5점/3점) 남겨서 평점 4.0/카운트 2로 정확히 집계됨을 확인, RLS 차단 케이스(미완료 미션 리뷰, 본인 리뷰)도 403으로 정상 차단됨을 확인 완료
 - [ ] Profile 평점/리뷰 수 실제 집계값 표시 (지금 4.9 / 128 하드코딩)
 
 ## 🟡 P2 · 실시간 & 위치 (제품 핵심 경험)

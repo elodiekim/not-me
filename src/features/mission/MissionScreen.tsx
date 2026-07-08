@@ -16,7 +16,7 @@ const STEP_BY_STATUS: Record<string, number> = {
 
 export function MissionScreen() {
   const router = useRouter();
-  const { missionId, amount } = useLocalSearchParams<{ missionId?: string; amount?: string }>();
+  const { missionId } = useLocalSearchParams<{ missionId?: string }>();
   const { data: mission, isLoading, isError } = useMission(missionId, { refetchInterval: 3000 });
 
   if (isLoading) {
@@ -65,7 +65,7 @@ export function MissionScreen() {
           label={isCompleted ? 'Leave a Review' : 'Waiting for completion...'}
           variant={isCompleted ? 'primary' : 'secondary'}
           disabled={!isCompleted}
-          onPress={() => router.replace({ pathname: '/complete', params: { amount } })}
+          onPress={() => router.replace({ pathname: '/complete', params: { missionId: mission.id } })}
         />
       </View>
     </SafeAreaView>
