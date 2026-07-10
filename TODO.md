@@ -60,6 +60,7 @@
 - [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 꺼둔 상태 — 출시 전 다시 켤 것
 - [ ] 회원가입 폼: 비밀번호 확인(재입력) 필드 추가
 - [ ] 회원가입 폼: 휴대전화 번호 입력 필드 추가 (`profiles`에 `phone` 컬럼 필요)
+- [ ] 비밀번호 찾기(재설정) 플로우 — `AuthScreen`에 "비밀번호를 잊으셨나요?" 진입점 + 이메일 입력 화면 + Supabase `resetPasswordForEmail` 연동, 리셋 링크 딥링크 처리 필요 (Expo Router 딥링크 설정 확인)
 - [x] ~~이메일 중복 체크~~ — Supabase Auth의 `auth.users.email` unique 제약으로 이미 처리됨, 별도 구현 불필요
 
 ## 🟠 P1 · 상태 연결 (플로우 간 데이터 전달)
