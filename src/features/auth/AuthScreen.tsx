@@ -45,8 +45,13 @@ export function AuthScreen() {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
         if (signInError) throw signInError;
       }
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (err) {
+      const code = (err as { code?: string } | null)?.code;
+      if (code === 'invalid_credentials') {
+        setError("That email or password doesn't look right.\n이메일 또는 비밀번호를 확인해주세요.");
+      } else {
+        setError('Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.');
+      }
     } finally {
       setLoading(false);
     }
