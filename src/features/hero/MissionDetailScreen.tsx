@@ -1,6 +1,7 @@
+import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Badge, Button, LoadingIndicator } from '../../components/ui';
 import { useAcceptMission } from '../../hooks/useAcceptMission';
@@ -38,8 +39,11 @@ export function MissionDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="px-6 py-4">
-        <Text className="text-lg font-sans-semibold text-text-primary">Mission Detail</Text>
+      <View className="flex-row items-center px-6 py-4">
+        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+          <Feather name="arrow-left" size={24} color="#111111" />
+        </Pressable>
+        <Text className="ml-4 text-lg font-sans-semibold text-text-primary">Mission Detail</Text>
       </View>
       <View className="flex-1 gap-6 px-6">
         <View className="items-center gap-2">

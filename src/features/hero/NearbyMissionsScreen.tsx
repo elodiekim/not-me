@@ -1,3 +1,4 @@
+import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -12,8 +13,13 @@ export function NearbyMissionsScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="px-6 py-4">
-        <Text className="text-lg font-sans-semibold text-text-primary">Nearby Missions</Text>
-        <Text className="font-sans text-sm text-text-secondary">근처 요청 목록</Text>
+        <View className="flex-row items-center">
+          <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+            <Feather name="arrow-left" size={24} color="#111111" />
+          </Pressable>
+          <Text className="ml-4 text-lg font-sans-semibold text-text-primary">Nearby Missions</Text>
+        </View>
+        <Text className="ml-10 font-sans text-sm text-text-secondary">근처 요청 목록</Text>
       </View>
 
       {isLoading ? (
