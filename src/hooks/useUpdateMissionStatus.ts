@@ -6,8 +6,20 @@ export function useUpdateMissionStatus() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ missionId, status }: { missionId: string; status: MissionStatus }) => {
-      const { error } = await supabase.from('missions').update({ status }).eq('id', missionId);
+    mutationFn: async ({
+      missionId,
+      status,
+      fromStatus,
+    }: {
+      missionId: string;
+      status: MissionStatus;
+      // Only update while the mission is still in this status — matches 0 rows
+      // (no error) if it changed in the meantime, same guard as useAcceptMission.
+      fromStatus?: MissionStatus;
+    }) => {
+      let query = supabase.from('missions').update({ status }).eq('id', missionId);
+      if (fromStatus) query = query.eq('status', fromStatus);
+      const { error } = await query;
       if (error) throw error;
     },
     onSuccess: (_data, { missionId }) => {
