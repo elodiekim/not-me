@@ -448,7 +448,7 @@ Home
 
 Mission
 
-Inbox
+Inbox — read-only activity feed (mission status changes, reviews received). Not chat.
 
 Profile
 

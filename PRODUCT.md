@@ -197,6 +197,7 @@ These categories are visible to communicate the product vision, but they are not
 - Confirm Location (current location default, manual edit fallback)
 - Track Mission
 - View Mission History
+- View Activity Feed (read-only timeline of mission status changes and reviews — not chat)
 - Leave Review
 
 ---
