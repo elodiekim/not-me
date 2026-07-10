@@ -16,6 +16,8 @@ export interface Mission {
   rewardAmount: number;
   status: MissionStatus;
   address: string;
+  latitude: number | null;
+  longitude: number | null;
   createdAt: string;
   updatedAt: string;
 }

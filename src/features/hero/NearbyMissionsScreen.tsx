@@ -1,13 +1,47 @@
 import { useRouter } from 'expo-router';
+import * as Location from 'expo-location';
+import { useEffect, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingIndicator, MissionCard } from '../../components/ui';
 import { useNearbyMissions } from '../../hooks/useNearbyMissions';
 import { CATEGORY_INFO } from '../../constants/categoryInfo';
+import { formatDistance, haversineDistanceKm } from '../../utils/distance';
+
+// Best-effort: denied permission or location failure just means no distance
+// label is shown — the mission list itself must still work.
+function useCurrentCoords() {
+  const [coords, setCoords] = useState<{ latitude: number; longitude: number } | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    (async () => {
+      try {
+        const { status } = await Location.requestForegroundPermissionsAsync();
+        if (status !== 'granted') return;
+
+        const position = await Location.getCurrentPositionAsync();
+        if (!cancelled) {
+          setCoords({ latitude: position.coords.latitude, longitude: position.coords.longitude });
+        }
+      } catch {
+        // no-op: distance label just stays hidden
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  return coords;
+}
 
 export function NearbyMissionsScreen() {
   const router = useRouter();
   const { data: missions, isLoading, isError } = useNearbyMissions();
+  const heroCoords = useCurrentCoords();
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -34,6 +68,16 @@ export function NearbyMissionsScreen() {
         <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>
           {missions.map((mission) => {
             const category = CATEGORY_INFO[mission.category];
+            const distanceLabel =
+              heroCoords && mission.latitude != null && mission.longitude != null
+                ? formatDistance(
+                    haversineDistanceKm(heroCoords, {
+                      latitude: mission.latitude,
+                      longitude: mission.longitude,
+                    })
+                  )
+                : null;
+            const subtitle = distanceLabel ? `${category.koTitle} · ${distanceLabel}` : category.koTitle;
             return (
               <Pressable
                 key={mission.id}
@@ -44,7 +88,7 @@ export function NearbyMissionsScreen() {
                 <MissionCard
                   avatar={category.icon}
                   title={category.title}
-                  subtitle={category.koTitle}
+                  subtitle={subtitle}
                   statusLabel={`$${mission.rewardAmount}`}
                   statusVariant="success"
                 />

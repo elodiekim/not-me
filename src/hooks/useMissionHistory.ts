@@ -10,7 +10,7 @@ export interface MissionHistoryEntry extends Mission {
 }
 
 const MISSION_SELECT =
-  'id, requester_id, hero_id, category, reward_amount, status, address, created_at, updated_at';
+  'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at';
 
 function mapMissionHistoryEntry(row: any, userId: string): MissionHistoryEntry {
   return {
@@ -21,6 +21,8 @@ function mapMissionHistoryEntry(row: any, userId: string): MissionHistoryEntry {
     rewardAmount: row.reward_amount,
     status: row.status,
     address: row.address,
+    latitude: row.latitude,
+    longitude: row.longitude,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     role: row.requester_id === userId ? 'user' : 'hero',

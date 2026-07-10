@@ -82,7 +82,7 @@
   - 가짜 "약 8분 후 도착" 문구 삭제 — 실제 ETA 계산이 없는데 숫자를 지어내는 건 부정직해서, "히어로가 오고 있어요" 정도로 순화
 
 **P1 상태 연결 5단계 전부 완료. User ↔ Hero 플로우가 처음부터 끝까지 실제 Supabase 데이터로 연결됨.**
-- [ ] (참고) `missions.address`는 아직 위치 입력 화면이 없어 placeholder 텍스트로 저장 중 — P2 위치 작업 때 실제 주소로 교체
+- [x] (참고) `missions.address`는 아직 위치 입력 화면이 없어 placeholder 텍스트로 저장 중 — Confirm Location 화면 추가로 해결 (아래 P2 항목 참고)
 
 ## 🟠 P1 · 리뷰 (Review)
 - [x] Complete 화면 별점/코멘트 실제 저장 (`useSubmitReview`, `missionId`를 Mission Status → Complete로 전달)
@@ -92,17 +92,33 @@
 - [ ] Profile 평점/리뷰 수 실제 집계값 표시 (지금 4.9 / 128 하드코딩)
 
 ## 🟡 P2 · 실시간 & 위치 (제품 핵심 경험)
-- [ ] 위치 권한 + 현재 위치 획득 (expo-location)
-- [ ] Nearby Missions 실제 거리 계산 (지금 "0.3 km away" 하드코딩)
+- [x] 위치 권한 + 현재 위치 획득 (expo-location)
+- [x] Nearby Missions 실제 거리 계산 (~~지금 "0.3 km away" 하드코딩~~ → 확인 결과 거리 표시 자체가 없었음(stale 메모). `missions.latitude/longitude` 저장 + haversine으로 실거리 계산해 subtitle에 표시, `0006_add_mission_location.sql` 사용자가 실행 완료·검증 완료)
+- [x] **Confirm Location 화면** (`PRODUCT.md`의 "현재 위치 기본값, 수동 편집 폴백" 구현): Reward → Confirm Location → Searching으로 플로우 변경. 좌표를 가져오는 책임을 `useCreateRequest`에서 이 화면으로 이동(`CreateRequestInput`에 `address`/`latitude`/`longitude` 추가). 진입 시 위치 권한 요청 → 허용되면 `reverseGeocodeAsync`로 주소 프리필(사용자가 자유롭게 수정 가능), 거부/실패하면 빈 입력창에서 직접 타이핑. 주소 비어있으면 Confirm 버튼 비활성화
+  - Expo Web에서는 `expo-location`의 `reverseGeocodeAsync`가 미지원(웹 전용 폴백 새로 안 만들고 실패 케이스로 처리 — 좌표는 정상 캡처되고 주소만 빈 채로 시작, 수동 입력 가능)이라 자동 프리필은 네이티브에서만 확인 가능
+  - Playwright로 검증: 권한 허용 시 좌표 캡처 + 수동 입력 주소로 미션 생성 → REST로 `latitude/longitude` 정상 저장 확인, 권한 거부 시 Confirm 버튼 비활성화 → 수동 입력 후 정상 생성 + 좌표 `null` 확인, 콘솔 에러 없음
+  - 상세 주소(동/호수) 입력 필드 추가 (선택 입력): building address + detail address를 별도 state로 관리하다가 Confirm 시점에 `"${building}, ${detail}"`로 합쳐서 저장 (detail 비어있으면 building만). REST로 확인 결과 `"123 Test Street, Seoul, 301-호"`처럼 정확히 합쳐짐, detail 없을 땐 trailing comma 없이 building 주소만 저장됨 확인
+- [x] 취소한 미션도 Mission 탭 History에 표시 (`MissionsTabScreen.tsx`): `historyMissions` 필터에 `cancelled` 추가, `statusLabel`을 취소된 건은 "Cancelled · 취소됨"(neutral variant)로 분기 — 리워드 금액 대신 취소 라벨 표시. Active 필터는 그대로라 취소된 미션은 Active에 안 보이고 History로만 이동. 실제로 미션 생성→취소→Missions 탭에서 History에 뜨는지, Active엔 안 뜨는지 확인 완료
 - [ ] Mission Status 실시간 업데이트 (Supabase Realtime)
 - [ ] (선택) 지도 표시
+- [x] Searching 화면 나가기(X 버튼): 대기 화면 오른쪽 상단에 X 아이콘 추가, 미션은 취소하지 않고 `router.replace('/')`로 홈만 이동(`accessibilityLabel="Close"`). 기존 "Cancel" 버튼(실제 취소)은 그대로 유지, 둘이 공존. 만료(expired) 화면엔 X 버튼 미추가(이미 Try Again/Back to Home 두 버튼으로 명확한 종료 상태라서)
+  - Mission 탭 Active 섹션이 이미 `status='requested'`도 표시하고 탭하면 `/mission-status`로 보내주는 기존 로직을 그대로 재사용 — 복귀 경로 새로 안 만듦
+  - Playwright로 검증: X 클릭 → 홈 이동 확인 → REST로 미션 status가 여전히 `requested`인지 확인 → Mission 탭 Active에 그대로 떠 있고 탭하면 `/mission-status`로 정상 이동 확인. Cancel 버튼 회귀 확인(인증된 요청으로 재조회 — RLS가 익명 키로는 취소된 미션을 못 읽어서 세션 토큰으로 확인): status가 `cancelled`로 정상 변경됨. 만료 화면엔 "Close" 라벨이 코드상 한 곳(대기 화면)에만 존재함을 확인
 - [x] Searching 타임아웃: 일정 시간 지나도 히어로가 안 잡히면 자동 만료 처리
-  - `SEARCH_TIMEOUT_MS` 상수 하나 (15분, SearchingScreen 상단) — 실사용 데이터 나오면 조정
+  - `SEARCH_TIMEOUT_MS` 상수 하나 (15분, `src/constants/mission.ts`로 분리) — 실사용 데이터 나오면 조정
   - 클라이언트에서 `created_at` 기준 경과 시간 체크 (setTimeout, 서버 크론 없음)
   - 새 `expired` 상태 대신 기존 `cancelled` 재사용 (마이그레이션/타입 변경 불필요, Nearby·Missions 탭 제외가 자동으로 따라옴 — 가장 간단한 쪽)
   - 만료 시 "No heroes nearby right now. Want to try again?" 화면 + Try Again(같은 카테고리/리워드로 새 미션 생성, `useCreateRequest` 재사용) + Back to Home
   - 만료/취소 업데이트에 `fromStatus: 'requested'` 조건 추가 (`useUpdateMissionStatus` 확장) — 히어로가 같은 순간 수락하면 0 row 매치로 무시되고 폴링이 mission-status로 이동 (useAcceptMission의 이중수락 가드와 같은 패턴)
   - 검증: `created_at`을 16분 전으로 백데이트한 미션으로 expo web + Playwright 실로그인 테스트 — 만료 화면 표시, row `cancelled` 변경, Try Again으로 새 `requested` 미션 생성 후 검색 화면 복귀 확인. 히어로 계정 REST 조회에서 취소 미션은 Nearby 제외(RLS상 아예 안 보임), 새 미션은 정상 노출 확인. `npx tsc --noEmit` 통과
+- [x] **화면 밖에서도 만료 처리 (opportunistic 체크)**: SearchingScreen을 벗어나면(X 버튼 등) 타이머가 언마운트되며 사라져서 화면 밖에서는 미션이 영원히 `requested`로 남는 문제 수정
+  - `SEARCH_TIMEOUT_MS` + `isRequestStale`/`millisUntilStale`를 `src/constants/mission.ts` / `src/utils/missionExpiry.ts`로 공용 분리, SearchingScreen도 이걸 사용하도록 교체
+  - `MissionsTabScreen.tsx`에 `useEffect` 추가: 목록 로드될 때마다 `role === 'user' && status === 'requested'`인 미션 중 stale한 것들을 `useUpdateMissionStatus`로 일괄 취소 (`fromStatus: 'requested'` 가드 동일 적용). 서버 크론이 아니라 "Mission 탭을 열어볼 때마다 한 번 더 확인"하는 방식 — 정시 취소 보장 아님, 그 정도로 충분
+  - `MissionScreen.tsx`(`/mission-status`)에도 같은 opportunistic 체크 추가 — 직접 진입해도 만료 처리됨
+  - `useUpdateMissionStatus`의 `onSuccess`에 `missionHistory` 쿼리 무효화 추가 — 취소 반영이 Mission 탭에 바로 보이도록
+  - `MissionScreen.tsx`가 `cancelled` 상태를 정직하게 표시하도록 수정: 기존엔 `cancelled`를 못 다뤄서 "히어로가 오고 있어요" 같은 잘못된 문구가 뜰 수 있었음 → "Request cancelled / 요청이 취소됐어요" 안내 + 타임라인 숨김 + 버튼도 "Back to Home"으로 분기
+  - 검증: `created_at`을 16분 전으로 백데이트한 미션 2건으로 각각 Mission 탭 진입/`/mission-status` 직접 진입 테스트 → 둘 다 자동으로 `cancelled` 전환 확인(REST), Mission 탭은 Active에서 빠지고 History로 이동 확인, `/mission-status`는 "This request was cancelled" 문구로 정상 표시(예전처럼 "히어로가 오고 있어요" 안 뜸) 확인. X 버튼/Cancel 버튼 회귀 확인 — 둘 다 그대로 정상 동작
+- [x] Mission History 카드에 주소 표시: `MissionCard`에 `detail?: string` prop 추가(과설계 방지용으로 새 prop 하나만), History 섹션에서 `detail={mission.address}`로 전달. Active 섹션은 이번 범위 아니라 안 건드림. 취소된 미션/정상 완료된 미션 둘 다 History 카드에 주소가 정상 표시되는 것 실계정 2개로 수락→도착→완료 플로우까지 돌려서 확인
 
 ## 🟡 P2 · 온보딩 & 앱 진입
 DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 없음(과거 커밋에서 reset됨).
