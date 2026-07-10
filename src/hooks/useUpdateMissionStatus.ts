@@ -24,6 +24,7 @@ export function useUpdateMissionStatus() {
     },
     onSuccess: (_data, { missionId }) => {
       queryClient.invalidateQueries({ queryKey: ['mission', missionId] });
+      queryClient.invalidateQueries({ queryKey: ['missionHistory'] });
     },
   });
 }

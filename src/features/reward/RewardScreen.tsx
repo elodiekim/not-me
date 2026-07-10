@@ -4,7 +4,6 @@ import { useMemo, useState } from 'react';
 import { Keyboard, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
-import { useCreateRequest } from '../../hooks/useCreateRequest';
 
 const PRESET_AMOUNTS = [10, 20];
 
@@ -12,8 +11,6 @@ export function RewardScreen() {
   const router = useRouter();
   const [selected, setSelected] = useState<number | 'custom' | null>(null);
   const [customValue, setCustomValue] = useState('');
-  const [error, setError] = useState<string | null>(null);
-  const createRequest = useCreateRequest();
 
   const amount = useMemo(() => {
     if (selected === 'custom') {
@@ -23,16 +20,9 @@ export function RewardScreen() {
     return selected;
   }, [selected, customValue]);
 
-  const handleConfirm = async () => {
+  const handleConfirm = () => {
     if (!amount) return;
-    setError(null);
-
-    try {
-      const mission = await createRequest.mutateAsync({ category: 'cockroach', rewardAmount: amount });
-      router.push({ pathname: '/searching', params: { missionId: mission.id, amount: String(amount) } });
-    } catch {
-      setError('Something went wrong. Please try again.');
-    }
+    router.push({ pathname: '/confirm-location', params: { amount: String(amount) } });
   };
 
   return (
@@ -78,16 +68,13 @@ export function RewardScreen() {
               leftIcon={<Text className="text-base font-sans-semibold text-text-primary">$</Text>}
             />
           )}
-
-          {error && <Text className="text-sm text-danger">{error}</Text>}
         </View>
 
         <View className="px-6 pb-6">
           <Button
             label={amount ? `Request Help · $${amount}` : 'Request Help'}
             variant="primary"
-            loading={createRequest.isPending}
-            disabled={!amount || createRequest.isPending}
+            disabled={!amount}
             onPress={handleConfirm}
           />
         </View>

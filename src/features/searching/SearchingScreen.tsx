@@ -1,14 +1,13 @@
+import { Feather } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Image, Text, View } from 'react-native';
+import { Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator } from '../../components/ui';
 import { useCreateRequest } from '../../hooks/useCreateRequest';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
-
-// 실사용 데이터가 없는 추정치 — 실제 평균 수락 시간을 보고 조정할 것 (TODO.md P2)
-const SEARCH_TIMEOUT_MS = 15 * 60 * 1000;
+import { millisUntilStale } from '../../utils/missionExpiry';
 
 export function SearchingScreen() {
   const router = useRouter();
@@ -33,7 +32,7 @@ export function SearchingScreen() {
   useEffect(() => {
     if (expired || !mission || mission.status !== 'requested') return;
 
-    const remaining = SEARCH_TIMEOUT_MS - (Date.now() - new Date(mission.createdAt).getTime());
+    const remaining = millisUntilStale(mission.createdAt);
     const expire = () => {
       setExpired(true);
       updateStatusMutate({ missionId: mission.id, status: 'cancelled', fromStatus: 'requested' });
@@ -64,6 +63,9 @@ export function SearchingScreen() {
       const newMission = await createRequest.mutateAsync({
         category: mission.category,
         rewardAmount: mission.rewardAmount,
+        address: mission.address,
+        latitude: mission.latitude,
+        longitude: mission.longitude,
       });
       setExpired(false);
       router.setParams({ missionId: newMission.id });
@@ -108,6 +110,11 @@ export function SearchingScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      <View className="flex-row items-center justify-end px-6 py-4">
+        <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => router.replace('/')}>
+          <Feather name="x" size={24} color="#111111" />
+        </Pressable>
+      </View>
       <View className="flex-1 items-center justify-center gap-6 px-6">
         <Image
           source={require('../../../assets/characters/binoculars-cat.png')}

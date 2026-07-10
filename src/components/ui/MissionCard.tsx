@@ -9,6 +9,7 @@ interface MissionCardProps {
   avatar: ImageSourcePropType;
   title: string;
   subtitle?: string;
+  detail?: string;
   statusLabel: string;
   statusVariant?: MissionCardStatus;
   rating?: number;
@@ -19,6 +20,7 @@ export function MissionCard({
   avatar,
   title,
   subtitle,
+  detail,
   statusLabel,
   statusVariant = 'info',
   rating,
@@ -34,6 +36,7 @@ export function MissionCard({
           <Badge label={statusLabel} variant={statusVariant} />
           <Text className="text-lg font-sans-bold text-text-primary">{title}</Text>
           {subtitle && <Text className="font-sans text-sm text-text-secondary">{subtitle}</Text>}
+          {detail && <Text className="font-sans text-xs text-text-secondary">{detail}</Text>}
           {rating !== undefined && <RatingRow rating={rating} reviewCount={reviewCount} />}
         </View>
       </View>

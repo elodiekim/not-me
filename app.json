@@ -16,7 +16,13 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "NotMe uses your location to show nearby missions and their distance."
+        }
+      ]
     ]
   }
 }

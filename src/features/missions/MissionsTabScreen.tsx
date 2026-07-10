@@ -1,11 +1,14 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard, SectionHeader } from '../../components/ui';
 import { CATEGORY_INFO } from '../../constants/categoryInfo';
 import { COLORS } from '../../constants/colors';
 import { useMissionHistory } from '../../hooks/useMissionHistory';
+import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
+import { isRequestStale } from '../../utils/missionExpiry';
 import type { MissionStatus } from '../../types/Mission';
 
 const ACTIVE_STATUS_LABELS: Partial<Record<MissionStatus, string>> = {
@@ -22,6 +25,18 @@ function formatMissionDate(dateString: string) {
 export function MissionsTabScreen() {
   const router = useRouter();
   const { data: missions, isLoading } = useMissionHistory();
+  const { mutate: updateStatusMutate } = useUpdateMissionStatus();
+
+  // Opportunistic expiry: no server cron, so a stale 'requested' mission only
+  // gets cancelled once someone looks at it — here, whenever this tab loads.
+  // Same fromStatus guard as SearchingScreen covers the hero-accepts-at-the-same-time race.
+  useEffect(() => {
+    (missions ?? [])
+      .filter((mission) => mission.role === 'user' && mission.status === 'requested' && isRequestStale(mission.createdAt))
+      .forEach((mission) =>
+        updateStatusMutate({ missionId: mission.id, status: 'cancelled', fromStatus: 'requested' })
+      );
+  }, [missions, updateStatusMutate]);
 
   if (isLoading) {
     return <LoadingIndicator message="Loading your missions..." />;
@@ -30,7 +45,9 @@ export function MissionsTabScreen() {
   const activeMissions = (missions ?? []).filter(
     (mission) => mission.status !== 'completed' && mission.status !== 'cancelled'
   );
-  const historyMissions = (missions ?? []).filter((mission) => mission.status === 'completed');
+  const historyMissions = (missions ?? []).filter(
+    (mission) => mission.status === 'completed' || mission.status === 'cancelled'
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -90,8 +107,9 @@ export function MissionsTabScreen() {
                   avatar={CATEGORY_INFO[mission.category].icon}
                   title={CATEGORY_INFO[mission.category].title}
                   subtitle={`${mission.role === 'user' ? 'Requested' : 'Helped'} · ${formatMissionDate(mission.createdAt)}`}
-                  statusLabel={`$${mission.rewardAmount}`}
-                  statusVariant="success"
+                  detail={mission.address}
+                  statusLabel={mission.status === 'cancelled' ? 'Cancelled · 취소됨' : `$${mission.rewardAmount}`}
+                  statusVariant={mission.status === 'cancelled' ? 'neutral' : 'success'}
                 />
               ))}
             </View>
