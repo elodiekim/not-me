@@ -6,21 +6,45 @@ import { supabase } from '../../services/supabase';
 
 type AuthMode = 'sign-in' | 'sign-up';
 
+// Lenient phone check — digits plus common separators, at least 7 chars.
+// We only guard against obvious typos, not validate real numbers.
+const PHONE_PATTERN = /^[0-9+\-\s()]{7,}$/;
+
 export function AuthScreen() {
   const [mode, setMode] = useState<AuthMode>('sign-in');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [passwordConfirm, setPasswordConfirm] = useState('');
+  const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
 
   const isSignUp = mode === 'sign-up';
-  const canSubmit = email.length > 0 && password.length > 0 && (!isSignUp || name.length > 0);
+  const passwordsMatch = password === passwordConfirm;
+  const phoneValid = PHONE_PATTERN.test(phone.trim());
+  // Only surface these once the user has typed, so the form isn't red on open.
+  const passwordMismatchError =
+    isSignUp && passwordConfirm.length > 0 && !passwordsMatch
+      ? "Passwords don't match.\n비밀번호가 일치하지 않아요."
+      : undefined;
+  const phoneError =
+    isSignUp && phone.length > 0 && !phoneValid
+      ? "That phone number doesn't look right.\n휴대전화 번호를 확인해주세요."
+      : undefined;
+
+  const canSubmit =
+    email.length > 0 &&
+    password.length > 0 &&
+    (!isSignUp ||
+      (name.length > 0 && passwordConfirm.length > 0 && passwordsMatch && phoneValid));
 
   const toggleMode = () => {
     setError(null);
     setMessage(null);
+    setPasswordConfirm('');
+    setPhone('');
     setMode(isSignUp ? 'sign-in' : 'sign-up');
   };
 
@@ -34,7 +58,7 @@ export function AuthScreen() {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { name } },
+          options: { data: { name, phone: phone.trim() } },
         });
         if (signUpError) throw signUpError;
 
@@ -79,6 +103,16 @@ export function AuthScreen() {
             value={email}
             onChangeText={setEmail}
           />
+          {isSignUp && (
+            <Input
+              label="Phone"
+              placeholder="010-1234-5678"
+              keyboardType="phone-pad"
+              value={phone}
+              onChangeText={setPhone}
+              error={phoneError}
+            />
+          )}
           <Input
             label="Password"
             placeholder="••••••••"
@@ -87,6 +121,16 @@ export function AuthScreen() {
             onChangeText={setPassword}
             error={error ?? undefined}
           />
+          {isSignUp && (
+            <Input
+              label="Confirm Password"
+              placeholder="••••••••"
+              secureTextEntry
+              value={passwordConfirm}
+              onChangeText={setPasswordConfirm}
+              error={passwordMismatchError}
+            />
+          )}
           {message && <Text className="text-xs text-text-secondary">{message}</Text>}
         </View>
 
