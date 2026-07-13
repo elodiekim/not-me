@@ -143,6 +143,20 @@ The MVP intentionally ships without a Hero-facing trust signal for Users (no-sho
 
 **Revisit this once categories expand beyond cockroach removal or Hero-reported incidents appear.** Do not build this proactively; wait for signal.
 
+## Rating Aggregation
+
+MVP Policy: Hero rating is a **simple arithmetic mean** of all reviews received, recalculated on every new review.
+
+Always show review count next to the rating (e.g. "★4.9 (128)") so a low-sample rating is visibly less confident than a high-sample one, rather than hiding sample size.
+
+### Known Gap
+
+A simple average is volatile for Heroes with few reviews — one bad early review can tank a new Hero's score in a way that looks identical to a well-established Hero's stable average.
+
+Weighted/Bayesian averaging (pulling low-sample scores toward a global mean) or recency weighting would fix this, but is unnecessary complexity while Hero volume and review counts are small.
+
+**Revisit if small-sample rating volatility becomes a real complaint once Hero volume grows.** Do not build this proactively; wait for signal.
+
 ---
 
 # MVP

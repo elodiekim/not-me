@@ -14,7 +14,8 @@ export function useAcceptMission() {
         .from('missions')
         .update({ hero_id: userId, status: 'accepted' }, { count: 'exact' })
         .eq('id', missionId)
-        .eq('status', 'requested');
+        .eq('status', 'requested')
+        .neq('requester_id', userId);
 
       if (error) throw error;
       if (!count) throw new Error('This mission was already accepted by someone else.');

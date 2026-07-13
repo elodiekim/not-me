@@ -1,12 +1,46 @@
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingIndicator, MissionCard } from '../../components/ui';
 import { useNearbyMissions } from '../../hooks/useNearbyMissions';
+import type { MissionWithRequester } from '../../hooks/useMission';
 import { CATEGORY_INFO } from '../../constants/categoryInfo';
+import { NEARBY_RADIUS_KM } from '../../constants/mission';
 import { formatDistance, haversineDistanceKm } from '../../utils/distance';
+
+interface RankedMission {
+  mission: MissionWithRequester;
+  distanceKm: number | null;
+}
+
+// heroCoords null (permission denied/loading) → keep server order (created_at desc),
+// distance sort isn't possible. Missions without their own coords sort last but stay
+// visible — only distance-known missions are radius-filtered.
+function rankByDistance(
+  missions: MissionWithRequester[],
+  heroCoords: { latitude: number; longitude: number } | null
+): RankedMission[] {
+  if (!heroCoords) {
+    return missions.map((mission) => ({ mission, distanceKm: null }));
+  }
+
+  return missions
+    .map((mission) => ({
+      mission,
+      distanceKm:
+        mission.latitude != null && mission.longitude != null
+          ? haversineDistanceKm(heroCoords, { latitude: mission.latitude, longitude: mission.longitude })
+          : null,
+    }))
+    .filter(({ distanceKm }) => distanceKm === null || distanceKm <= NEARBY_RADIUS_KM)
+    .sort((a, b) => {
+      if (a.distanceKm === null) return b.distanceKm === null ? 0 : 1;
+      if (b.distanceKm === null) return -1;
+      return a.distanceKm - b.distanceKm;
+    });
+}
 
 // Best-effort: denied permission or location failure just means no distance
 // label is shown — the mission list itself must still work.
@@ -43,6 +77,8 @@ export function NearbyMissionsScreen() {
   const { data: missions, isLoading, isError } = useNearbyMissions();
   const heroCoords = useCurrentCoords();
 
+  const rankedMissions = useMemo(() => rankByDistance(missions ?? [], heroCoords), [missions, heroCoords]);
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="px-6 py-4">
@@ -58,7 +94,7 @@ export function NearbyMissionsScreen() {
             Something went wrong.{'\n'}Please try again.
           </Text>
         </View>
-      ) : !missions || missions.length === 0 ? (
+      ) : rankedMissions.length === 0 ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-center text-sm text-text-secondary">
             No missions nearby right now.{'\n'}근처에 요청이 없어요. 곧 찾아올게요.
@@ -66,17 +102,9 @@ export function NearbyMissionsScreen() {
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>
-          {missions.map((mission) => {
+          {rankedMissions.map(({ mission, distanceKm }) => {
             const category = CATEGORY_INFO[mission.category];
-            const distanceLabel =
-              heroCoords && mission.latitude != null && mission.longitude != null
-                ? formatDistance(
-                    haversineDistanceKm(heroCoords, {
-                      latitude: mission.latitude,
-                      longitude: mission.longitude,
-                    })
-                  )
-                : null;
+            const distanceLabel = distanceKm !== null ? formatDistance(distanceKm) : null;
             const subtitle = distanceLabel ? `${category.koTitle} · ${distanceLabel}` : category.koTitle;
             return (
               <Pressable
