@@ -4,8 +4,12 @@ import { useMemo, useState } from 'react';
 import { Keyboard, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
+import { MAX_REWARD_AMOUNT } from '../../constants/mission';
 
 const PRESET_AMOUNTS = [10, 20];
+
+// 정수부 + 선택적 소수점 2자리까지만 허용 (예: 10, 10.1, 10.12는 되고 10.123은 안 됨)
+const CUSTOM_AMOUNT_PATTERN = /^\d+(\.\d{1,2})?$/;
 
 export function RewardScreen() {
   const router = useRouter();
@@ -14,10 +18,20 @@ export function RewardScreen() {
 
   const amount = useMemo(() => {
     if (selected === 'custom') {
+      if (!CUSTOM_AMOUNT_PATTERN.test(customValue)) return null;
       const parsed = Number(customValue);
-      return Number.isFinite(parsed) && parsed > 0 ? parsed : null;
+      return parsed > 0 && parsed <= MAX_REWARD_AMOUNT ? parsed : null;
     }
     return selected;
+  }, [selected, customValue]);
+
+  const customAmountError = useMemo(() => {
+    if (selected !== 'custom' || !customValue) return undefined;
+    const parsed = Number(customValue);
+    if (Number.isFinite(parsed) && parsed > MAX_REWARD_AMOUNT) {
+      return `Max $${MAX_REWARD_AMOUNT} · 최대 $${MAX_REWARD_AMOUNT}까지 가능해요`;
+    }
+    return undefined;
   }, [selected, customValue]);
 
   const handleConfirm = () => {
@@ -65,6 +79,7 @@ export function RewardScreen() {
               keyboardType="decimal-pad"
               value={customValue}
               onChangeText={setCustomValue}
+              error={customAmountError}
               leftIcon={<Text className="text-base font-sans-semibold text-text-primary">$</Text>}
             />
           )}
