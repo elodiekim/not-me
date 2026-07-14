@@ -20,7 +20,9 @@ const STEP_BY_STATUS: Record<string, number> = {
 export function MissionScreen() {
   const router = useRouter();
   const { missionId } = useLocalSearchParams<{ missionId?: string }>();
-  const { data: mission, isLoading, isError } = useMission(missionId, { refetchInterval: 3000 });
+  // Realtime pushes status changes instantly; this poll is only a safety net for
+  // dropped sockets, so 30s is plenty (was 3s when polling was the primary path).
+  const { data: mission, isLoading, isError } = useMission(missionId, { refetchInterval: 30000 });
   const { mutate: updateStatusMutate } = useUpdateMissionStatus();
 
   // Opportunistic expiry: no server cron, so a stale 'requested' mission only gets

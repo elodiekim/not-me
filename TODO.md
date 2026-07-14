@@ -113,7 +113,12 @@
   - Playwright로 검증: 권한 허용 시 좌표 캡처 + 수동 입력 주소로 미션 생성 → REST로 `latitude/longitude` 정상 저장 확인, 권한 거부 시 Confirm 버튼 비활성화 → 수동 입력 후 정상 생성 + 좌표 `null` 확인, 콘솔 에러 없음
   - 상세 주소(동/호수) 입력 필드 추가 (선택 입력): building address + detail address를 별도 state로 관리하다가 Confirm 시점에 `"${building}, ${detail}"`로 합쳐서 저장 (detail 비어있으면 building만). REST로 확인 결과 `"123 Test Street, Seoul, 301-호"`처럼 정확히 합쳐짐, detail 없을 땐 trailing comma 없이 building 주소만 저장됨 확인
 - [x] 취소한 미션도 Mission 탭 History에 표시 (`MissionsTabScreen.tsx`): `historyMissions` 필터에 `cancelled` 추가, `statusLabel`을 취소된 건은 "Cancelled · 취소됨"(neutral variant)로 분기 — 리워드 금액 대신 취소 라벨 표시. Active 필터는 그대로라 취소된 미션은 Active에 안 보이고 History로만 이동. 실제로 미션 생성→취소→Missions 탭에서 History에 뜨는지, Active엔 안 뜨는지 확인 완료
-- [ ] Mission Status 실시간 업데이트 (Supabase Realtime)
+- [x] Mission Status 실시간 업데이트 (Supabase Realtime)
+  - `useMission.ts`에 `useEffect`로 realtime 구독 추가: `id` 있을 때 `supabase.channel('mission-{id}')`로 `missions` 테이블 해당 row(`id=eq.{id}`) UPDATE 구독 → 이벤트 수신 시 캐시를 직접 안 채우고 `queryClient.invalidateQueries(['mission', id])` 호출(payload에 requester/hero join이 없어서). 언마운트 시 `supabase.removeChannel(channel)`로 구독 해제. 훅 하나만 고쳐서 Searching/Mission Status/ActiveMission/MissionDetail/Complete 5개 화면 자동 적용
+  - 폴링은 안전망으로 유지: Searching 2s→30s, Mission Status 3s→30s (소켓 끊김/재연결 실패 대비 off 안 함). `refetchOnReconnect`는 `new QueryClient()` 기본값(true) 그대로 → 네트워크 복귀 시 자동 재조회
+  - DB: `missions` 테이블을 `supabase_realtime` publication에 추가해야 이벤트가 나옴(`docs/enable-missions-realtime.sql` = `alter publication supabase_realtime add table public.missions;`). 사용자가 SQL 실행 완료. PK(`id`) 필터 + `new`만 사용이라 `REPLICA IDENTITY FULL` 불필요
+  - 검증(2계정, 실 Supabase): Requester 구독 상태에서 Hero가 REST로 `accepted` 변경 → Requester 소켓이 **457ms** 만에 UPDATE 이벤트 수신(30초 폴링보다 압도적으로 빨라 폴링 아닌 socket 확정). 채널 `SUBSCRIBED`→UPDATE(rows=1)→EVENT 순서 정상, 언마운트 시 `removeChannel`로 중복 구독 없음. `npx tsc --noEmit` 통과
+  - (참고) publication 켜기 전 최초 측정에선 SUBSCRIBED·UPDATE 성공에도 20초간 이벤트 미수신 → Requester가 해당 row를 SELECT함을 확인해 RLS 아닌 publication 누락으로 진단, 활성화 후 재측정으로 해결
 - [ ] (선택) 지도 표시
 - [x] Searching 화면 나가기(X 버튼): 대기 화면 오른쪽 상단에 X 아이콘 추가, 미션은 취소하지 않고 `router.replace('/')`로 홈만 이동(`accessibilityLabel="Close"`). 기존 "Cancel" 버튼(실제 취소)은 그대로 유지, 둘이 공존. 만료(expired) 화면엔 X 버튼 미추가(이미 Try Again/Back to Home 두 버튼으로 명확한 종료 상태라서)
   - Mission 탭 Active 섹션이 이미 `status='requested'`도 표시하고 탭하면 `/mission-status`로 보내주는 기존 로직을 그대로 재사용 — 복귀 경로 새로 안 만듦
