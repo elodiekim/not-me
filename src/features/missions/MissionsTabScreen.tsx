@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard, SectionHeader } from '../../components/ui';
-import { CATEGORY_INFO } from '../../constants/categoryInfo';
+import { getCategoryInfo } from '../../constants/categoryInfo';
 import { COLORS } from '../../constants/colors';
 import { useMissionHistory } from '../../hooks/useMissionHistory';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
@@ -69,26 +69,29 @@ export function MissionsTabScreen() {
             </View>
           ) : (
             <View className="gap-3">
-              {activeMissions.map((mission) => (
-                <Pressable
-                  key={mission.id}
-                  accessibilityRole="button"
-                  accessibilityLabel={`Open active mission: ${CATEGORY_INFO[mission.category].title}`}
-                  onPress={() =>
-                    mission.role === 'user'
-                      ? router.push({ pathname: '/mission-status', params: { missionId: mission.id } })
-                      : router.push({ pathname: '/hero/active', params: { id: mission.id } })
-                  }
-                >
-                  <MissionCard
-                    avatar={CATEGORY_INFO[mission.category].icon}
-                    title={CATEGORY_INFO[mission.category].title}
-                    subtitle={`${mission.role === 'user' ? 'Requested' : 'Helping'} · ${formatMissionDate(mission.createdAt)}`}
-                    statusLabel={ACTIVE_STATUS_LABELS[mission.status] ?? 'In progress'}
-                    statusVariant="info"
-                  />
-                </Pressable>
-              ))}
+              {activeMissions.map((mission) => {
+                const category = getCategoryInfo(mission.category);
+                return (
+                  <Pressable
+                    key={mission.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Open active mission: ${category.title}`}
+                    onPress={() =>
+                      mission.role === 'user'
+                        ? router.push({ pathname: '/mission-status', params: { missionId: mission.id } })
+                        : router.push({ pathname: '/hero/active', params: { id: mission.id } })
+                    }
+                  >
+                    <MissionCard
+                      avatar={category.icon}
+                      title={category.title}
+                      subtitle={`${mission.role === 'user' ? 'Requested' : 'Helping'} · ${formatMissionDate(mission.createdAt)}`}
+                      statusLabel={ACTIVE_STATUS_LABELS[mission.status] ?? 'In progress'}
+                      statusVariant="info"
+                    />
+                  </Pressable>
+                );
+              })}
             </View>
           )}
         </View>
@@ -101,17 +104,20 @@ export function MissionsTabScreen() {
             </View>
           ) : (
             <View className="gap-3">
-              {historyMissions.map((mission) => (
-                <MissionCard
-                  key={mission.id}
-                  avatar={CATEGORY_INFO[mission.category].icon}
-                  title={CATEGORY_INFO[mission.category].title}
-                  subtitle={`${mission.role === 'user' ? 'Requested' : 'Helped'} · ${formatMissionDate(mission.createdAt)}`}
-                  detail={mission.address}
-                  statusLabel={mission.status === 'cancelled' ? 'Cancelled · 취소됨' : `$${mission.rewardAmount}`}
-                  statusVariant={mission.status === 'cancelled' ? 'neutral' : 'success'}
-                />
-              ))}
+              {historyMissions.map((mission) => {
+                const category = getCategoryInfo(mission.category);
+                return (
+                  <MissionCard
+                    key={mission.id}
+                    avatar={category.icon}
+                    title={category.title}
+                    subtitle={`${mission.role === 'user' ? 'Requested' : 'Helped'} · ${formatMissionDate(mission.createdAt)}`}
+                    detail={mission.address}
+                    statusLabel={mission.status === 'cancelled' ? 'Cancelled · 취소됨' : `$${mission.rewardAmount}`}
+                    statusVariant={mission.status === 'cancelled' ? 'neutral' : 'success'}
+                  />
+                );
+              })}
             </View>
           )}
         </View>

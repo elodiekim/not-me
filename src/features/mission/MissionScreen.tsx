@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
-import { CATEGORY_INFO } from '../../constants/categoryInfo';
+import { getCategoryInfo } from '../../constants/categoryInfo';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
 import { isRequestStale } from '../../utils/missionExpiry';
@@ -46,7 +46,7 @@ export function MissionScreen() {
     );
   }
 
-  const category = CATEGORY_INFO[mission.category];
+  const category = getCategoryInfo(mission.category);
   const isCompleted = mission.status === 'completed';
   const isCancelled = mission.status === 'cancelled';
 

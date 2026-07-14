@@ -75,6 +75,14 @@
     - `0007_prevent_self_accept.sql`: `0003` claim 정책에 `requester_id <> auth.uid()` 추가 + 리뷰 INSERT 정책에 `requester_id <> hero_id` 추가
   - **주의(중요)**: 처음엔 claim 정책만 고쳤더니 실제 공격 재현에서 **자기 수락이 여전히 성공**했음. 원인은 Postgres RLS가 같은 커맨드의 permissive 정책들을 **OR**로 묶는다는 점 — `0001`의 "Requester or accepted hero can update a mission" 정책이 `with check` 없이 기본값(=`using`, 즉 `auth.uid() = requester_id or auth.uid() = hero_id`)을 쓰기 때문에 requester 본인이면 이 정책만으로 이미 통과됨. 그래서 0007에 `as restrictive` 정책(`hero_id is null or hero_id <> requester_id`)을 추가로 넣어 모든 UPDATE 경로에 AND로 강제 적용해서 해결. **정책 하나만 손보는 방식은 다른 permissive 정책에 의해 우회될 수 있으니 이후 유사 RLS 수정 시 restrictive 정책 필요 여부를 항상 검토할 것.**
   - 검증 (실제 REST API로 공격 시나리오 재현, 임시 테스트 계정 2개 사용): ①본인 요청 self-accept 시도 → `403 new row violates row-level security policy "Requester and hero must never be the same person"` 확인 ②다른 계정(B)의 정상 플로우 — nearby 노출 → accept → arrived → completed → 리뷰 insert(201) → `profiles.hero_rating` 실제로 5.0 반영까지 전부 정상 동작 확인 (회귀 없음). `npx tsc --noEmit` 통과. 테스트 데이터는 종료 후 정리(mission/review row는 delete, 테스트용 auth 계정 2개는 service key 없어 남아있음 — 무해한 더미 계정).
+- [x] **DB의 알 수 없는 `category` 값으로 크래시 가능** — `CATEGORY_INFO[mission.category]`가 6개 화면(Active/Detail/Nearby/Mission/MissionsTab)에서 직접 인덱싱되는데, `missions.category`는 DB에 enum/check 제약 없는 자유 텍스트라 정보 없는 값이 들어오면 `undefined.icon`으로 크래시. `getCategoryInfo(category)` 헬퍼를 추가해 매칭 안 되면 유일한 실제 카테고리(cockroach)로 폴백하도록 6곳 전부 교체
+- [ ] **`/mission-status`에 Cancel 버튼 없음** (신규 발견, 미해결) — `SearchingScreen`(`/searching`, 요청 직후 화면)엔 Cancel이 있는데, 같은 "히어로 아직 안 잡힘"(`requested`) 상태를 보여주는 `MissionScreen`(`/mission-status`, Mission 탭 Active에서 재진입하는 경로)엔 Cancel이 없음. 한 번 Searching 화면을 벗어나면 유저가 직접 취소할 방법이 없고 15분 자동만료만 기다려야 함.
+  - `mission.status === 'requested'`일 때 `MissionScreen`에도 동일한 Cancel 동작 추가 (`useUpdateMissionStatus`, `fromStatus: 'requested'` 가드 그대로 재사용)
+  - `accepted`/`on_the_way`(이미 히어로가 수락하고 오는 중)일 때 취소 허용 여부는 **별도 결정 필요** — 히어로가 이미 이동 중인 상태의 취소는 신뢰/보상 이슈가 있어서 지금 만들지 말고 Known Gap으로 남겨둘 것
+- [ ] **중복 요청 가능** (신규 발견, 미해결) — 이미 `requested`/`accepted`/`on_the_way` 상태의 활성 미션이 있어도 Home → Request → Reward → Confirm Location으로 또 새 미션을 만들 수 있음 (`useCreateRequest`, `RequestScreen`, `RewardScreen` 어디에도 활성 미션 존재 여부 체크 없음). 같은 카테고리(바퀴잡이)뿐이라 유저가 실수로 두 번 요청하면 Mission 탭 Active에 중복 카드가 뜨는 혼란스러운 상태가 됨.
+  - Request 플로우 진입 시점(Home의 "Get Help With" 또는 RequestScreen 진입 시)에 현재 유저의 활성 미션(`status in ('requested','accepted','on_the_way')`) 존재 여부 체크
+  - 있으면 Request/Reward 플로우 진입 자체를 막고 그 미션의 `/mission-status`로 바로 이동 (새로 만들지 않고 기존 걸로 보내는 방식 — 가장 단순)
+  - 가벼운 체크라 새 훅 하나(`useActiveMission` 등)로 충분, `useMissionHistory` 통째로 재사용할 필요는 없음
 
 ## 🟠 P1 · 상태 연결 (플로우 간 데이터 전달)
 - [x] ~~Zustand `useRequestStore`~~ — 불필요 판단: 카테고리는 바퀴벌레 하나뿐이라 선택지 없음, 리워드는 쿼리 파라미터로 충분
