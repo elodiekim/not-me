@@ -1,4 +1,5 @@
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, useQueryClient, UseQueryOptions } from '@tanstack/react-query';
+import { useEffect } from 'react';
 import { supabase } from '../services/supabase';
 import type { Mission } from '../types/Mission';
 
@@ -50,6 +51,31 @@ export function useMission(
   id: string | undefined,
   options?: Pick<UseQueryOptions<MissionWithRequester>, 'refetchInterval'>
 ) {
+  const queryClient = useQueryClient();
+
+  // Realtime: push-based updates via WebSocket. When this mission's row changes,
+  // invalidate the query so fetchMission re-runs with the requester/hero joins
+  // (the payload has no joined data, so we can't fill the cache from it directly).
+  // Polling still runs via refetchInterval as a safety net if the socket drops.
+  useEffect(() => {
+    if (!id) return;
+
+    const channel = supabase
+      .channel(`mission-${id}`)
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'missions', filter: `id=eq.${id}` },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['mission', id] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [id, queryClient]);
+
   return useQuery({
     queryKey: ['mission', id],
     queryFn: () => fetchMission(id as string),

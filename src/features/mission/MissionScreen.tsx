@@ -3,7 +3,7 @@ import { useEffect } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
-import { CATEGORY_INFO } from '../../constants/categoryInfo';
+import { getCategoryInfo } from '../../constants/categoryInfo';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
 import { isRequestStale } from '../../utils/missionExpiry';
@@ -20,8 +20,11 @@ const STEP_BY_STATUS: Record<string, number> = {
 export function MissionScreen() {
   const router = useRouter();
   const { missionId } = useLocalSearchParams<{ missionId?: string }>();
-  const { data: mission, isLoading, isError } = useMission(missionId, { refetchInterval: 3000 });
-  const { mutate: updateStatusMutate } = useUpdateMissionStatus();
+  // Realtime pushes status changes instantly; this poll is only a safety net for
+  // dropped sockets, so 30s is plenty (was 3s when polling was the primary path).
+  const { data: mission, isLoading, isError } = useMission(missionId, { refetchInterval: 30000 });
+  const updateStatus = useUpdateMissionStatus();
+  const { mutate: updateStatusMutate } = updateStatus;
 
   // Opportunistic expiry: no server cron, so a stale 'requested' mission only gets
   // cancelled once someone looks at it — here, whenever this screen loads/polls.
@@ -46,9 +49,26 @@ export function MissionScreen() {
     );
   }
 
-  const category = CATEGORY_INFO[mission.category];
+  const category = getCategoryInfo(mission.category);
   const isCompleted = mission.status === 'completed';
   const isCancelled = mission.status === 'cancelled';
+  // Only a still-unmatched request is cancellable here. Once a hero has accepted
+  // (accepted/on_the_way), cancelling raises trust/reward questions we don't
+  // handle yet — left as a known gap, so no Cancel button in those states.
+  const isRequested = mission.status === 'requested';
+
+  const handleCancel = async () => {
+    try {
+      await updateStatus.mutateAsync({
+        missionId: mission.id,
+        status: 'cancelled',
+        fromStatus: 'requested',
+      });
+    } catch {
+      // Cancellation failed (e.g. offline) — never trap the user, still go home.
+    }
+    router.replace('/');
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -85,6 +105,14 @@ export function MissionScreen() {
       <View className="px-6 pb-6">
         {isCancelled ? (
           <Button label="Back to Home" variant="secondary" onPress={() => router.replace('/')} />
+        ) : isRequested ? (
+          <Button
+            label="Cancel"
+            variant="ghost"
+            onPress={handleCancel}
+            loading={updateStatus.isPending}
+            disabled={updateStatus.isPending}
+          />
         ) : (
           <Button
             label={isCompleted ? 'Leave a Review' : 'Waiting for completion...'}

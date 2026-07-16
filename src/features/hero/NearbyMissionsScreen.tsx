@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingIndicator, MissionCard } from '../../components/ui';
 import { useNearbyMissions } from '../../hooks/useNearbyMissions';
 import type { MissionWithRequester } from '../../hooks/useMission';
-import { CATEGORY_INFO } from '../../constants/categoryInfo';
+import { getCategoryInfo } from '../../constants/categoryInfo';
 import { NEARBY_RADIUS_KM } from '../../constants/mission';
 import { formatDistance, haversineDistanceKm } from '../../utils/distance';
 
@@ -109,7 +109,7 @@ export function NearbyMissionsScreen() {
       ) : (
         <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>
           {rankedMissions.map(({ mission, distanceKm }) => {
-            const category = CATEGORY_INFO[mission.category];
+            const category = getCategoryInfo(mission.category);
             const distanceLabel = distanceKm !== null ? formatDistance(distanceKm) : null;
             const subtitle = distanceLabel ? `${category.koTitle} · ${distanceLabel}` : category.koTitle;
             return (

@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Badge, Button, LoadingIndicator } from '../../components/ui';
 import { useAcceptMission } from '../../hooks/useAcceptMission';
 import { useMission } from '../../hooks/useMission';
-import { CATEGORY_INFO } from '../../constants/categoryInfo';
+import { getCategoryInfo } from '../../constants/categoryInfo';
 import { LocationCard } from './components/LocationCard';
 import { MissionNotFound } from './components/MissionNotFound';
 
@@ -25,7 +25,7 @@ export function MissionDetailScreen() {
     return <MissionNotFound />;
   }
 
-  const category = CATEGORY_INFO[mission.category];
+  const category = getCategoryInfo(mission.category);
 
   const handleAccept = async () => {
     setAcceptError(null);
