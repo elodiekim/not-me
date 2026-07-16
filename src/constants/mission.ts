@@ -4,3 +4,6 @@ export const SEARCH_TIMEOUT_MS = 15 * 60 * 1000;
 // Nearby Missions에서 이 반경(km) 밖의 미션은 숨김. 카테고리가 하나뿐이고 사용자가 적은
 // 초기 단계라 넉넉하게 잡음 — 실사용 데이터가 쌓이면 좁힐 것 (TODO.md P2)
 export const NEARBY_RADIUS_KM = 50;
+
+// 커스텀 리워드 금액 상한. DB의 reward_amount_range check 제약(0008 마이그레이션)과 값을 맞출 것.
+export const MAX_REWARD_AMOUNT = 200;

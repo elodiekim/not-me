@@ -4,7 +4,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
-import { CATEGORY_INFO } from '../../constants/categoryInfo';
+import { getCategoryInfo } from '../../constants/categoryInfo';
 import { LocationCard } from './components/LocationCard';
 import { MissionNotFound } from './components/MissionNotFound';
 
@@ -22,7 +22,7 @@ export function ActiveMissionScreen() {
     return <MissionNotFound />;
   }
 
-  const category = CATEGORY_INFO[mission.category];
+  const category = getCategoryInfo(mission.category);
   const arrived = mission.status === 'arrived';
 
   const handleArrived = () => {
