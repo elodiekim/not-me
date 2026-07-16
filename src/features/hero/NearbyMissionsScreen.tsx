@@ -4,10 +4,11 @@ import * as Location from 'expo-location';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { LoadingIndicator, MissionCard } from '../../components/ui';
+import { MissionCard, MissionCardSkeleton } from '../../components/ui';
 import { useNearbyMissions } from '../../hooks/useNearbyMissions';
 import type { MissionWithRequester } from '../../hooks/useMission';
 import { getCategoryInfo } from '../../constants/categoryInfo';
+import { COLORS } from '../../constants/colors';
 import { NEARBY_RADIUS_KM } from '../../constants/mission';
 import { formatDistance, haversineDistanceKm } from '../../utils/distance';
 
@@ -93,7 +94,11 @@ export function NearbyMissionsScreen() {
       </View>
 
       {isLoading ? (
-        <LoadingIndicator message="Loading nearby missions..." />
+        <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>
+          {Array.from({ length: 4 }).map((_, i) => (
+            <MissionCardSkeleton key={i} />
+          ))}
+        </ScrollView>
       ) : isError ? (
         <View className="flex-1 items-center justify-center px-6">
           <Text className="text-center text-sm text-text-secondary">
@@ -101,10 +106,14 @@ export function NearbyMissionsScreen() {
           </Text>
         </View>
       ) : rankedMissions.length === 0 ? (
-        <View className="flex-1 items-center justify-center px-6">
-          <Text className="text-center text-sm text-text-secondary">
-            No missions nearby right now.{'\n'}근처에 요청이 없어요. 곧 찾아올게요.
-          </Text>
+        <View className="flex-1 justify-center px-6">
+          <View className="items-center gap-3 rounded-card bg-surface p-8">
+            <Feather name="search" size={28} color={COLORS.textDisabled} />
+            <Text className="text-sm font-sans-semibold text-text-primary">No missions nearby</Text>
+            <Text className="font-sans text-center text-xs text-text-secondary">
+              근처에 요청이 없어요.{'\n'}곧 찾아올게요.
+            </Text>
+          </View>
         </View>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>

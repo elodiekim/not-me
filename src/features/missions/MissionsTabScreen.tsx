@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, LoadingIndicator, MissionCard, SectionHeader } from '../../components/ui';
+import { Button, MissionCard, MissionCardSkeleton, SectionHeader } from '../../components/ui';
 import { getCategoryInfo } from '../../constants/categoryInfo';
 import { COLORS } from '../../constants/colors';
 import { useMissionHistory } from '../../hooks/useMissionHistory';
@@ -39,7 +39,30 @@ export function MissionsTabScreen() {
   }, [missions, updateStatusMutate]);
 
   if (isLoading) {
-    return <LoadingIndicator message="Loading your missions..." />;
+    return (
+      <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+        <View className="px-6 py-4">
+          <Text className="text-lg font-sans-semibold text-text-primary">My Missions</Text>
+          <Text className="font-sans text-sm text-text-secondary">내 미션</Text>
+        </View>
+        <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
+          <View className="gap-3">
+            <SectionHeader title="Active" />
+            <View className="gap-3">
+              <MissionCardSkeleton />
+              <MissionCardSkeleton />
+            </View>
+          </View>
+          <View className="gap-3">
+            <SectionHeader title="History" />
+            <View className="gap-3">
+              <MissionCardSkeleton />
+              <MissionCardSkeleton />
+            </View>
+          </View>
+        </ScrollView>
+      </SafeAreaView>
+    );
   }
 
   const activeMissions = (missions ?? []).filter(
