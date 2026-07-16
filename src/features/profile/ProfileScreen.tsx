@@ -6,6 +6,14 @@ import { COLORS } from '../../constants/colors';
 import { useMissionHistory } from '../../hooks/useMissionHistory';
 import { useProfile } from '../../hooks/useProfile';
 import { supabase } from '../../services/supabase';
+import { useOnboardingStore } from '../../stores/useOnboardingStore';
+
+// Dev-only: clear the onboarding flag and sign out so the gate routes back to
+// the onboarding flow. Stripped from production builds via __DEV__.
+async function replayOnboarding() {
+  await useOnboardingStore.getState().reset();
+  await supabase.auth.signOut();
+}
 
 const SETTINGS_ITEMS: { icon: keyof typeof Feather.glyphMap; label: string; koLabel: string }[] = [
   { icon: 'user', label: 'Account', koLabel: '계정' },
@@ -101,6 +109,14 @@ export function ProfileScreen() {
         </View>
 
         <Button label="Sign Out" variant="ghost" onPress={() => supabase.auth.signOut()} />
+
+        {__DEV__ && (
+          <Button
+            label="Replay Onboarding · 온보딩 다시 보기 (dev)"
+            variant="ghost"
+            onPress={replayOnboarding}
+          />
+        )}
       </ScrollView>
     </SafeAreaView>
   );

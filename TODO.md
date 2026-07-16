@@ -150,9 +150,12 @@
 
 ## 🟡 P2 · 온보딩 & 앱 진입
 DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 없음(과거 커밋에서 reset됨).
-- [ ] Splash 화면
-- [ ] Onboarding 화면
-- [ ] app.json 앱 아이콘 / 스플래시 설정 (`assets/logo/app-icon.png` 있으나 미연결)
+- [x] Splash 화면 — `expo-splash-screen` 설치 후 `_layout.tsx` 모듈 최상단에서 `SplashScreen.preventAutoHideAsync()` 호출, 폰트 로딩 + 온보딩 플래그 조회(`useOnboardingStore`)가 **둘 다** 끝나면 `hideAsync()`. 기존 `return null` 자리를 `ready` 게이트로 교체. app.json `expo-splash-screen` 플러그인에 `app-icon.png`(정사각에 가까운 586x619) + `resizeMode: contain` + 배경 `#FFFFFF`(DESIGN background 토큰). ⚠️ **네이티브 전용 동작**이라 Expo Web에선 스플래시 이미지 자체가 렌더되지 않음(웹에선 `hideAsync`가 사실상 no-op, 로직 흐름만 검증됨) — 실제 스플래시 표시는 EAS/네이티브 빌드에서 재확인 필요
+- [x] Onboarding 화면 — `app/onboarding.tsx` + `src/features/onboarding/OnboardingScreen.tsx`(3장 슬라이드: bush-cockroach-cat / hero-cat / proud-cat + 영/한 두 줄 카피). 가로 `ScrollView pagingEnabled` + 하단 점 인디케이터(활성 primary, 새 캐러셀 라이브러리 없음). 우상단 Skip + 마지막 장 Get Started. 둘 다 AsyncStorage `hasOnboarded='true'` 저장 후 `/sign-in`으로 이동. **주의: `onMomentumScrollEnd`는 react-native-web에서 안 켜져 Get Started/점이 안 바뀌는 버그가 있어 `onScroll`로 교체함(웹/네이티브 공통 동작).** 온보딩 플래그는 `useOnboardingStore`(Zustand)로 메모리 반영 — 안 그러면 완료 직후 stale 플래그 때문에 `/onboarding`으로 되돌아가는 바운스 버그 발생하므로 store로 해결
+  - AuthGate 게이트 로직: `!hasOnboarded && !session`이면 (온보딩 라우트가 아닌 한) `/onboarding`으로 리다이렉트(딥링크 우회 커버). 온보딩 완료했거나 세션 있는 유저가 `/onboarding`에 오면 세션 여부에 따라 `/` 또는 `/sign-in`으로 되돌림. 그 외는 기존 로직 그대로
+  - 검증(Expo Web + Playwright, 실제 동작): ①localStorage 비운 첫 접속 → `/onboarding` 3장 표시 ②마지막 장 스크롤 시 Get Started 노출 → 탭 시 `/sign-in`, `hasOnboarded=true` 저장 ③온보딩 후 새로고침 → 온보딩 안 뜨고 바로 sign-in ④Skip → 즉시 sign-in + 플래그 저장 ⑤**회귀**: 실제 회원가입으로 세션 생성 후 `hasOnboarded` 플래그를 지우고 새로고침해도 온보딩 안 뜨고 `/`(홈) 유지, 로그인 상태로 `/onboarding` 딥링크해도 `/`로 리다이렉트 — 온보딩 로직이 로그인 유저 플로우를 안 건드림 확인. `npx tsc --noEmit` 통과
+  - (테스트용 더미 계정 `onboard-test-*@example.com` 1개가 원격 auth에 남음 — service key 없어 삭제 불가, 무해한 더미)
+- [x] app.json 앱 아이콘 / 스플래시 설정 — `expo.icon`에 `./assets/logo/app-icon.png` 연결(ios/android 공용 하나, 과설계 안 함) + 위 스플래시 플러그인. `npx expo config`로 icon/splash 경로 정상 resolve 확인. ⚠️ **아이콘 실제 렌더링은 Web에서 검증 불가(네이티브 전용)**, 게다가 `app-icon.png`가 정사각형이 아님(586x619) — Expo는 1024x1024 정사각 아이콘 권장이라 네이티브 빌드 시 왜곡/패딩 경고 가능성 있음. 정식 아이콘 규격(1024x1024 square) 준비 후 EAS 빌드에서 재확인 필요
 
 ## 🟢 P3 · 마감 완성도 (Definition of Done)
 - [ ] 로딩 상태: 리스트 스켈레톤 (Nearby / History)

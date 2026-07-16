@@ -6,6 +6,7 @@
     "scheme": "notme",
     "orientation": "portrait",
     "userInterfaceStyle": "light",
+    "icon": "./assets/logo/app-icon.png",
     "ios": {
       "supportsTablet": true
     },
@@ -21,6 +22,14 @@
         "expo-location",
         {
           "locationWhenInUsePermission": "NotMe uses your location to show nearby missions and their distance."
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/logo/app-icon.png",
+          "resizeMode": "contain",
+          "backgroundColor": "#FFFFFF"
         }
       ]
     ]
