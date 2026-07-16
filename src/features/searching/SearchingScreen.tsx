@@ -12,7 +12,9 @@ import { millisUntilStale } from '../../utils/missionExpiry';
 export function SearchingScreen() {
   const router = useRouter();
   const { missionId, amount } = useLocalSearchParams<{ missionId?: string; amount?: string }>();
-  const { data: mission } = useMission(missionId, { refetchInterval: 2000 });
+  // Realtime pushes status changes instantly; this poll is only a safety net for
+  // dropped sockets, so 30s is plenty (was 2s when polling was the primary path).
+  const { data: mission } = useMission(missionId, { refetchInterval: 30000 });
   const updateStatus = useUpdateMissionStatus();
   const createRequest = useCreateRequest();
   const [expired, setExpired] = useState(false);
