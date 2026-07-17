@@ -10,7 +10,9 @@ import { HomeHeader } from './components/HomeHeader';
 export function HomeScreen() {
   const router = useRouter();
   const { cancelled } = useLocalSearchParams<{ cancelled?: string }>();
-  const [showCancelToast, setShowCancelToast] = useState(false);
+  // A single toast slot shared by every transient banner on Home (cancel confirmation,
+  // bell "coming soon", etc). null = nothing showing. Only one shows at a time.
+  const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // A cancel navigation arrives with ?cancelled=1. Show the toast once, then clear
   // the in-memory route param so re-entering Home (e.g. switching tabs and back)
@@ -18,22 +20,20 @@ export function HomeScreen() {
   // would remount this screen and the toast would never render.
   useEffect(() => {
     if (cancelled !== '1') return;
-    setShowCancelToast(true);
+    setToastMessage('Request cancelled · 요청이 취소됐어요');
     router.setParams({ cancelled: undefined });
   }, [cancelled, router]);
 
-  const handleToastDismiss = useCallback(() => setShowCancelToast(false), []);
+  const handleToastDismiss = useCallback(() => setToastMessage(null), []);
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
-        <HomeHeader />
+        <HomeHeader onBellPress={() => setToastMessage('Coming soon · 곧 만나요')} />
         <HeroSection />
         <BecomeHeroSection onPress={() => router.push('/hero')} />
       </ScrollView>
-      {showCancelToast && (
-        <Toast message="Request cancelled · 요청이 취소됐어요" onDismiss={handleToastDismiss} />
-      )}
+      {toastMessage && <Toast message={toastMessage} onDismiss={handleToastDismiss} />}
     </SafeAreaView>
   );
 }
