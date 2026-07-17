@@ -56,7 +56,9 @@ export function SearchingScreen() {
         // Cancellation failed (e.g. offline) — never trap the user on this screen.
       }
     }
-    router.replace('/');
+    // One-shot signal so Home can confirm the cancel with a toast; the X (close)
+    // button navigates without it, so only real cancels are acknowledged.
+    router.replace({ pathname: '/', params: { cancelled: '1' } });
   };
 
   const handleTryAgain = async () => {

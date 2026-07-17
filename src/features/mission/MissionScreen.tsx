@@ -22,7 +22,7 @@ export function MissionScreen() {
   const { missionId } = useLocalSearchParams<{ missionId?: string }>();
   // Realtime pushes status changes instantly; this poll is only a safety net for
   // dropped sockets, so 30s is plenty (was 3s when polling was the primary path).
-  const { data: mission, isLoading, isError } = useMission(missionId, { refetchInterval: 30000 });
+  const { data: mission, isLoading, isError, refetch } = useMission(missionId, { refetchInterval: 30000 });
   const updateStatus = useUpdateMissionStatus();
   const { mutate: updateStatusMutate } = updateStatus;
 
@@ -41,10 +41,11 @@ export function MissionScreen() {
 
   if (isError || !mission) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center gap-2 bg-background px-6" edges={['top']}>
+      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-6" edges={['top']}>
         <Text className="text-sm text-text-secondary">
           Something went wrong.{'\n'}Please try again.
         </Text>
+        <Button label="Try Again" variant="secondary" onPress={() => refetch()} />
       </SafeAreaView>
     );
   }
@@ -67,7 +68,8 @@ export function MissionScreen() {
     } catch {
       // Cancellation failed (e.g. offline) — never trap the user, still go home.
     }
-    router.replace('/');
+    // One-shot signal so Home can confirm the cancel with a toast.
+    router.replace({ pathname: '/', params: { cancelled: '1' } });
   };
 
   return (

@@ -26,7 +26,7 @@ function formatMemberSince(dateString: string) {
 }
 
 export function ProfileScreen() {
-  const { data: profile, isLoading: isProfileLoading, isError } = useProfile();
+  const { data: profile, isLoading: isProfileLoading, isError, refetch } = useProfile();
   const { data: missions, isLoading: isHistoryLoading } = useMissionHistory();
   const requestedCount = (missions ?? []).filter((item) => item.role === 'user').length;
   const helpedCount = (missions ?? []).filter((item) => item.role === 'hero').length;
@@ -37,10 +37,11 @@ export function ProfileScreen() {
 
   if (isError || !profile) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center gap-2 bg-background px-6" edges={['top']}>
+      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-6" edges={['top']}>
         <Text className="text-sm text-text-secondary">
           Something went wrong.{'\n'}Please try again.
         </Text>
+        <Button label="Try Again" variant="secondary" onPress={() => refetch()} />
       </SafeAreaView>
     );
   }

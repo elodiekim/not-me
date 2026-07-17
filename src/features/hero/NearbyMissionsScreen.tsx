@@ -4,7 +4,7 @@ import * as Location from 'expo-location';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { MissionCard, MissionCardSkeleton } from '../../components/ui';
+import { Button, MissionCard, MissionCardSkeleton } from '../../components/ui';
 import { useNearbyMissions } from '../../hooks/useNearbyMissions';
 import type { MissionWithRequester } from '../../hooks/useMission';
 import { getCategoryInfo } from '../../constants/categoryInfo';
@@ -76,7 +76,7 @@ function useCurrentCoords() {
 
 export function NearbyMissionsScreen() {
   const router = useRouter();
-  const { data: missions, isLoading, isError } = useNearbyMissions();
+  const { data: missions, isLoading, isError, refetch } = useNearbyMissions();
   const heroCoords = useCurrentCoords();
 
   const rankedMissions = useMemo(() => rankByDistance(missions ?? [], heroCoords), [missions, heroCoords]);
@@ -100,10 +100,11 @@ export function NearbyMissionsScreen() {
           ))}
         </ScrollView>
       ) : isError ? (
-        <View className="flex-1 items-center justify-center px-6">
+        <View className="flex-1 items-center justify-center gap-4 px-6">
           <Text className="text-center text-sm text-text-secondary">
             Something went wrong.{'\n'}Please try again.
           </Text>
+          <Button label="Try Again" variant="secondary" onPress={() => refetch()} />
         </View>
       ) : rankedMissions.length === 0 ? (
         <View className="flex-1 justify-center px-6">

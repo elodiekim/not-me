@@ -24,7 +24,7 @@ function formatMissionDate(dateString: string) {
 
 export function MissionsTabScreen() {
   const router = useRouter();
-  const { data: missions, isLoading } = useMissionHistory();
+  const { data: missions, isLoading, isError, refetch } = useMissionHistory();
   const { mutate: updateStatusMutate } = useUpdateMissionStatus();
 
   // Opportunistic expiry: no server cron, so a stale 'requested' mission only
@@ -61,6 +61,17 @@ export function MissionsTabScreen() {
             </View>
           </View>
         </ScrollView>
+      </SafeAreaView>
+    );
+  }
+
+  if (isError) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-6" edges={['top']}>
+        <Text className="text-center text-sm text-text-secondary">
+          Something went wrong.{'\n'}Please try again.
+        </Text>
+        <Button label="Try Again" variant="secondary" onPress={() => refetch()} />
       </SafeAreaView>
     );
   }
