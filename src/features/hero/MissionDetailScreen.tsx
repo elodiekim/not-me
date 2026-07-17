@@ -13,7 +13,7 @@ import { MissionNotFound } from './components/MissionNotFound';
 export function MissionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
-  const { data: mission, isLoading, isError } = useMission(id);
+  const { data: mission, isLoading, isError, refetch } = useMission(id);
   const acceptMission = useAcceptMission();
   const [acceptError, setAcceptError] = useState<string | null>(null);
 
@@ -22,7 +22,7 @@ export function MissionDetailScreen() {
   }
 
   if (isError || !mission) {
-    return <MissionNotFound />;
+    return <MissionNotFound onRetry={refetch} />;
   }
 
   const category = getCategoryInfo(mission.category);
