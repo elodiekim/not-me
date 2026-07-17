@@ -7,10 +7,11 @@ export type MissionRole = 'user' | 'hero';
 
 export interface MissionHistoryEntry extends Mission {
   role: MissionRole;
+  hasReview: boolean;
 }
 
 const MISSION_SELECT =
-  'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at';
+  'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at, reviews(id)';
 
 function mapMissionHistoryEntry(row: any, userId: string): MissionHistoryEntry {
   return {
@@ -26,6 +27,9 @@ function mapMissionHistoryEntry(row: any, userId: string): MissionHistoryEntry {
     createdAt: row.created_at,
     updatedAt: row.updated_at,
     role: row.requester_id === userId ? 'user' : 'hero',
+    // reviews.mission_id is unique, so PostgREST embeds this as a single
+    // object (or null), not an array, even though it reads like a to-many.
+    hasReview: row.reviews != null,
   };
 }
 

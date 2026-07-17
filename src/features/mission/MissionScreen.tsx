@@ -52,6 +52,7 @@ export function MissionScreen() {
 
   const category = getCategoryInfo(mission.category);
   const isCompleted = mission.status === 'completed';
+  const isReviewed = isCompleted && mission.hasReview;
   const isCancelled = mission.status === 'cancelled';
   // Only a still-unmatched request is cancellable here. Once a hero has accepted
   // (accepted/on_the_way), cancelling raises trust/reward questions we don't
@@ -117,9 +118,9 @@ export function MissionScreen() {
           />
         ) : (
           <Button
-            label={isCompleted ? 'Leave a Review' : 'Waiting for completion...'}
-            variant={isCompleted ? 'primary' : 'secondary'}
-            disabled={!isCompleted}
+            label={isReviewed ? 'Reviewed ✓' : isCompleted ? 'Leave a Review' : 'Waiting for completion...'}
+            variant={isCompleted && !isReviewed ? 'primary' : 'secondary'}
+            disabled={!isCompleted || isReviewed}
             onPress={() => router.replace({ pathname: '/complete', params: { missionId: mission.id } })}
           />
         )}

@@ -140,16 +140,38 @@ export function MissionsTabScreen() {
             <View className="gap-3">
               {historyMissions.map((mission) => {
                 const category = getCategoryInfo(mission.category);
-                return (
+                const isReviewable = mission.role === 'user' && mission.status === 'completed' && !mission.hasReview;
+                const isReviewed = mission.role === 'user' && mission.status === 'completed' && mission.hasReview;
+                const statusLabel =
+                  mission.status === 'cancelled'
+                    ? 'Cancelled · 취소됨'
+                    : isReviewable
+                      ? 'Leave a Review'
+                      : isReviewed
+                        ? 'Reviewed ✓'
+                        : `$${mission.rewardAmount}`;
+                const statusVariant = mission.status === 'cancelled' ? 'neutral' : isReviewable ? 'info' : 'success';
+                const card = (
                   <MissionCard
-                    key={mission.id}
                     avatar={category.icon}
                     title={category.title}
                     subtitle={`${mission.role === 'user' ? 'Requested' : 'Helped'} · ${formatMissionDate(mission.createdAt)}`}
                     detail={mission.address}
-                    statusLabel={mission.status === 'cancelled' ? 'Cancelled · 취소됨' : `$${mission.rewardAmount}`}
-                    statusVariant={mission.status === 'cancelled' ? 'neutral' : 'success'}
+                    statusLabel={statusLabel}
+                    statusVariant={statusVariant}
                   />
+                );
+                return isReviewable ? (
+                  <Pressable
+                    key={mission.id}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Leave a review for ${category.title}`}
+                    onPress={() => router.push({ pathname: '/complete', params: { missionId: mission.id } })}
+                  >
+                    {card}
+                  </Pressable>
+                ) : (
+                  <View key={mission.id}>{card}</View>
                 );
               })}
             </View>
