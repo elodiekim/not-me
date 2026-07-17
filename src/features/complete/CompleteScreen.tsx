@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Image, Keyboard, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, LoadingIndicator } from '../../components/ui';
@@ -16,7 +16,16 @@ export function CompleteScreen() {
   const [comment, setComment] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  if (isLoading) {
+  // Direct/repeat entry to an already-reviewed mission (e.g. a stale link or
+  // back-navigation) would otherwise show the form again and hit the DB's
+  // one-review-per-mission constraint on submit, stuck behind a generic error.
+  useEffect(() => {
+    if (mission?.hasReview) {
+      router.replace('/');
+    }
+  }, [mission, router]);
+
+  if (isLoading || mission?.hasReview) {
     return <LoadingIndicator message="Loading mission..." />;
   }
 

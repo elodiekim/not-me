@@ -8,12 +8,14 @@ export interface MissionWithRequester extends Mission {
   heroName: string | null;
   heroRating: number | null;
   heroReviewCount: number;
+  hasReview: boolean;
 }
 
 const MISSION_WITH_REQUESTER_SELECT =
   'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at, ' +
   'requester:profiles!missions_requester_id_fkey(name), ' +
-  'hero:profiles!missions_hero_id_fkey(name, hero_rating, hero_review_count)';
+  'hero:profiles!missions_hero_id_fkey(name, hero_rating, hero_review_count), ' +
+  'reviews(id)';
 
 function mapMissionWithRequester(row: any): MissionWithRequester {
   return {
@@ -32,6 +34,9 @@ function mapMissionWithRequester(row: any): MissionWithRequester {
     heroName: row.hero?.name ?? null,
     heroRating: row.hero?.hero_rating ?? null,
     heroReviewCount: row.hero?.hero_review_count ?? 0,
+    // reviews.mission_id is unique, so PostgREST embeds this as a single
+    // object (or null), not an array, even though it reads like a to-many.
+    hasReview: row.reviews != null,
   };
 }
 
