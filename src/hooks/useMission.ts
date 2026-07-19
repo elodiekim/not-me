@@ -6,6 +6,7 @@ import type { Mission } from '../types/Mission';
 export interface MissionWithRequester extends Mission {
   requesterName: string;
   heroName: string | null;
+  heroAvatarUrl: string | null;
   heroRating: number | null;
   heroReviewCount: number;
   hasReview: boolean;
@@ -14,7 +15,7 @@ export interface MissionWithRequester extends Mission {
 const MISSION_WITH_REQUESTER_SELECT =
   'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at, ' +
   'requester:profiles!missions_requester_id_fkey(name), ' +
-  'hero:profiles!missions_hero_id_fkey(name, hero_rating, hero_review_count), ' +
+  'hero:profiles!missions_hero_id_fkey(name, avatar_url, hero_rating, hero_review_count), ' +
   'reviews(id)';
 
 function mapMissionWithRequester(row: any): MissionWithRequester {
@@ -32,6 +33,7 @@ function mapMissionWithRequester(row: any): MissionWithRequester {
     updatedAt: row.updated_at,
     requesterName: row.requester?.name ?? 'Someone nearby',
     heroName: row.hero?.name ?? null,
+    heroAvatarUrl: row.hero?.avatar_url ?? null,
     heroRating: row.hero?.hero_rating ?? null,
     heroReviewCount: row.hero?.hero_review_count ?? 0,
     // reviews.mission_id is unique, so PostgREST embeds this as a single

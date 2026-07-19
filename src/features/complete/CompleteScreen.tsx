@@ -77,7 +77,7 @@ export function CompleteScreen() {
           </View>
         </View>
 
-        <View className="px-6 pb-6">
+        <View className="gap-3 px-6 pb-6">
           <Button
             label="Submit Review"
             variant="primary"
@@ -85,6 +85,7 @@ export function CompleteScreen() {
             disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
             onPress={handleSubmit}
           />
+          <Button label="Not now · 나중에 할게요" variant="ghost" onPress={() => router.replace('/')} />
         </View>
       </Pressable>
     </SafeAreaView>

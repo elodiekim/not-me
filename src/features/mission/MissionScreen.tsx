@@ -80,7 +80,7 @@ export function MissionScreen() {
       </View>
       <View className="flex-1 gap-8 px-6">
         <MissionCard
-          avatar={category.icon}
+          avatar={mission.heroAvatarUrl ? { uri: mission.heroAvatarUrl } : require('../../../assets/icons/profile.png')}
           title={
             isCancelled
               ? 'Request cancelled'
@@ -105,7 +105,7 @@ export function MissionScreen() {
 
         {!isCancelled && <StatusTimeline currentStep={STEP_BY_STATUS[mission.status] ?? 0} />}
       </View>
-      <View className="px-6 pb-6">
+      <View className="px-6 pb-6 gap-3">
         {isCancelled ? (
           <Button label="Back to Home" variant="secondary" onPress={() => router.replace('/')} />
         ) : isRequested ? (
@@ -116,13 +116,22 @@ export function MissionScreen() {
             loading={updateStatus.isPending}
             disabled={updateStatus.isPending}
           />
+        ) : isCompleted && !isReviewed ? (
+          <>
+            <Button
+              label="Leave a Review"
+              variant="primary"
+              onPress={() => router.replace({ pathname: '/complete', params: { missionId: mission.id } })}
+            />
+            <Button label="Not now · 나중에 할게요" variant="ghost" onPress={() => router.replace('/')} />
+          </>
+        ) : isReviewed ? (
+          <>
+            <Button label="Reviewed ✓" variant="secondary" disabled />
+            <Button label="Back to Home" variant="ghost" onPress={() => router.replace('/')} />
+          </>
         ) : (
-          <Button
-            label={isReviewed ? 'Reviewed ✓' : isCompleted ? 'Leave a Review' : 'Waiting for completion...'}
-            variant={isCompleted && !isReviewed ? 'primary' : 'secondary'}
-            disabled={!isCompleted || isReviewed}
-            onPress={() => router.replace({ pathname: '/complete', params: { missionId: mission.id } })}
-          />
+          <Button label="Waiting for completion..." variant="secondary" disabled />
         )}
       </View>
     </SafeAreaView>
