@@ -343,6 +343,16 @@ Not every household problem needs a professional.
 
 Sometimes you just need someone nearby.
 
+## Live Map Tracking (Deferred)
+
+Mission Status could show the Hero's live location on a map as they travel (Uber-style), instead of just a text timeline.
+
+This is intentionally **not MVP scope** — it needs continuous Hero location broadcasting (a new realtime channel beyond the current status updates), a map SDK + API key, and battery/privacy handling. Too large for a one-week feature slice, and not required to validate the core MVP hypothesis (cockroach removal).
+
+The two other map-shaped needs (Nearby Missions spatial browsing, Confirm Location pin-drop) are already covered without a real map — distance-sorted list and text address with reverse-geocode prefill, respectively. Those are not planned to become real maps either.
+
+**Revisit live tracking once the core loop is validated and categories/volume justify the investment.** Do not build proactively.
+
 ---
 
 # Non Goals

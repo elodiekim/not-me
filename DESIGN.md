@@ -316,6 +316,10 @@ Use Lucide Icons.
 
 Avoid filled icons unless necessary.
 
+This applies to functional UI icons only — navigation, actions, list rows, empty/status states (implemented via Feather from `@expo/vector-icons`, close enough to Lucide in style).
+
+Category and brand icons (mission categories, feature cards like "Become a Hero") are hand-drawn illustrations, not outline icons — see Illustrations below.
+
 ---
 
 # Illustrations
