@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useEffect, useMemo, useState } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, MissionCard, MissionCardSkeleton } from '../../components/ui';
 import { useNearbyMissions } from '../../hooks/useNearbyMissions';
@@ -76,10 +76,21 @@ function useCurrentCoords() {
 
 export function NearbyMissionsScreen() {
   const router = useRouter();
-  const { data: missions, isLoading, isError, refetch } = useNearbyMissions();
+  const { data: missions, isLoading, isError, isRefetching, refetch } = useNearbyMissions();
   const heroCoords = useCurrentCoords();
 
   const rankedMissions = useMemo(() => rankByDistance(missions ?? [], heroCoords), [missions, heroCoords]);
+
+  // Only manual entry point for fresh data — this screen has no polling/Realtime, so
+  // a new nearby request otherwise stays invisible until the hero re-opens the screen.
+  const refreshControl = (
+    <RefreshControl
+      refreshing={isRefetching}
+      onRefresh={refetch}
+      tintColor={COLORS.primary}
+      colors={[COLORS.primary]}
+    />
+  );
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -107,7 +118,12 @@ export function NearbyMissionsScreen() {
           <Button label="Try Again" variant="secondary" onPress={() => refetch()} />
         </View>
       ) : rankedMissions.length === 0 ? (
-        <View className="flex-1 justify-center px-6">
+        // Empty is exactly when a hero wants to pull-to-refresh, so the empty state
+        // lives in a scrollable container too (flexGrow keeps the box centered).
+        <ScrollView
+          contentContainerStyle={{ flexGrow: 1, justifyContent: 'center', paddingHorizontal: 24 }}
+          refreshControl={refreshControl}
+        >
           <View className="items-center gap-3 rounded-card bg-surface p-8">
             <Feather name="search" size={28} color={COLORS.textDisabled} />
             <Text className="text-sm font-sans-semibold text-text-primary">No missions nearby</Text>
@@ -115,9 +131,9 @@ export function NearbyMissionsScreen() {
               근처에 요청이 없어요.{'\n'}곧 찾아올게요.
             </Text>
           </View>
-        </View>
+        </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>
+        <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }} refreshControl={refreshControl}>
           {rankedMissions.map(({ mission, distanceKm }) => {
             const category = getCategoryInfo(mission.category);
             const distanceLabel = distanceKm !== null ? formatDistance(distanceKm) : null;
