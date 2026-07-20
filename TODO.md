@@ -166,7 +166,11 @@
   - `MissionScreen.tsx`가 `cancelled` 상태를 정직하게 표시하도록 수정: 기존엔 `cancelled`를 못 다뤄서 "히어로가 오고 있어요" 같은 잘못된 문구가 뜰 수 있었음 → "Request cancelled / 요청이 취소됐어요" 안내 + 타임라인 숨김 + 버튼도 "Back to Home"으로 분기
   - 검증: `created_at`을 16분 전으로 백데이트한 미션 2건으로 각각 Mission 탭 진입/`/mission-status` 직접 진입 테스트 → 둘 다 자동으로 `cancelled` 전환 확인(REST), Mission 탭은 Active에서 빠지고 History로 이동 확인, `/mission-status`는 "This request was cancelled" 문구로 정상 표시(예전처럼 "히어로가 오고 있어요" 안 뜸) 확인. X 버튼/Cancel 버튼 회귀 확인 — 둘 다 그대로 정상 동작
 - [x] Mission History 카드에 주소 표시: `MissionCard`에 `detail?: string` prop 추가(과설계 방지용으로 새 prop 하나만), History 섹션에서 `detail={mission.address}`로 전달. Active 섹션은 이번 범위 아니라 안 건드림. 취소된 미션/정상 완료된 미션 둘 다 History 카드에 주소가 정상 표시되는 것 실계정 2개로 수락→도착→완료 플로우까지 돌려서 확인
-- [ ] Nearby Missions 화면에 pull-to-refresh 추가: `ScrollView`(또는 `FlatList`로 교체)에 RN 기본 `RefreshControl` 연결, `useNearbyMissions`의 `refetch`/`isRefetching`을 그대로 사용(새 라이브러리 불필요). 기존 30초 폴링·Realtime 구독과 공존 — 유저가 수동으로 즉시 재조회하는 트리거만 추가되는 것
+- [x] Nearby Missions 화면에 pull-to-refresh 추가 (완료 · 2026-07-20) — ⚠️ TODO 설명이 stale했음: "기존 30초 폴링·Realtime 구독과 공존"이라 적혀 있었지만 이 화면은 **폴링도 Realtime도 없이 마운트 시 1회만 조회**함(그게 이 작업의 전제). pull-to-refresh가 유일한 수동 재조회 수단.
+  - `NearbyMissionsScreen.tsx`: `useNearbyMissions()`에서 `isRefetching` 추가 구조분해, RN 기본 `RefreshControl` import(프로젝트 최초 도입, 새 라이브러리 없음). `refreshControl` JSX를 한 번 만들어(`refreshing={isRefetching}`, `onRefresh={refetch}`, `tintColor`/`colors`는 `COLORS.primary`) 리스트/빈 상태 두 ScrollView에 재사용
+  - **빈 상태도 pull 가능하게**: 기존엔 빈 상태가 일반 `View`(스크롤 불가)라 당길 수 없었음 → `ScrollView`(`contentContainerStyle: { flexGrow: 1, justifyContent: 'center' }`로 박스는 그대로 중앙 유지)로 교체하고 동일 `refreshControl` 부착. 빈 상태일 때가 오히려 "다시 당겨 확인"하고 싶은 순간이라 반드시 포함
+  - 로딩 스켈레톤/에러 상태는 미변경(스켈레톤 위 당김은 무의미, 에러는 Try Again으로 이미 재시도 가능). 거리 정렬·반경 필터(`rankByDistance`/`useMemo`)는 그대로 — refetch로 새 데이터 들어와도 자동 재계산
+  - 검증(`npx tsc --noEmit` 통과 + expo web + Playwright, 실 Supabase 계정 2개): 히어로 화면 진입(baseline $63 표시) → 요청자 계정으로 새 미션 $71 REST 생성 → **당기기 전엔 $71 안 보이고, 재조회 후 리스트에 나타남**(스크린샷 확인). 거리 라벨 정상 렌더(정렬/필터 회귀 없음), 빈 상태 박스가 스크롤 컨테이너 안에 정상 렌더, 에러 상태 Try Again 정상 노출(회귀). 테스트 미션은 종료 후 REST DELETE로 정리. **참고**: RefreshControl의 당김 제스처 자체는 react-native-web에서 마우스로 재현이 안 되는 네이티브 인터랙션이라, 웹에선 "재조회 시 새 데이터가 뜨는가"(pull이 호출하는 `refetch`와 동일한 queryFn)를 화면 재진입으로 검증함. RefreshControl→refetch 연결은 2-prop 배선이라 tsc + 코드 리뷰로 확인
 
 ## 🟡 P2 · 온보딩 & 앱 진입
 DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 없음(과거 커밋에서 reset됨).
