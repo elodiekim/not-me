@@ -63,7 +63,9 @@
   - `0005_add_profile_phone.sql`: `profiles.phone` nullable text 추가(unique 없음) + `handle_new_user()`를 `create or replace`로 재정의해 `raw_user_meta_data->>'phone'`도 insert (0002 소급수정 안 함) — Management API로 실제 원격 DB에 적용 완료
   - AuthScreen: Email 아래에 Phone Input(회원가입 모드만), 가벼운 정규식(`/^[0-9+\-\s()]{7,}$/`) 검증으로 필수 입력, signUp `options.data.phone`로 전달. `Profile.ts`/`useProfile.ts`에 `phone` 반영
   - 검증: `npx tsc --noEmit` 통과 · expo web + Playwright — 로그인 모드엔 phone/confirm 필드 안 뜸, 비번 불일치·잘못된 phone 시 에러+버튼 비활성, 정상 입력 시 가입→자동 로그인, 원격 DB에서 해당 유저 `profiles.phone = '010-1234-5678'` 실제 저장 확인
-- [ ] 비밀번호 찾기(재설정) 플로우 — `AuthScreen`에 "비밀번호를 잊으셨나요?" 진입점 + 이메일 입력 화면 + Supabase `resetPasswordForEmail` 연동, 리셋 링크 딥링크 처리 필요 (Expo Router 딥링크 설정 확인)
+- [x] 비밀번호 찾기(재설정) 플로우 — `AuthScreen`에 "비밀번호를 잊으셨나요?" 진입점 + 이메일 입력 화면 + Supabase `resetPasswordForEmail` 연동, PKCE `exchangeCodeForSession`로 리셋 링크 딥링크 처리. redirectTo는 `Linking.createURL('reset-password')`로 환경별 자동(Expo Go는 `exp://`, 독립 빌드는 `notme://`)
+  - ⚠️ **실제 이메일 링크 클릭 E2E는 개발 빌드/TestFlight에서 최종 확인 필요.** Expo Go(iOS)로는 검증 불가 — iOS Safari가 웹 302 리다이렉트를 통한 `exp://` 커스텀 스킴 오픈을 차단함(구조적 한계, 코드 문제 아님). 로직 자체(만료 코드 에러 처리 / `updateUser` 비번 변경 라운드트립 / 미존재 이메일 enumeration 방지)는 실제 Supabase 호출로 검증 완료
+  - 📌 개발 빌드에서 테스트할 때: Supabase Auth → URL Configuration → Redirect URLs에 `notme://reset-password` 등록 필요. 같은 기기에서 요청+클릭해야 함(PKCE code_verifier 로컬 저장)
 - [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 꺼둔 상태 — 위 인증 폼 작업들과 함께 마무리하면서 다시 켤 것
 
 ## 🔴 P0 · 정합성 / 신뢰 버그 (점검에서 발견, 수정 완료 · 2026-07-10)

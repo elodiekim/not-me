@@ -32,10 +32,16 @@ function AuthGate({ children }: { children: ReactNode }) {
 
   const inOnboarding = segments[0] === 'onboarding';
   const inAuthScreen = segments[0] === 'sign-in';
+  // Password-reset routes must be reachable without a session — including via a deep
+  // link that lands before onboarding — so the recovery link never gets bounced away.
+  const inPasswordReset = segments[0] === 'forgot-password' || segments[0] === 'reset-password';
 
   // First-time, logged-out users see onboarding before anything else — even on deep links.
   if (!hasOnboarded && !session) {
-    return inOnboarding ? children : <Redirect href="/onboarding" />;
+    if (inOnboarding || inPasswordReset) {
+      return children;
+    }
+    return <Redirect href="/onboarding" />;
   }
 
   // Onboarded or logged-in users should never land on the onboarding route.
@@ -43,7 +49,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     return <Redirect href={session ? '/' : '/sign-in'} />;
   }
 
-  if (!session && !inAuthScreen) {
+  if (!session && !inAuthScreen && !inPasswordReset) {
     return <Redirect href="/sign-in" />;
   }
 

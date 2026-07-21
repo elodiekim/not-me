@@ -1,5 +1,6 @@
+import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
 import { supabase } from '../../services/supabase';
@@ -11,6 +12,7 @@ type AuthMode = 'sign-in' | 'sign-up';
 const PHONE_PATTERN = /^[0-9+\-\s()]{7,}$/;
 
 export function AuthScreen() {
+  const router = useRouter();
   const [mode, setMode] = useState<AuthMode>('sign-in');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -141,6 +143,18 @@ export function AuthScreen() {
           disabled={!canSubmit}
           onPress={handleSubmit}
         />
+
+        {!isSignUp && (
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Forgot password?"
+            onPress={() => router.push('/forgot-password')}
+          >
+            <Text className="text-center text-sm text-text-secondary">
+              Forgot password? · 비밀번호를 잊으셨나요?
+            </Text>
+          </Pressable>
+        )}
 
         <Button
           label={isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
