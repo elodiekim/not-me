@@ -26,12 +26,22 @@ function formatMemberSince(dateString: string) {
   return new Date(dateString).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
+// Sum of a few decimals can drift (10.1 + 10.2 = 20.2999…), so pin to 2 places
+// first, then drop a trailing .00 so whole-dollar totals read as "$20".
+function formatEarned(amount: number) {
+  const fixed = amount.toFixed(2);
+  return `$${fixed.endsWith('.00') ? fixed.slice(0, -3) : fixed}`;
+}
+
 export function ProfileScreen() {
   const router = useRouter();
   const { data: profile, isLoading: isProfileLoading, isError, refetch } = useProfile();
   const { data: missions, isLoading: isHistoryLoading } = useMissionHistory();
   const requestedCount = (missions ?? []).filter((item) => item.role === 'user').length;
   const helpedCount = (missions ?? []).filter((item) => item.role === 'hero').length;
+  const totalEarned = (missions ?? [])
+    .filter((item) => item.role === 'hero' && item.status === 'completed')
+    .reduce((sum, item) => sum + item.rewardAmount, 0);
 
   if (isProfileLoading || isHistoryLoading) {
     return <LoadingIndicator message="Loading your profile..." />;
@@ -81,6 +91,11 @@ export function ProfileScreen() {
             <Text className="font-sans text-xs text-text-secondary">Helped · 도움</Text>
           </Card>
         </View>
+
+        <Card>
+          <Text className="text-2xl font-sans-bold text-text-primary">{formatEarned(totalEarned)}</Text>
+          <Text className="font-sans text-xs text-text-secondary">Total Earned · 누적 수익</Text>
+        </Card>
 
         <Card>
           <Text className="text-sm font-sans-semibold text-text-primary">
