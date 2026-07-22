@@ -1,4 +1,5 @@
 import { Feather } from '@expo/vector-icons';
+import { useRouter } from 'expo-router';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, LoadingIndicator, RatingRow, SectionHeader } from '../../components/ui';
@@ -26,6 +27,7 @@ function formatMemberSince(dateString: string) {
 }
 
 export function ProfileScreen() {
+  const router = useRouter();
   const { data: profile, isLoading: isProfileLoading, isError, refetch } = useProfile();
   const { data: missions, isLoading: isHistoryLoading } = useMissionHistory();
   const requestedCount = (missions ?? []).filter((item) => item.role === 'user').length;
@@ -92,7 +94,12 @@ export function ProfileScreen() {
           <Card>
             <View className="gap-4">
               {SETTINGS_ITEMS.map((item, index) => (
-                <Pressable key={item.label} accessibilityRole="button" accessibilityLabel={item.label}>
+                <Pressable
+                  key={item.label}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                  onPress={item.label === 'Account' ? () => router.push('/edit-profile') : undefined}
+                >
                   <View
                     className={`flex-row items-center gap-3 ${index > 0 ? 'border-t border-surface pt-4' : ''}`}
                   >
