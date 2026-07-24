@@ -4,6 +4,7 @@ import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, LoadingIndicator } from '../../components/ui';
 import { supabase } from '../../services/supabase';
+import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT_ERROR } from './password';
 
 // exchanging: trading the recovery code for a session.
 // ready: valid session established, show the new-password form.
@@ -47,11 +48,16 @@ export function ResetPasswordScreen() {
   }, [code]);
 
   const passwordsMatch = password === passwordConfirm;
+  const passwordTooShortError =
+    password.length > 0 && password.length < MIN_PASSWORD_LENGTH
+      ? PASSWORD_TOO_SHORT_ERROR
+      : undefined;
   const passwordMismatchError =
     passwordConfirm.length > 0 && !passwordsMatch
       ? "Passwords don't match.\n비밀번호가 일치하지 않아요."
       : undefined;
-  const canSubmit = password.length > 0 && passwordConfirm.length > 0 && passwordsMatch;
+  const canSubmit =
+    password.length >= MIN_PASSWORD_LENGTH && passwordConfirm.length > 0 && passwordsMatch;
 
   const handleSubmit = async () => {
     setError(null);
@@ -113,7 +119,7 @@ export function ResetPasswordScreen() {
             secureTextEntry
             value={password}
             onChangeText={setPassword}
-            error={error ?? undefined}
+            error={passwordTooShortError ?? error ?? undefined}
           />
           <Input
             label="Confirm Password"

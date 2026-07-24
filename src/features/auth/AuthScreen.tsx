@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
 import { supabase } from '../../services/supabase';
+import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT_ERROR } from './password';
 
 type AuthMode = 'sign-in' | 'sign-up';
 
@@ -31,6 +32,11 @@ export function AuthScreen() {
     isSignUp && passwordConfirm.length > 0 && !passwordsMatch
       ? "Passwords don't match.\n비밀번호가 일치하지 않아요."
       : undefined;
+  // Sign-up only: sign-in enters an existing password, so length isn't ours to police.
+  const passwordTooShortError =
+    isSignUp && password.length > 0 && password.length < MIN_PASSWORD_LENGTH
+      ? PASSWORD_TOO_SHORT_ERROR
+      : undefined;
   const phoneError =
     isSignUp && phone.length > 0 && !phoneValid
       ? "That phone number doesn't look right.\n휴대전화 번호를 확인해주세요."
@@ -39,7 +45,12 @@ export function AuthScreen() {
   const canSubmit =
     email.length > 0 &&
     password.length > 0 &&
-    (!isSignUp || (name.length > 0 && passwordConfirm.length > 0 && passwordsMatch && phoneValid));
+    (!isSignUp ||
+      (name.length > 0 &&
+        password.length >= MIN_PASSWORD_LENGTH &&
+        passwordConfirm.length > 0 &&
+        passwordsMatch &&
+        phoneValid));
 
   const toggleMode = () => {
     setError(null);
@@ -126,7 +137,7 @@ export function AuthScreen() {
             secureTextEntry
             value={password}
             onChangeText={setPassword}
-            error={error ?? undefined}
+            error={passwordTooShortError ?? error ?? undefined}
           />
           {isSignUp && (
             <Input
