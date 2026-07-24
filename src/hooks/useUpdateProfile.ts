@@ -50,7 +50,10 @@ export function useUpdateProfile() {
         fields.avatar_url = `${publicUrl}?t=${Date.now()}`;
       }
 
-      const { error: updateError } = await supabase.from('profiles').update(fields).eq('id', userId);
+      const { error: updateError } = await supabase
+        .from('profiles')
+        .update(fields)
+        .eq('id', userId);
       if (updateError) throw updateError;
     },
     onSuccess: () => {

@@ -74,7 +74,12 @@ export function OnboardingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <View className="h-12 flex-row items-center justify-end px-6">
-        <Pressable accessibilityRole="button" accessibilityLabel="Skip" onPress={finish} hitSlop={12}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Skip"
+          onPress={finish}
+          hitSlop={12}
+        >
           <Text className="text-base font-sans-medium text-text-secondary">Skip</Text>
         </Pressable>
       </View>
@@ -100,8 +105,12 @@ export function OnboardingScreen() {
                   resizeMode="contain"
                 />
                 <View className="items-center gap-2">
-                  <Text className="text-center text-2xl font-sans-bold text-text-primary">{slide.title}</Text>
-                  <Text className="text-center text-base text-text-secondary">{slide.subtitle}</Text>
+                  <Text className="text-center text-2xl font-sans-bold text-text-primary">
+                    {slide.title}
+                  </Text>
+                  <Text className="text-center text-base text-text-secondary">
+                    {slide.subtitle}
+                  </Text>
                 </View>
               </View>
             ))}

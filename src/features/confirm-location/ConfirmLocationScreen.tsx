@@ -33,12 +33,23 @@ export function ConfirmLocationScreen() {
         const position = await Location.getCurrentPositionAsync();
         if (cancelled) return;
 
-        const detected = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+        const detected = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+        };
         setCoords(detected);
 
         const [geocoded] = await Location.reverseGeocodeAsync(detected);
         if (!cancelled && geocoded) {
-          setAddress(formatAddress([geocoded.name, geocoded.street, geocoded.district, geocoded.city, geocoded.region]));
+          setAddress(
+            formatAddress([
+              geocoded.name,
+              geocoded.street,
+              geocoded.district,
+              geocoded.city,
+              geocoded.region,
+            ]),
+          );
         }
       } catch {
         // Best-effort: user can just type the address in manually.
@@ -76,22 +87,32 @@ export function ConfirmLocationScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Pressable className="flex-1" onPress={Keyboard.dismiss} accessible={false}>
         <View className="flex-row items-center px-6 py-4">
-          <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            onPress={() => router.back()}
+          >
             <Feather name="arrow-left" size={24} color="#111111" />
           </Pressable>
-          <Text className="ml-4 text-lg font-sans-semibold text-text-primary">Confirm Location</Text>
+          <Text className="ml-4 text-lg font-sans-semibold text-text-primary">
+            Confirm Location
+          </Text>
         </View>
 
         <View className="flex-1 gap-6 px-6">
           <View className="gap-1">
-            <Text className="text-2xl font-sans-bold text-text-primary">Where do you need help?</Text>
+            <Text className="text-2xl font-sans-bold text-text-primary">
+              Where do you need help?
+            </Text>
             <Text className="font-sans text-sm text-text-secondary">
               We use this to find heroes nearby.{'\n'}이 위치로 근처 히어로를 찾아드려요.
             </Text>
           </View>
 
           {detecting && (
-            <Text className="font-sans text-sm text-text-secondary">Detecting your location...</Text>
+            <Text className="font-sans text-sm text-text-secondary">
+              Detecting your location...
+            </Text>
           )}
 
           <Input

@@ -13,7 +13,7 @@ export function MissionCardSkeleton() {
       Animated.sequence([
         Animated.timing(opacity, { toValue: 1, duration: 700, useNativeDriver: false }),
         Animated.timing(opacity, { toValue: 0.5, duration: 700, useNativeDriver: false }),
-      ])
+      ]),
     );
     loop.start();
     return () => loop.stop();

@@ -21,7 +21,7 @@ const NUMERIC_KEYBOARD_TYPES = ['decimal-pad', 'number-pad', 'numeric'];
 
 export const Input = forwardRef<TextInput, InputProps>(function Input(
   { label, leftIcon, error, keyboardType, returnKeyType, ...props },
-  ref
+  ref,
 ) {
   const accessoryId = useId();
   const showDoneAccessory =

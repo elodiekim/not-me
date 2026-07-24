@@ -35,7 +35,7 @@ export function useCreateRequest() {
           longitude,
         })
         .select(
-          'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at'
+          'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at',
         )
         .single();
 

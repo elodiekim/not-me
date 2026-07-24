@@ -49,7 +49,10 @@ export function ProfileScreen() {
 
   if (isError || !profile) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-6" edges={['top']}>
+      <SafeAreaView
+        className="flex-1 items-center justify-center gap-4 bg-background px-6"
+        edges={['top']}
+      >
         <Text className="text-sm text-text-secondary">
           Something went wrong.{'\n'}Please try again.
         </Text>
@@ -75,7 +78,9 @@ export function ProfileScreen() {
             <RatingRow rating={profile.heroRating} reviewCount={profile.heroReviewCount} />
           ) : (
             <View className="items-center">
-              <Text className="font-sans-semibold text-xs text-primary">The roach next door is waiting.</Text>
+              <Text className="font-sans-semibold text-xs text-primary">
+                The roach next door is waiting.
+              </Text>
               <Text className="font-sans text-xs text-text-secondary">첫 출동 대기 중...</Text>
             </View>
           )}
@@ -93,7 +98,9 @@ export function ProfileScreen() {
         </View>
 
         <Card>
-          <Text className="text-2xl font-sans-bold text-text-primary">{formatEarned(totalEarned)}</Text>
+          <Text className="text-2xl font-sans-bold text-text-primary">
+            {formatEarned(totalEarned)}
+          </Text>
           <Text className="font-sans text-xs text-text-secondary">Total Earned · 누적 수익</Text>
         </Card>
 
@@ -113,14 +120,18 @@ export function ProfileScreen() {
                   key={item.label}
                   accessibilityRole="button"
                   accessibilityLabel={item.label}
-                  onPress={item.label === 'Account' ? () => router.push('/edit-profile') : undefined}
+                  onPress={
+                    item.label === 'Account' ? () => router.push('/edit-profile') : undefined
+                  }
                 >
                   <View
                     className={`flex-row items-center gap-3 ${index > 0 ? 'border-t border-surface pt-4' : ''}`}
                   >
                     <Feather name={item.icon} size={18} color={COLORS.textSecondary} />
                     <View className="flex-1">
-                      <Text className="text-sm font-sans-semibold text-text-primary">{item.label}</Text>
+                      <Text className="text-sm font-sans-semibold text-text-primary">
+                        {item.label}
+                      </Text>
                       <Text className="font-sans text-xs text-text-secondary">{item.koLabel}</Text>
                     </View>
                     <Feather name="chevron-right" size={18} color={COLORS.textDisabled} />

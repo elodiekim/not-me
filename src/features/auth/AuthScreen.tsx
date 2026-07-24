@@ -39,8 +39,7 @@ export function AuthScreen() {
   const canSubmit =
     email.length > 0 &&
     password.length > 0 &&
-    (!isSignUp ||
-      (name.length > 0 && passwordConfirm.length > 0 && passwordsMatch && phoneValid));
+    (!isSignUp || (name.length > 0 && passwordConfirm.length > 0 && passwordsMatch && phoneValid));
 
   const toggleMode = () => {
     setError(null);
@@ -65,7 +64,9 @@ export function AuthScreen() {
         if (signUpError) throw signUpError;
 
         if (!data.session) {
-          setMessage('Check your email to confirm your account.\n이메일을 확인해서 계정을 인증해주세요.');
+          setMessage(
+            'Check your email to confirm your account.\n이메일을 확인해서 계정을 인증해주세요.',
+          );
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
@@ -74,7 +75,9 @@ export function AuthScreen() {
     } catch (err) {
       const code = (err as { code?: string } | null)?.code;
       if (code === 'invalid_credentials') {
-        setError("That email or password doesn't look right.\n이메일 또는 비밀번호를 확인해주세요.");
+        setError(
+          "That email or password doesn't look right.\n이메일 또는 비밀번호를 확인해주세요.",
+        );
       } else {
         setError('Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.');
       }
@@ -96,7 +99,9 @@ export function AuthScreen() {
         </View>
 
         <View className="gap-4">
-          {isSignUp && <Input label="Name" placeholder="Your name" value={name} onChangeText={setName} />}
+          {isSignUp && (
+            <Input label="Name" placeholder="Your name" value={name} onChangeText={setName} />
+          )}
           <Input
             label="Email"
             placeholder="you@example.com"

@@ -35,9 +35,20 @@ export function Toast({ message, onDismiss, durationMs = 2500 }: ToastProps) {
   return (
     <Animated.View
       pointerEvents="none"
-      style={{ position: 'absolute', left: 24, right: 24, bottom: 96, opacity, zIndex: 50, elevation: 6 }}
+      style={{
+        position: 'absolute',
+        left: 24,
+        right: 24,
+        bottom: 96,
+        opacity,
+        zIndex: 50,
+        elevation: 6,
+      }}
     >
-      <View accessibilityRole="alert" className="items-center rounded-card bg-text-primary px-5 py-3">
+      <View
+        accessibilityRole="alert"
+        className="items-center rounded-card bg-text-primary px-5 py-3"
+      >
         <Text className="font-sans-semibold text-center text-sm text-background">{message}</Text>
       </View>
     </Animated.View>

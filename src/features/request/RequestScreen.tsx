@@ -33,7 +33,11 @@ export function RequestScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-row items-center px-6 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          onPress={() => router.back()}
+        >
           <Feather name="arrow-left" size={24} color="#111111" />
         </Pressable>
         <Text className="ml-4 text-lg font-sans-semibold text-text-primary">Request Help</Text>

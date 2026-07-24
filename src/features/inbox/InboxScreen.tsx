@@ -46,7 +46,10 @@ export function InboxScreen() {
 
   if (isError) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-6" edges={['top']}>
+      <SafeAreaView
+        className="flex-1 items-center justify-center gap-4 bg-background px-6"
+        edges={['top']}
+      >
         <Text className="text-center text-sm text-text-secondary">
           Something went wrong.{'\n'}Please try again.
         </Text>
@@ -75,7 +78,9 @@ export function InboxScreen() {
           const row = (
             <View className="gap-1 rounded-card bg-surface p-4">
               <Text className="text-sm font-sans-semibold text-text-primary">{event.message}</Text>
-              <Text className="font-sans text-xs text-text-secondary">{formatRelativeTime(event.timestamp)}</Text>
+              <Text className="font-sans text-xs text-text-secondary">
+                {formatRelativeTime(event.timestamp)}
+              </Text>
             </View>
           );
           return event.route ? (

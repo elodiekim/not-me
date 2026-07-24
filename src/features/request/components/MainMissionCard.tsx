@@ -11,7 +11,11 @@ export function MainMissionCard({ onPress }: MainMissionCardProps) {
   return (
     <View className="gap-3">
       <SectionHeader title="Get Help With" />
-      <Pressable accessibilityRole="button" accessibilityLabel="Request Cockroach Removal" onPress={onPress}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Request Cockroach Removal"
+        onPress={onPress}
+      >
         <Card>
           <View className="flex-row items-center gap-4">
             <View className="items-center justify-center rounded-full bg-primary/20 p-2">

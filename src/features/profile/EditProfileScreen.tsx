@@ -25,7 +25,10 @@ export function EditProfileScreen() {
 
   if (isError || !profile) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-6" edges={['top']}>
+      <SafeAreaView
+        className="flex-1 items-center justify-center gap-4 bg-background px-6"
+        edges={['top']}
+      >
         <Text className="text-sm text-text-secondary">
           Something went wrong.{'\n'}Please try again.
         </Text>
@@ -94,12 +97,19 @@ function EditProfileForm({ profile }: { profile: Profile }) {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-row items-center px-6 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          onPress={() => router.back()}
+        >
           <Feather name="arrow-left" size={24} color="#111111" />
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        contentContainerStyle={{ padding: 24, gap: 32 }}
+        keyboardShouldPersistTaps="handled"
+      >
         <View className="items-center gap-2">
           <Text className="text-2xl font-sans-bold text-text-primary">Edit Profile</Text>
           <Text className="text-sm text-text-secondary">프로필 수정</Text>

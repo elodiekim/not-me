@@ -3,9 +3,6 @@
     "expo@claude-plugins-official": true
   },
   "permissions": {
-    "allow": [
-      "Bash(npx tsc --noEmit*)",
-      "Bash(npx --yes playwright screenshot *)"
-    ]
+    "allow": ["Bash(npx tsc --noEmit*)", "Bash(npx --yes playwright screenshot *)"]
   }
 }
