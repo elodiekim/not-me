@@ -17,7 +17,14 @@ const VARIANT_STYLES: Record<ButtonVariant, { container: string; text: string }>
   danger: { container: 'bg-danger', text: 'text-white' },
 };
 
-export function Button({ label, variant = 'primary', loading = false, icon, disabled, ...props }: ButtonProps) {
+export function Button({
+  label,
+  variant = 'primary',
+  loading = false,
+  icon,
+  disabled,
+  ...props
+}: ButtonProps) {
   const styles = VARIANT_STYLES[variant];
   const isDisabled = disabled || loading;
 

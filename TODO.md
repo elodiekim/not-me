@@ -9,20 +9,24 @@
 ## ✅ 완료 (UI 프로토타입)
 
 ### Phase 1 · 셋업
+
 - [x] Expo 생성
 - [x] NativeWind 설치
 - [x] Zustand 설치
 - [x] TanStack Query 설치
 
 ### Phase 2 · 디자인 시스템 & 공용 컴포넌트
+
 - [x] Design System (colors / typography / spacing)
 - [x] Button / Card / Input / Badge / Chip / Avatar / MissionCard / SectionHeader / LoadingIndicator / RatingRow
 - [x] Bottom Tab Navigation (Home / Mission / Inbox / Profile)
 
 ### Phase 3 · User 플로우 (UI)
+
 - [x] Home / Request / Reward / Searching / Mission Status / Complete / Profile
 
 ### Phase 4 · Hero 플로우 (UI)
+
 - [x] Nearby Missions / Mission Detail / Active Mission / Reward Earned / Mission History
 
 ---
@@ -51,6 +55,7 @@
   - 검증: 테스트 계정 3개(요청자/히어로/신규)로 REST 시딩 후 expo web + Playwright 실로그인 — 카운트 2/0·0/1·0/0, History $20 카드, Active 탭→미션 상태 화면 이동, 빈 상태 모두 확인 완료
 
 ## 🔴 P0 · 인증 (Authentication)
+
 - [x] Supabase Auth 연동 (이메일/비밀번호)
 - [x] 로그인 / 회원가입 화면 (`AuthScreen`)
 - [x] 세션 유지 & 보호 라우팅 (미로그인 시 `/sign-in`으로 리다이렉트)
@@ -69,6 +74,7 @@
 - [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 꺼둔 상태 — 위 인증 폼 작업들과 함께 마무리하면서 다시 켤 것
 
 ## 🔴 P0 · 정합성 / 신뢰 버그 (점검에서 발견, 수정 완료 · 2026-07-10)
+
 - [x] **자기 요청을 자기가 수락 → 자기 리뷰로 평점 조작 방지** (신뢰 훼손 가능한 실제 버그)
   - 증상: `useNearbyMissions`가 `status='requested'` 미션을 **본인 것 포함 전부** 반환하고, `useAcceptMission`·RLS(`0003_claim_open_mission.sql`) 어디에도 `requester_id ≠ hero_id` 체크가 없음 → 요청자가 Hero 모드에서 **자기 요청을 수락 가능**. 완료까지 진행하면 리뷰 INSERT RLS가 전부 self로 충족돼 **자기 자신에게 리뷰를 남겨 `hero_rating`을 부풀릴 수 있음** (`handle_new_review` 트리거가 그대로 반영).
   - 수정 (3겹):
@@ -93,6 +99,7 @@
   - 검증(expo web + Playwright): 활성(`requested`) 미션 있는 상태에서 Home→Request Help → 폼 대신 `/mission-status?missionId=<활성미션>`로 이동 확인. 활성 미션 없으면 정상적으로 `/request` 폼(Roach Catcher 등) 렌더 확인(회귀). 기존 Searching Cancel/X·opportunistic 만료 로직 미변경
 
 ## 🟠 P1 · 상태 연결 (플로우 간 데이터 전달)
+
 - [x] ~~Zustand `useRequestStore`~~ — 불필요 판단: 카테고리는 바퀴벌레 하나뿐이라 선택지 없음, 리워드는 쿼리 파라미터로 충분
 - [x] **1/5 Reward 확정 → 실제 `missions` row 생성** (`useCreateRequest`), `missionId`를 Searching로 전달 — REST로 실제 insert 확인 완료
 - [x] **2/5 Hero의 Nearby Missions**: mock → 실제 `status='requested'` 미션 조회 (`useNearbyMissions`, `useMission`), 요청자 이름까지 join으로 표시 확인 완료
@@ -108,9 +115,11 @@
   - 가짜 "약 8분 후 도착" 문구 삭제 — 실제 ETA 계산이 없는데 숫자를 지어내는 건 부정직해서, "히어로가 오고 있어요" 정도로 순화
 
 **P1 상태 연결 5단계 전부 완료. User ↔ Hero 플로우가 처음부터 끝까지 실제 Supabase 데이터로 연결됨.**
+
 - [x] (참고) `missions.address`는 아직 위치 입력 화면이 없어 placeholder 텍스트로 저장 중 — Confirm Location 화면 추가로 해결 (아래 P2 항목 참고)
 
 ## 🟠 P1 · 리뷰 (Review)
+
 - [x] Complete 화면 별점/코멘트 실제 저장 (`useSubmitReview`, `missionId`를 Mission Status → Complete로 전달)
   - `reviews` INSERT RLS 강화: 완료된 미션 + 실제 요청자/히어로 매칭 확인 (`0004_review_trigger_and_rls.sql`)
   - 리뷰 insert 시 `profiles.hero_rating`/`hero_review_count` 자동 재계산 트리거(`handle_new_review`) 추가
@@ -132,6 +141,7 @@
   - 검증(임시 테스트 계정 2개, expo web + Playwright, 실 REST): ① completed+미리뷰 미션 진입 → "Leave a Review"/"Not now" 두 버튼 다 노출 확인 → "Not now" 클릭 → 홈 이동 확인 ② Mission 탭 History에서 여전히 "Leave a Review" 카드로 남아있는지(리뷰 상태 안 바뀜) 확인 ③ 거기서 다시 들어가 실제로 별점 남기고 제출 → REST로 `reviews` row 생성 확인 ④ 같은 미션에 `/mission-status` 재진입 시 "Reviewed ✓" + "Back to Home" 두 버튼으로 바뀌는지, "Back to Home" 클릭 시 실제로 홈 이동하는지 확인 ⑤ 회귀: 별개 미션으로 "Leave a Review" 버튼이 기존처럼 `/complete`로 정상 이동하는지 확인. `npx tsc --noEmit` 통과, 13개 체크 전부 통과
 
 ## 🟡 P2 · 실시간 & 위치 (제품 핵심 경험)
+
 - [x] 위치 권한 + 현재 위치 획득 (expo-location)
 - [x] Nearby Missions 실제 거리 계산 (~~지금 "0.3 km away" 하드코딩~~ → 확인 결과 거리 표시 자체가 없었음(stale 메모). `missions.latitude/longitude` 저장 + haversine으로 실거리 계산해 subtitle에 표시, `0006_add_mission_location.sql` 사용자가 실행 완료·검증 완료)
 - [x] **Nearby Missions 근접 필터/정렬** (점검에서 발견) — 거리 *표시*만 하고 전체 열린 요청을 다 보여주던 문제 수정. 서울 히어로에게 부산 요청이 "400km"로 뜨던 상황 해결
@@ -175,7 +185,9 @@
   - 검증(`npx tsc --noEmit` 통과 + expo web + Playwright, 실 Supabase 계정 2개): 히어로 화면 진입(baseline $63 표시) → 요청자 계정으로 새 미션 $71 REST 생성 → **당기기 전엔 $71 안 보이고, 재조회 후 리스트에 나타남**(스크린샷 확인). 거리 라벨 정상 렌더(정렬/필터 회귀 없음), 빈 상태 박스가 스크롤 컨테이너 안에 정상 렌더, 에러 상태 Try Again 정상 노출(회귀). 테스트 미션은 종료 후 REST DELETE로 정리. **참고**: RefreshControl의 당김 제스처 자체는 react-native-web에서 마우스로 재현이 안 되는 네이티브 인터랙션이라, 웹에선 "재조회 시 새 데이터가 뜨는가"(pull이 호출하는 `refetch`와 동일한 queryFn)를 화면 재진입으로 검증함. RefreshControl→refetch 연결은 2-prop 배선이라 tsc + 코드 리뷰로 확인
 
 ## 🟡 P2 · 온보딩 & 앱 진입
+
 DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 없음(과거 커밋에서 reset됨).
+
 - [x] Splash 화면 — `expo-splash-screen` 설치 후 `_layout.tsx` 모듈 최상단에서 `SplashScreen.preventAutoHideAsync()` 호출, 폰트 로딩 + 온보딩 플래그 조회(`useOnboardingStore`)가 **둘 다** 끝나면 `hideAsync()`. 기존 `return null` 자리를 `ready` 게이트로 교체. app.json `expo-splash-screen` 플러그인에 `app-icon.png`(정사각에 가까운 586x619) + `resizeMode: contain` + 배경 `#FFFFFF`(DESIGN background 토큰). ⚠️ **네이티브 전용 동작**이라 Expo Web에선 스플래시 이미지 자체가 렌더되지 않음(웹에선 `hideAsync`가 사실상 no-op, 로직 흐름만 검증됨) — 실제 스플래시 표시는 EAS/네이티브 빌드에서 재확인 필요
 - [x] Onboarding 화면 — `app/onboarding.tsx` + `src/features/onboarding/OnboardingScreen.tsx`(3장 슬라이드: bush-cockroach-cat / hero-cat / proud-cat + 영/한 두 줄 카피). 가로 `ScrollView pagingEnabled` + 하단 점 인디케이터(활성 primary, 새 캐러셀 라이브러리 없음). 우상단 Skip + 마지막 장 Get Started. 둘 다 AsyncStorage `hasOnboarded='true'` 저장 후 `/sign-in`으로 이동. **주의: `onMomentumScrollEnd`는 react-native-web에서 안 켜져 Get Started/점이 안 바뀌는 버그가 있어 `onScroll`로 교체함(웹/네이티브 공통 동작).** 온보딩 플래그는 `useOnboardingStore`(Zustand)로 메모리 반영 — 안 그러면 완료 직후 stale 플래그 때문에 `/onboarding`으로 되돌아가는 바운스 버그 발생하므로 store로 해결
   - AuthGate 게이트 로직: `!hasOnboarded && !session`이면 (온보딩 라우트가 아닌 한) `/onboarding`으로 리다이렉트(딥링크 우회 커버). 온보딩 완료했거나 세션 있는 유저가 `/onboarding`에 오면 세션 여부에 따라 `/` 또는 `/sign-in`으로 되돌림. 그 외는 기존 로직 그대로
@@ -184,6 +196,7 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] app.json 앱 아이콘 / 스플래시 설정 — `expo.icon`에 `./assets/logo/app-icon.png` 연결(ios/android 공용 하나, 과설계 안 함) + 위 스플래시 플러그인. `npx expo config`로 icon/splash 경로 정상 resolve 확인. ⚠️ **아이콘 실제 렌더링은 Web에서 검증 불가(네이티브 전용)**, 게다가 `app-icon.png`가 정사각형이 아님(586x619) — Expo는 1024x1024 정사각 아이콘 권장이라 네이티브 빌드 시 왜곡/패딩 경고 가능성 있음. 정식 아이콘 규격(1024x1024 square) 준비 후 EAS 빌드에서 재확인 필요
 
 ## 🟢 P3 · 마감 완성도 (Definition of Done)
+
 - [x] 로딩 상태: 리스트 스켈레톤 (Nearby / History) (완료 · 2026-07-16) — 스피너 하나(`LoadingIndicator`)로 화면 전체를 막던 걸 실제 카드 자리에 회색 뼈대를 먼저 보여주는 방식으로 개선(순수 UI, 훅/DB 로직 변경 없음).
   - `src/components/ui/MissionCardSkeleton.tsx` 신규: `MissionCard`와 동일한 `Card` 레이아웃(원형 아바타 블록 + 배지 바 + 텍스트 2줄)을 `bg-surface`(#F8F8F8) 블록으로 표현. RN 기본 `Animated`로 opacity 0.5↔1 pulse(700ms, `useNativeDriver:false`로 web 경고 회피, 새 라이브러리 없음). a11y에선 `accessibilityElementsHidden`+`importantForAccessibility="no-hide-descendants"`로 무시. `ui/index.ts`에 export
   - `NearbyMissionsScreen`: isLoading 시 `MissionCardSkeleton` 4개를 실제 리스트와 같은 `ScrollView`(padding 24, gap 16)에 나열
@@ -228,7 +241,15 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] **Inbox 탭에 상단 헤더가 없음** (디자인 리뷰에서 발견 · 2026-07-14) — Home(로고+벨) / Mission("My Missions") / Profile(아바타+이름)은 화면 상단에 타이틀이 있는데, Inbox는 헤더가 없던 문제. 바로 위 "Coming Soon → 활동 피드" 작업과 함께 해결: `InboxScreen`에 다른 탭과 통일된 두 줄 헤더("Inbox / 받은편지함", `MissionsTabScreen`과 동일한 `text-lg font-sans-semibold` + 서브타이틀) 추가. 이벤트 0개일 때 뜨는 `ComingSoonScreen`도 자체적으로 "Inbox / 받은편지함" 타이틀을 표시해 빈 상태에서도 정체성 유지. Playwright로 헤더 렌더 육안 확인 완료
 
 ## ⚪ 품질 / 인프라 (선택)
-- [ ] ESLint / Prettier 설정
+
+- [x] ESLint / Prettier 설정
+  - ESLint: `npx expo lint`로 Expo 공식 셋업 사용 — `eslint@9` + `eslint-config-expo@10`(flat config, `eslint.config.js`) 자동 설치. 직접 config 안 짜고 공식 경로 그대로
+  - Prettier: `prettier@3.9` + `eslint-config-prettier@10`(스타일 규칙 충돌 방지용) 설치. `.prettierrc`로 기존 코드 스타일 유지 — `singleQuote: true`, `semi: true`, `tabWidth: 2`, `printWidth: 100`, `trailingComma: 'all'`. `eslint.config.js`에 `eslint-config-prettier/flat`을 맨 뒤에 추가해 Prettier와 겹치는 스타일 규칙 off. `.prettierignore`(dist/.expo/native/lockfile/assets 제외)
+  - `package.json` 스크립트: `lint: "eslint ."`, `format: "prettier --write ."`, `format:check: "prettier --check ."`. `.gitignore`에 `.eslintcache`/`.prettiercache` 추가
+  - 전체 `npm run format` 1회 실행(예상대로 대부분 파일 포맷 diff — 순수 포맷팅만, 로직 변경 없음)
+  - 추가된 devDependencies: `eslint`, `eslint-config-expo`, `prettier`, `eslint-config-prettier`(+ eslint 트랜지티브). 전부 devDependency라 런타임 무영향
+  - 남은 lint 이슈: 처음 `react/no-unescaped-entities` 2건(ForgotPasswordScreen / MissionNotFound의 JSX 텍스트 내 `'`) — 표시상 동일한 `&apos;` 이스케이프로 안전하게 수정(로직/표시 변경 없음). **최종 lint 에러 0건**
+  - 검증: `npm run lint`(에러 0), `npm run format:check`(All matched files use Prettier code style), `npx tsc --noEmit` 통과, `expo start --web` 부팅 확인(온보딩 정상 렌더 — 포맷팅이 로직 안 건드림). ※ 콘솔의 NativeWind dark-mode 경고는 이번 작업과 무관한 기존 경고
 - [ ] 핵심 훅 · 유틸 기본 테스트
 - [ ] EAS Build → TestFlight 설정
 - [ ] AGENTS.md의 Expo 버전(57) vs 실제(54) 정리
@@ -236,4 +257,5 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 ---
 
 ## 만들지 않음 (CLAUDE.md 기준)
+
 결제 · AI · 채팅 · 푸시알림 · 애널리틱스 · 어드민 · 리퍼럴 · 게이미피케이션

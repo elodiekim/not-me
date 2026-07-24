@@ -13,11 +13,17 @@ export function BecomeHeroSection({ onPress }: BecomeHeroSectionProps) {
       <Card>
         <View className="flex-row items-center gap-4">
           <View className="items-center justify-center rounded-full bg-primary/20 p-3">
-            <Image source={require('../../../../assets/icons/star.png')} style={{ width: 32, height: 32 }} resizeMode="contain" />
+            <Image
+              source={require('../../../../assets/icons/star.png')}
+              style={{ width: 32, height: 32 }}
+              resizeMode="contain"
+            />
           </View>
           <View className="flex-1 gap-1">
             <Text className="text-base font-sans-bold text-text-primary">Wanna be a Hero?</Text>
-            <Text className="font-sans text-sm text-text-secondary">Nearby chaos? You got this.</Text>
+            <Text className="font-sans text-sm text-text-secondary">
+              Nearby chaos? You got this.
+            </Text>
           </View>
           <Feather name="chevron-right" size={20} color={COLORS.primary} />
         </View>

@@ -1,0 +1,17 @@
+# build output & tooling caches
+dist/
+.expo/
+web-build/
+node_modules/
+
+# generated native folders
+/ios
+/android
+
+# lockfiles & generated types
+package-lock.json
+expo-env.d.ts
+*.tsbuildinfo
+
+# assets (not source)
+assets/

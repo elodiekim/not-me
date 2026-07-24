@@ -14,7 +14,8 @@ export function HeroSection() {
         </Text>
         <Text className="text-3xl font-sans-bold leading-tight text-primary">Get help now.</Text>
         <Text className="font-sans text-sm text-text-secondary">
-          바퀴벌레가 나타났어요? 지금 <Text className="font-sans text-primary underline">도움을 요청하세요</Text>!
+          바퀴벌레가 나타났어요? 지금{' '}
+          <Text className="font-sans text-primary underline">도움을 요청하세요</Text>!
         </Text>
       </View>
 

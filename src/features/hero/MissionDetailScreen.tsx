@@ -33,14 +33,20 @@ export function MissionDetailScreen() {
       await acceptMission.mutateAsync(mission.id);
       router.replace({ pathname: '/hero/active', params: { id: mission.id } });
     } catch {
-      setAcceptError('This mission was already taken by another hero.\n다른 히어로가 이미 수락했어요.');
+      setAcceptError(
+        'This mission was already taken by another hero.\n다른 히어로가 이미 수락했어요.',
+      );
     }
   };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-row items-center px-6 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          onPress={() => router.back()}
+        >
           <Feather name="arrow-left" size={24} color="#111111" />
         </Pressable>
         <Text className="ml-4 text-lg font-sans-semibold text-text-primary">Mission Detail</Text>
@@ -55,7 +61,9 @@ export function MissionDetailScreen() {
 
         <View className="gap-1 rounded-card bg-surface p-4">
           <Text className="font-sans text-xs text-text-secondary">Requester · 요청자</Text>
-          <Text className="text-base font-sans-semibold text-text-primary">{mission.requesterName}</Text>
+          <Text className="text-base font-sans-semibold text-text-primary">
+            {mission.requesterName}
+          </Text>
         </View>
 
         <LocationCard address={mission.address} />

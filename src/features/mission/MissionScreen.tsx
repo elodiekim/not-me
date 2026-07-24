@@ -22,7 +22,12 @@ export function MissionScreen() {
   const { missionId } = useLocalSearchParams<{ missionId?: string }>();
   // Realtime pushes status changes instantly; this poll is only a safety net for
   // dropped sockets, so 30s is plenty (was 3s when polling was the primary path).
-  const { data: mission, isLoading, isError, refetch } = useMission(missionId, { refetchInterval: 30000 });
+  const {
+    data: mission,
+    isLoading,
+    isError,
+    refetch,
+  } = useMission(missionId, { refetchInterval: 30000 });
   const updateStatus = useUpdateMissionStatus();
   const { mutate: updateStatusMutate } = updateStatus;
 
@@ -41,7 +46,10 @@ export function MissionScreen() {
 
   if (isError || !mission) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-6" edges={['top']}>
+      <SafeAreaView
+        className="flex-1 items-center justify-center gap-4 bg-background px-6"
+        edges={['top']}
+      >
         <Text className="text-sm text-text-secondary">
           Something went wrong.{'\n'}Please try again.
         </Text>
@@ -80,7 +88,11 @@ export function MissionScreen() {
       </View>
       <View className="flex-1 gap-8 px-6">
         <MissionCard
-          avatar={mission.heroAvatarUrl ? { uri: mission.heroAvatarUrl } : require('../../../assets/icons/profile.png')}
+          avatar={
+            mission.heroAvatarUrl
+              ? { uri: mission.heroAvatarUrl }
+              : require('../../../assets/icons/profile.png')
+          }
           title={
             isCancelled
               ? 'Request cancelled'
@@ -89,7 +101,9 @@ export function MissionScreen() {
                 : 'Looking for your hero'
           }
           subtitle={`${category.title} · ${category.koTitle} · $${mission.rewardAmount}`}
-          statusLabel={isCancelled ? 'Cancelled · 취소됨' : isCompleted ? 'Completed' : 'On the way'}
+          statusLabel={
+            isCancelled ? 'Cancelled · 취소됨' : isCompleted ? 'Completed' : 'On the way'
+          }
           statusVariant={isCancelled ? 'neutral' : isCompleted ? 'success' : 'info'}
           rating={mission.heroRating ?? undefined}
           reviewCount={mission.heroReviewCount}
@@ -121,9 +135,15 @@ export function MissionScreen() {
             <Button
               label="Leave a Review"
               variant="primary"
-              onPress={() => router.replace({ pathname: '/complete', params: { missionId: mission.id } })}
+              onPress={() =>
+                router.replace({ pathname: '/complete', params: { missionId: mission.id } })
+              }
             />
-            <Button label="Not now · 나중에 할게요" variant="ghost" onPress={() => router.replace('/')} />
+            <Button
+              label="Not now · 나중에 할게요"
+              variant="ghost"
+              onPress={() => router.replace('/')}
+            />
           </>
         ) : isReviewed ? (
           <>

@@ -12,7 +12,10 @@ interface ComingSoonScreenProps {
 
 export function ComingSoonScreen({ icon, title, koTitle, description }: ComingSoonScreenProps) {
   return (
-    <SafeAreaView className="flex-1 items-center justify-center gap-3 bg-background px-6" edges={['top']}>
+    <SafeAreaView
+      className="flex-1 items-center justify-center gap-3 bg-background px-6"
+      edges={['top']}
+    >
       <View className="items-center justify-center rounded-full bg-surface p-6">
         <Feather name={icon} size={32} color={COLORS.textDisabled} />
       </View>

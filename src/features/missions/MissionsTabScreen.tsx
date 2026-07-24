@@ -32,9 +32,14 @@ export function MissionsTabScreen() {
   // Same fromStatus guard as SearchingScreen covers the hero-accepts-at-the-same-time race.
   useEffect(() => {
     (missions ?? [])
-      .filter((mission) => mission.role === 'user' && mission.status === 'requested' && isRequestStale(mission.createdAt))
+      .filter(
+        (mission) =>
+          mission.role === 'user' &&
+          mission.status === 'requested' &&
+          isRequestStale(mission.createdAt),
+      )
       .forEach((mission) =>
-        updateStatusMutate({ missionId: mission.id, status: 'cancelled', fromStatus: 'requested' })
+        updateStatusMutate({ missionId: mission.id, status: 'cancelled', fromStatus: 'requested' }),
       );
   }, [missions, updateStatusMutate]);
 
@@ -67,7 +72,10 @@ export function MissionsTabScreen() {
 
   if (isError) {
     return (
-      <SafeAreaView className="flex-1 items-center justify-center gap-4 bg-background px-6" edges={['top']}>
+      <SafeAreaView
+        className="flex-1 items-center justify-center gap-4 bg-background px-6"
+        edges={['top']}
+      >
         <Text className="text-center text-sm text-text-secondary">
           Something went wrong.{'\n'}Please try again.
         </Text>
@@ -77,10 +85,10 @@ export function MissionsTabScreen() {
   }
 
   const activeMissions = (missions ?? []).filter(
-    (mission) => mission.status !== 'completed' && mission.status !== 'cancelled'
+    (mission) => mission.status !== 'completed' && mission.status !== 'cancelled',
   );
   const historyMissions = (missions ?? []).filter(
-    (mission) => mission.status === 'completed' || mission.status === 'cancelled'
+    (mission) => mission.status === 'completed' || mission.status === 'cancelled',
   );
 
   return (
@@ -95,11 +103,18 @@ export function MissionsTabScreen() {
           {activeMissions.length === 0 ? (
             <View className="items-center gap-3 rounded-card bg-surface p-8">
               <Feather name="check-circle" size={28} color={COLORS.textDisabled} />
-              <Text className="text-sm font-sans-semibold text-text-primary">No active mission</Text>
-              <Text className="font-sans text-center text-xs text-text-secondary">
-                진행 중인 미션이 없어요.{'\n'}Request help or accept a nearby mission to get started.
+              <Text className="text-sm font-sans-semibold text-text-primary">
+                No active mission
               </Text>
-              <Button label="Request Help" variant="secondary" onPress={() => router.push('/request')} />
+              <Text className="font-sans text-center text-xs text-text-secondary">
+                진행 중인 미션이 없어요.{'\n'}Request help or accept a nearby mission to get
+                started.
+              </Text>
+              <Button
+                label="Request Help"
+                variant="secondary"
+                onPress={() => router.push('/request')}
+              />
             </View>
           ) : (
             <View className="gap-3">
@@ -112,7 +127,10 @@ export function MissionsTabScreen() {
                     accessibilityLabel={`Open active mission: ${category.title}`}
                     onPress={() =>
                       mission.role === 'user'
-                        ? router.push({ pathname: '/mission-status', params: { missionId: mission.id } })
+                        ? router.push({
+                            pathname: '/mission-status',
+                            params: { missionId: mission.id },
+                          })
                         : router.push({ pathname: '/hero/active', params: { id: mission.id } })
                     }
                   >
@@ -134,14 +152,18 @@ export function MissionsTabScreen() {
           <SectionHeader title="History" />
           {historyMissions.length === 0 ? (
             <View className="items-center gap-2 rounded-card bg-surface p-8">
-              <Text className="font-sans text-sm text-text-secondary">No missions yet · 미션 기록이 없어요</Text>
+              <Text className="font-sans text-sm text-text-secondary">
+                No missions yet · 미션 기록이 없어요
+              </Text>
             </View>
           ) : (
             <View className="gap-3">
               {historyMissions.map((mission) => {
                 const category = getCategoryInfo(mission.category);
-                const isReviewable = mission.role === 'user' && mission.status === 'completed' && !mission.hasReview;
-                const isReviewed = mission.role === 'user' && mission.status === 'completed' && mission.hasReview;
+                const isReviewable =
+                  mission.role === 'user' && mission.status === 'completed' && !mission.hasReview;
+                const isReviewed =
+                  mission.role === 'user' && mission.status === 'completed' && mission.hasReview;
                 const statusLabel =
                   mission.status === 'cancelled'
                     ? 'Cancelled · 취소됨'
@@ -150,7 +172,8 @@ export function MissionsTabScreen() {
                       : isReviewed
                         ? 'Reviewed ✓'
                         : `$${mission.rewardAmount}`;
-                const statusVariant = mission.status === 'cancelled' ? 'neutral' : isReviewable ? 'info' : 'success';
+                const statusVariant =
+                  mission.status === 'cancelled' ? 'neutral' : isReviewable ? 'info' : 'success';
                 const card = (
                   <MissionCard
                     avatar={category.icon}
@@ -166,7 +189,9 @@ export function MissionsTabScreen() {
                     key={mission.id}
                     accessibilityRole="button"
                     accessibilityLabel={`Leave a review for ${category.title}`}
-                    onPress={() => router.push({ pathname: '/complete', params: { missionId: mission.id } })}
+                    onPress={() =>
+                      router.push({ pathname: '/complete', params: { missionId: mission.id } })
+                    }
                   >
                     {card}
                   </Pressable>

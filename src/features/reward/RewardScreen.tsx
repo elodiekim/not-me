@@ -43,7 +43,11 @@ export function RewardScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <Pressable className="flex-1" onPress={Keyboard.dismiss} accessible={false}>
         <View className="flex-row items-center px-6 py-4">
-          <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            onPress={() => router.back()}
+          >
             <Feather name="arrow-left" size={24} color="#111111" />
           </Pressable>
           <Text className="ml-4 text-lg font-sans-semibold text-text-primary">Set Your Reward</Text>
@@ -51,22 +55,29 @@ export function RewardScreen() {
 
         <View className="flex-1 gap-6 px-6">
           <View className="gap-1">
-            <Text className="text-2xl font-sans-bold text-text-primary">How much will you offer?</Text>
+            <Text className="text-2xl font-sans-bold text-text-primary">
+              How much will you offer?
+            </Text>
             <Text className="font-sans text-sm text-text-secondary">
-              Offering a reward helps you get help faster.{'\n'}리워드를 제안하면 더 빠르게 도움을 받을 수 있어요.
+              Offering a reward helps you get help faster.{'\n'}리워드를 제안하면 더 빠르게 도움을
+              받을 수 있어요.
             </Text>
           </View>
 
           <View className="gap-2">
             {PRESET_AMOUNTS.map((preset) => (
               <Pressable key={preset} onPress={() => setSelected(preset)}>
-                <View className={`items-center rounded-input py-4 ${selected === preset ? 'bg-primary/15' : 'bg-surface'}`}>
+                <View
+                  className={`items-center rounded-input py-4 ${selected === preset ? 'bg-primary/15' : 'bg-surface'}`}
+                >
                   <Text className="text-base font-sans-bold text-text-primary">${preset}</Text>
                 </View>
               </Pressable>
             ))}
             <Pressable onPress={() => setSelected('custom')}>
-              <View className={`items-center rounded-input py-4 ${selected === 'custom' ? 'bg-primary/15' : 'bg-surface'}`}>
+              <View
+                className={`items-center rounded-input py-4 ${selected === 'custom' ? 'bg-primary/15' : 'bg-surface'}`}
+              >
                 <Text className="text-base font-sans-bold text-text-primary">Custom amount</Text>
               </View>
             </Pressable>

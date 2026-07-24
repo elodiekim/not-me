@@ -35,7 +35,9 @@ export function StatusTimeline({ currentStep }: StatusTimelineProps) {
               >
                 {step.label}
               </Text>
-              <Text className={`font-sans text-xs ${isActive ? 'text-text-secondary' : 'text-text-disabled'}`}>
+              <Text
+                className={`font-sans text-xs ${isActive ? 'text-text-secondary' : 'text-text-disabled'}`}
+              >
                 {step.koLabel}
               </Text>
             </View>

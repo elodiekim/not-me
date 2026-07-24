@@ -46,7 +46,11 @@ export function ForgotPasswordScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-row items-center px-6 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Back"
+          onPress={() => router.back()}
+        >
           <Feather name="arrow-left" size={24} color="#111111" />
         </Pressable>
       </View>
@@ -59,7 +63,8 @@ export function ForgotPasswordScreen() {
 
         {sent ? (
           <Text className="text-center text-sm text-text-secondary">
-            If an account exists, we've sent a reset link.{'\n'}계정이 있다면 재설정 링크를 보내드렸어요.
+            If an account exists, we&apos;ve sent a reset link.{'\n'}계정이 있다면 재설정 링크를
+            보내드렸어요.
           </Text>
         ) : (
           <>

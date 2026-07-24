@@ -56,7 +56,7 @@ async function fetchMission(id: string): Promise<MissionWithRequester> {
 
 export function useMission(
   id: string | undefined,
-  options?: Pick<UseQueryOptions<MissionWithRequester>, 'refetchInterval'>
+  options?: Pick<UseQueryOptions<MissionWithRequester>, 'refetchInterval'>,
 ) {
   const queryClient = useQueryClient();
 
@@ -74,7 +74,7 @@ export function useMission(
         { event: 'UPDATE', schema: 'public', table: 'missions', filter: `id=eq.${id}` },
         () => {
           queryClient.invalidateQueries({ queryKey: ['mission', id] });
-        }
+        },
       )
       .subscribe();
 

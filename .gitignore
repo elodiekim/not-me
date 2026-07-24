@@ -37,6 +37,10 @@ yarn-error.*
 # typescript
 *.tsbuildinfo
 
+# lint / format caches
+.eslintcache
+.prettiercache
+
 # generated native folders
 /ios
 /android

@@ -115,7 +115,11 @@ export function SearchingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-row items-center justify-end px-6 py-4">
-        <Pressable accessibilityRole="button" accessibilityLabel="Close" onPress={() => router.replace('/')}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Close"
+          onPress={() => router.replace('/')}
+        >
           <Feather name="x" size={24} color="#111111" />
         </Pressable>
       </View>

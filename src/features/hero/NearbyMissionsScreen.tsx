@@ -22,7 +22,7 @@ interface RankedMission {
 // visible — only distance-known missions are radius-filtered.
 function rankByDistance(
   missions: MissionWithRequester[],
-  heroCoords: { latitude: number; longitude: number } | null
+  heroCoords: { latitude: number; longitude: number } | null,
 ): RankedMission[] {
   if (!heroCoords) {
     return missions.map((mission) => ({ mission, distanceKm: null }));
@@ -33,7 +33,10 @@ function rankByDistance(
       mission,
       distanceKm:
         mission.latitude != null && mission.longitude != null
-          ? haversineDistanceKm(heroCoords, { latitude: mission.latitude, longitude: mission.longitude })
+          ? haversineDistanceKm(heroCoords, {
+              latitude: mission.latitude,
+              longitude: mission.longitude,
+            })
           : null,
     }))
     .filter(({ distanceKm }) => distanceKm === null || distanceKm <= NEARBY_RADIUS_KM)
@@ -79,7 +82,10 @@ export function NearbyMissionsScreen() {
   const { data: missions, isLoading, isError, isRefetching, refetch } = useNearbyMissions();
   const heroCoords = useCurrentCoords();
 
-  const rankedMissions = useMemo(() => rankByDistance(missions ?? [], heroCoords), [missions, heroCoords]);
+  const rankedMissions = useMemo(
+    () => rankByDistance(missions ?? [], heroCoords),
+    [missions, heroCoords],
+  );
 
   // Only manual entry point for fresh data — this screen has no polling/Realtime, so
   // a new nearby request otherwise stays invisible until the hero re-opens the screen.
@@ -96,7 +102,11 @@ export function NearbyMissionsScreen() {
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="px-6 py-4">
         <View className="flex-row items-center">
-          <Pressable accessibilityRole="button" accessibilityLabel="Back" onPress={() => router.back()}>
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Back"
+            onPress={() => router.back()}
+          >
             <Feather name="arrow-left" size={24} color="#111111" />
           </Pressable>
           <Text className="ml-4 text-lg font-sans-semibold text-text-primary">Nearby Missions</Text>
@@ -133,11 +143,16 @@ export function NearbyMissionsScreen() {
           </View>
         </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }} refreshControl={refreshControl}>
+        <ScrollView
+          contentContainerStyle={{ padding: 24, gap: 16 }}
+          refreshControl={refreshControl}
+        >
           {rankedMissions.map(({ mission, distanceKm }) => {
             const category = getCategoryInfo(mission.category);
             const distanceLabel = distanceKm !== null ? formatDistance(distanceKm) : null;
-            const subtitle = distanceLabel ? `${category.koTitle} · ${distanceLabel}` : category.koTitle;
+            const subtitle = distanceLabel
+              ? `${category.koTitle} · ${distanceLabel}`
+              : category.koTitle;
             return (
               <Pressable
                 key={mission.id}
