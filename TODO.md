@@ -71,6 +71,13 @@
 - [x] 비밀번호 찾기(재설정) 플로우 — `AuthScreen`에 "비밀번호를 잊으셨나요?" 진입점 + 이메일 입력 화면 + Supabase `resetPasswordForEmail` 연동, PKCE `exchangeCodeForSession`로 리셋 링크 딥링크 처리. redirectTo는 `Linking.createURL('reset-password')`로 환경별 자동(Expo Go는 `exp://`, 독립 빌드는 `notme://`)
   - ⚠️ **실제 이메일 링크 클릭 E2E는 개발 빌드/TestFlight에서 최종 확인 필요.** Expo Go(iOS)로는 검증 불가 — iOS Safari가 웹 302 리다이렉트를 통한 `exp://` 커스텀 스킴 오픈을 차단함(구조적 한계, 코드 문제 아님). 로직 자체(만료 코드 에러 처리 / `updateUser` 비번 변경 라운드트립 / 미존재 이메일 enumeration 방지)는 실제 Supabase 호출로 검증 완료
   - 📌 개발 빌드에서 테스트할 때: Supabase Auth → URL Configuration → Redirect URLs에 `notme://reset-password` 등록 필요. 같은 기기에서 요청+클릭해야 함(PKCE code_verifier 로컬 저장)
+- [ ] **구글 로그인 (소셜 로그인, 카카오는 보류)** — 카카오는 Supabase 지원은 되지만 개인(비사업자) 카카오 개발자 계정으론 이메일 scope를 기본으로 못 받는 제약이 있어서 이번 범위에서 제외, 나중에 필요해지면 provider 하나 더 추가하는 식으로 확장
+  - `signInWithOAuth({ provider: 'google' })` + `expo-web-browser`(`skipBrowserRedirect: true`) 조합, 비밀번호 재설정 때 만든 딥링크 처리(`Linking.createURL`, redirect URL 등록) 패턴 재사용
+  - Google Cloud Console에서 OAuth 클라이언트 ID **3개** 필요(iOS / Android / Web) — 잘못된 자리에 잘못된 ID 넣으면 `DEVELOPER_ERROR`만 뜨고 원인 파악이 어려우니 설정 단계를 꼼꼼히 문서화하며 진행할 것
+  - Supabase Dashboard의 Auth → Providers에서 Google 활성화 + 위 클라이언트 ID/시크릿 등록
+  - **구글 가입 유저는 지금 이메일 가입 폼의 필수 휴대전화 입력을 건너뜀** → `profiles.phone`이 비어있는 상태로 시작함. 별도 "가입 직후 전화번호 입력" 화면은 새로 안 만들고, 이미 계획된 Edit Profile 화면(프로필 수정 항목 참고)에서 나중에 채우는 걸로 충분 — 지금 강제할 필요 없음
+  - `handle_new_user()` 트리거가 OAuth 가입에도 그대로 타는지 확인 필요(현재는 이메일/비번 가입 기준으로 짜여 있음) — `raw_user_meta_data`에 `phone` 키가 없는 경우 정상적으로 null로 들어가는지 확인
+  - 로그인 화면에 "Continue with Google" 버튼 추가(이메일/비번 폼과 나란히), 로딩 중 상태 처리
 - [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 꺼둔 상태 — 위 인증 폼 작업들과 함께 마무리하면서 다시 켤 것
 - [x] **비밀번호 최소 길이 클라이언트 검증** (점검에서 발견) — 가입(`AuthScreen`)·재설정(`ResetPasswordScreen`) 둘 다 `password.length > 0`만 확인. Supabase가 서버측 6자 최소를 걸어 막긴 하지만, 3자 등 입력 시 "Something went wrong"류 **모호한 에러**로 떨어져 사용자가 원인을 모름 → 두 화면에 "6자 이상" 안내 + `canSubmit` 가드 추가(서버 규칙과 숫자 일치시킬 것). 순수 클라 검증, DB 변경 없음
   - 서버 최소 길이 REST 확인: 5자→422 `weak_password`, 6자→200 → `MIN_PASSWORD_LENGTH = 6` (`src/features/auth/password.ts` 공유 상수)로 정확히 일치. 로그인 모드엔 미적용(기존 계정 로그인 막지 않게)
@@ -243,6 +250,14 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 손그림 PNG vs Feather 아웃라인 "혼재"도 버그 아님 — 실제로는 의도된 2단 체계: Feather(`@expo/vector-icons`) = 기능적 UI 아이콘(뒤로가기/닫기/검색/설정 리스트/빈 상태, 12곳 전수 확인 일관됨), 손그림 PNG = 브랜드·카테고리 일러스트(카테고리 아이콘, Become a Hero 등). `CategoryTile`의 Feather `more-horizontal`도 "아이콘 없는 카테고리" 폴백으로 의도된 것
   - 다만 `DESIGN.md` 「Icons」 섹션이 Lucide/outline만 명시하고 이 2단 체계를 문서화하지 않아 "기준 불명확"으로 보였던 것 — 사용자 승인 받아 「Icons」 섹션에 "기능적 UI 아이콘에만 적용, 카테고리/브랜드 아이콘은 Illustrations 섹션 참고" 2줄 추가해 명문화. PRODUCT.md는 건드리지 않음
 - [x] **Inbox 탭에 상단 헤더가 없음** (디자인 리뷰에서 발견 · 2026-07-14) — Home(로고+벨) / Mission("My Missions") / Profile(아바타+이름)은 화면 상단에 타이틀이 있는데, Inbox는 헤더가 없던 문제. 바로 위 "Coming Soon → 활동 피드" 작업과 함께 해결: `InboxScreen`에 다른 탭과 통일된 두 줄 헤더("Inbox / 받은편지함", `MissionsTabScreen`과 동일한 `text-lg font-sans-semibold` + 서브타이틀) 추가. 이벤트 0개일 때 뜨는 `ComingSoonScreen`도 자체적으로 "Inbox / 받은편지함" 타이틀을 표시해 빈 상태에서도 정체성 유지. Playwright로 헤더 렌더 육안 확인 완료
+
+## 🟡 P2 · 관리자 대시보드 (신규, `PRODUCT.md`의 "Admin Dashboard" 참고)
+CLAUDE.md "만들지 않음"에서 예외로 뺀 항목 — 내부 운영 도구 + 포트폴리오 목적. 스코프는 의도적으로 작게(차트 라이브러리 없음, 숫자 카드 위주).
+- [ ] `profiles.is_admin` 플래그 마이그레이션 + RLS: 관리자만 전체 `missions`/`profiles` 조회 가능하게(자기수락 버그 고칠 때 쓴 restrictive policy 패턴 재사용). 최초 관리자 계정은 SQL로 수동 지정(가입 플로우에 관리자 셀프 지정 넣지 않음 — 보안)
+- [ ] 웹 전용 관리자 라우트(Expo Router 내, 이 프로젝트에서 이미 Expo Web 검증 많이 해온 환경 재사용 — 새 앱/새 배포 파이프라인 안 만듦). 일반 유저는 접근 불가하도록 `is_admin` 체크로 가드
+- [ ] 화면 1 — 미션 관리: 전체 상태 필터 가능한 리스트, 막힌/방치된 요청 수동 취소 액션
+- [ ] 화면 2 — 유저 관리: 가입자 리스트, 문제 유저 비활성화 액션
+- [ ] 화면 3 — 통계: 총 미션 수 / 완료율 / 가입자 추이 / 평균 히어로 평점 — 숫자 카드만, 차트 라이브러리 신규 설치 안 함
 
 ## ⚪ 품질 / 인프라 (선택)
 
