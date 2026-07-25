@@ -1,8 +1,8 @@
 # TODO
 
-> 현재 상태: **UI 프로토타입 완성** — 전 화면이 클릭으로 연결됨.
-> 단, 모든 데이터가 하드코딩(mock)이고 `services / stores / hooks / types` 폴더는 비어 있음.
-> Supabase 미설치 · 인증 없음 · 화면 간 상태 전달 없음 · 리뷰/미션 저장 안 됨.
+> 현재 상태: **기능 MVP 거의 완성** — User↔Hero 플로우가 처음부터 끝까지 실제 Supabase 데이터로 동작(요청→매칭→완료→리뷰).
+> 인증 · Realtime · 위치/거리정렬 · 온보딩/스플래시 · Edit Profile(아바타 업로드) · Inbox 활동피드 · Total Earned · ESLint/Prettier까지 구현·검증 완료(대부분 Expo Web + Playwright 기준).
+> **남은 핵심**: 네이티브 실기기 검증(EAS Build → TestFlight) · 출시 전 이메일 인증 재활성화 · 핵심 유틸 단위 테스트 · 스토리지/비번 입력 서버측 검증 마감. 상세는 아래 미착수(`[ ]`) 항목 참고.
 
 ---
 
@@ -72,6 +72,9 @@
   - ⚠️ **실제 이메일 링크 클릭 E2E는 개발 빌드/TestFlight에서 최종 확인 필요.** Expo Go(iOS)로는 검증 불가 — iOS Safari가 웹 302 리다이렉트를 통한 `exp://` 커스텀 스킴 오픈을 차단함(구조적 한계, 코드 문제 아님). 로직 자체(만료 코드 에러 처리 / `updateUser` 비번 변경 라운드트립 / 미존재 이메일 enumeration 방지)는 실제 Supabase 호출로 검증 완료
   - 📌 개발 빌드에서 테스트할 때: Supabase Auth → URL Configuration → Redirect URLs에 `notme://reset-password` 등록 필요. 같은 기기에서 요청+클릭해야 함(PKCE code_verifier 로컬 저장)
 - [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 꺼둔 상태 — 위 인증 폼 작업들과 함께 마무리하면서 다시 켤 것
+- [x] **비밀번호 최소 길이 클라이언트 검증** (점검에서 발견) — 가입(`AuthScreen`)·재설정(`ResetPasswordScreen`) 둘 다 `password.length > 0`만 확인. Supabase가 서버측 6자 최소를 걸어 막긴 하지만, 3자 등 입력 시 "Something went wrong"류 **모호한 에러**로 떨어져 사용자가 원인을 모름 → 두 화면에 "6자 이상" 안내 + `canSubmit` 가드 추가(서버 규칙과 숫자 일치시킬 것). 순수 클라 검증, DB 변경 없음
+  - 서버 최소 길이 REST 확인: 5자→422 `weak_password`, 6자→200 → `MIN_PASSWORD_LENGTH = 6` (`src/features/auth/password.ts` 공유 상수)로 정확히 일치. 로그인 모드엔 미적용(기존 계정 로그인 막지 않게)
+  - 검증: `npx tsc --noEmit` 통과 · expo web + Playwright 11/11 통과 — 가입 5자→에러+버튼 비활성, 6자→통과 / 로그인 짧은 비번→버튼 유지(회귀 방지) / 재설정 화면도 동일(PKCE 토큰 교환 intercept로 폼 렌더)
 
 ## 🔴 P0 · 정합성 / 신뢰 버그 (점검에서 발견, 수정 완료 · 2026-07-10)
 
@@ -217,6 +220,7 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 이미지 선택은 `expo-image-picker`(신규 설치 필요), 정사각 크롭(`aspect: [1,1]`)까지만, 필터/편집 등 추가 기능 없음(오버엔지니어링 방지)
   - 업로드 성공 시 `profiles.avatar_url` 갱신 + `useProfile` 캐시 무효화, 실패 시 DESIGN.md 톤으로 에러 메시지
   - Notifications/Help는 이번 범위 아님 — CLAUDE.md "만들지 않음"의 푸시알림과 겹치니 Notifications는 별도 판단 필요(지금은 손대지 말 것)
+- [x] **avatars 버킷 서버측 제한 없음** (완료 · 2026-07-25 · 보안) — `0010_avatars_bucket_hardening.sql` 신규 작성(0009는 수정 안 함, append-only), 사용자가 SQL Editor에서 직접 실행. 버킷에 `file_size_limit = 5MB` + `allowed_mime_types = [image/jpeg, image/png, image/webp]` 추가, UPDATE 정책을 drop 후 `with check`까지 포함해 재생성(경로 이동 방지). 앱 코드 변경 없음. 검증(실 Supabase REST): ①5MB+ 업로드 → **413 차단**, ②text/plain·application/pdf → **415 차단**, ③정상 jpeg/png 업로드 → **200 정상(회귀 OK)**, ④본인 폴더 PUT 업데이트 → 200, 타 유저가 A 폴더로 PUT → **403 RLS 차단**
 - [x] 히어로 누적 수익(Total Earned) 표시 (완료 · 2026-07-22) — `ProfileScreen`에 히어로로 완료한 미션(`role==='hero' && status==='completed'`)의 `rewardAmount` 합계 통계 카드 추가. Member since 카드 위에 전체 폭 단독 Card로 배치. 새 훅/쿼리/DB 변경 없이 기존 `useMissionHistory` 배열 filter+reduce. 부동소수점 드리프트는 `formatEarned`(toFixed(2) 후 `.00`만 잘라냄)로 처리. **정산/출금 문구·버튼 없음**(CLAUDE.md "Payments" 미구현 유지). 0원은 담백하게 "$0". 검증(실 Supabase, 계정 3개): 히어로 완료 $10.50/$20/$0.25 → 합계 **$30.75** 정확, accepted/cancelled/requested 및 role=user 완료 미션은 합계 제외 확인, 빈 계정 "$0", `10.1+10.2`→`$20.30` 드리프트 없음, `tsc` 통과
 - [x] Home 알림 벨 아이콘 동작 또는 비활성 처리 — 정적 `<Image>`였던 벨을 `Pressable`로 감싸고 `accessibilityRole="button"`/`accessibilityLabel="Notifications"` + `hitSlop={10}`(네이티브에서 24→44pt 터치영역) 추가. 실제 알림 기능은 CLAUDE.md상 보류 범위라, 탭 시 "Coming soon · 곧 만나요" 토스트만 표시. `HomeScreen`의 토스트 상태를 `showCancelToast: boolean` → `toastMessage: string | null`로 최소 리팩터해 취소 확인/벨 안내가 같은 `<Toast>` 하나를 공유(`HomeHeader`는 `onBellPress` 콜백만 받음). Expo web 실측: 벨 탭→"Coming soon" 토스트 뜨고 ~2.9초 후 자동 소멸, 기존 취소 토스트(`?cancelled=1`)도 회귀 확인 완료, tsc 통과. 주의: `hitSlop`은 react-native-web에서는 클릭영역을 확장하지 않음(24px 그대로) — 네이티브 타깃에선 정상 44pt.
 - [x] 커스텀 리워드 상한/검증 (점검에서 발견) — `RewardScreen`이 `Number(customValue) > 0`만 확인해 $999999 같은 값도 통과하던 문제. `MAX_REWARD_AMOUNT`(`constants/mission.ts`, $200) + 소수 2자리 정규식으로 클라이언트 가드 추가, DB에도 `reward_amount_range` check 제약(`0008_reward_amount_check.sql`) 추가해 이중 방어. 실제 앱에서 $201/$200 경계값, 10.123/10.12 소수 자리 확인 완료, REST로 직접 999999 insert 시도 시 `23514` 위반으로 차단되는 것도 확인 완료
