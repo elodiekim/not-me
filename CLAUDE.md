@@ -349,12 +349,17 @@ Do not implement unless explicitly requested.
 - AI Features
 - Chat
 - Push Notifications
-- Analytics
-- Admin Dashboard
+- Analytics (user tracking, funnels, growth metrics — see exception below)
 - Referral System
 - Gamification
 
 Keep the MVP focused.
+
+## Exception: Internal Admin Dashboard
+
+Admin Dashboard is no longer excluded — it's planned as a small internal ops tool (mission list/filters, user list, basic aggregate counts), separate from the consumer app. See `PRODUCT.md`'s Admin Dashboard section for scope.
+
+This is not "Analytics" in the excluded sense above — no event tracking, no funnels, no growth/marketing metrics. Just read-only counts of data that already exists in `missions`/`profiles`/`reviews`.
 
 ---
 

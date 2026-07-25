@@ -355,6 +355,28 @@ The two other map-shaped needs (Nearby Missions spatial browsing, Confirm Locati
 
 ---
 
+# Admin Dashboard
+
+An internal, admin-only web tool for operating NotMe — separate from the consumer app. Also a deliberate portfolio artifact (demonstrates data tables, authorization tiers, and aggregate queries, distinct from the consumer screens).
+
+## Access
+
+Gated by an `is_admin` flag on `profiles`, enforced via RLS (same restrictive-policy pattern used for the self-accept fix). Not a public route.
+
+## Scope (v1, kept small)
+
+- **Missions**: full list across all statuses, filterable. Manual cancel for stuck/abandoned requests.
+- **Users**: signup list. Disable a problem user's account.
+- **Stats**: simple counts — total missions, completion rate, signups over time, average Hero rating. Number cards, not charts. No chart library.
+
+## Explicitly Out of Scope
+
+No event tracking, no funnels, no growth/marketing analytics — see CLAUDE.md's "What NOT to Build." This is operational visibility into existing data, not a BI tool.
+
+Where to run it: a web-only admin route inside the existing Expo Router app (this project is already tested extensively on Expo Web), not a separate app.
+
+---
+
 # Non Goals
 
 NotMe is NOT:
