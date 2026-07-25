@@ -25,6 +25,14 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "NotMe uses your photo library to set your profile picture.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/logo/app-icon.png",
