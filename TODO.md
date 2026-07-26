@@ -149,6 +149,12 @@
   - `isReviewed` 상태도 판단해서 같이 처리 — 볼 것도 없고 나가기만 하면 되는 상태인데 disabled "Reviewed ✓" 버튼 하나뿐이라 헤더 back도 없는 이 화면에서 나갈 방법이 전혀 없었음. "Reviewed ✓"(비활성) 아래에 "Back to Home" 버튼 추가해서 같은 패턴으로 대칭 처리
   - `isRequested`(Cancel)/`isCancelled`/진행 중 상태("Waiting for completion...")는 이번 범위 아니라 그대로 미변경
   - 검증(임시 테스트 계정 2개, expo web + Playwright, 실 REST): ① completed+미리뷰 미션 진입 → "Leave a Review"/"Not now" 두 버튼 다 노출 확인 → "Not now" 클릭 → 홈 이동 확인 ② Mission 탭 History에서 여전히 "Leave a Review" 카드로 남아있는지(리뷰 상태 안 바뀜) 확인 ③ 거기서 다시 들어가 실제로 별점 남기고 제출 → REST로 `reviews` row 생성 확인 ④ 같은 미션에 `/mission-status` 재진입 시 "Reviewed ✓" + "Back to Home" 두 버튼으로 바뀌는지, "Back to Home" 클릭 시 실제로 홈 이동하는지 확인 ⑤ 회귀: 별개 미션으로 "Leave a Review" 버튼이 기존처럼 `/complete`로 정상 이동하는지 확인. `npx tsc --noEmit` 통과, 13개 체크 전부 통과
+- [x] **리뷰 목록 화면 신규 — 리뷰 상세 열람 + 히어로 신뢰 확인** (사용자가 실기기 테스트 중 발견 · 완료 · 2026-07-27) — 별점/개수(`RatingRow`)는 여러 화면에 뜨지만 **실제 리뷰 코멘트를 읽을 화면이 아예 없던** 문제. 두 갈래(①본인 받은/쓴 리뷰 열람 불가 ②`/mission-status`에서 배정된 히어로를 숫자만 보고 믿어야 함)를 화면/훅 하나 재사용으로 동시 해결(화면 2개 안 만듦).
+  - 새 훅 `src/hooks/useReviews.ts`: `useReceivedReviews(heroId)`(리뷰 대상 = `hero_id` 매치)와 `useWrittenReviews(reviewerId)`(작성자 = `reviewer_id` 매치) 2개. `useMission`의 FK 임베드 패턴 그대로(`profiles!reviews_reviewer_id_fkey` / `profiles!reviews_hero_id_fkey`)로 상대방 이름까지 조인, 최신순 정렬. RLS 변경 불필요(이미 인증 유저 전체가 `reviews` SELECT 가능 — 공개 신뢰 신호)
+  - 새 화면 `app/reviews.tsx` + `src/features/reviews/ReviewsScreen.tsx`: `heroId` 쿼리 파라미터 유무로 2가지 모드. **있으면**(히어로 지정) 그 히어로가 "받은 리뷰"만 읽기 전용(`/mission-status`에서 진입, 신뢰 확인용), **없으면**(본인 프로필) "받은 리뷰"+"쓴 리뷰" 두 섹션(`SectionHeader` 재사용). 각 항목은 `RatingRow`(별점)+코멘트(없으면 생략)+상대방 이름(`by`/`for`)+날짜. back 버튼·빈 상태("No reviews yet.\n아직 리뷰가 없어요.", 죄책감 문구 없음)·로딩/에러(공통 패턴) 포함
+  - `MissionScreen.tsx`: `mission.heroId`가 있을 때만 히어로 정보 `MissionCard`를 **지역적으로 `Pressable`로 감싸** `/reviews?heroId=<heroId>`로 이동(공용 `MissionCard` API는 안 건드림 — `onPress` prop 추가 X). `requested`(히어로 미배정)면 안 감싸서 탭 불가
+  - `ProfileScreen.tsx`: "Member since" 카드 아래 "My Reviews · 내 리뷰" 링크 카드 하나 추가(`router.push('/reviews')`, 파라미터 없이). Settings 행과 동일한 아이콘+라벨+chevron 스타일
+  - 검증(expo web + Playwright, 실 Supabase 계정 2개로 양방향 리뷰 시딩): ① 프로필→My Reviews→받은 리뷰(H→R 코멘트)·쓴 리뷰(R→H 코멘트) 각각 정상 표시 ② `/reviews?heroId=H`는 H가 받은 리뷰만 뜨고 **다른 히어로 리뷰 안 섞임**(R이 받은 리뷰 미노출) 확인 ③ `/mission-status`(히어로 배정 미션)에서 히어로 카드 탭→`/reviews?heroId=H` 이동 확인 ④ 빈 상태(리뷰 응답 `[]` 가로채기) 정상 렌더 ⑤ `requested` 미션은 리뷰 버튼 없음 + 카드 탭해도 URL 불변(회귀) 확인. `npx tsc --noEmit` 통과. **주의**: `reviews`/`missions`에 DELETE RLS 정책이 없어(0009 avatars만 존재) 검증용 테스트 행은 REST로 삭제 불가 — 테스트 계정에 완료 미션/리뷰가 남음(기존 "service key 없어 남는 무해한 더미" 선례와 동일). 정리 원하면 아래 SQL을 Supabase에서 실행: `delete from missions where address = 'Seoul reviews test';`(리뷰는 `mission_id` on delete cascade로 함께 삭제됨)
 
 ## 🟡 P2 · 실시간 & 위치 (제품 핵심 경험)
 
@@ -252,7 +258,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] **Inbox 탭에 상단 헤더가 없음** (디자인 리뷰에서 발견 · 2026-07-14) — Home(로고+벨) / Mission("My Missions") / Profile(아바타+이름)은 화면 상단에 타이틀이 있는데, Inbox는 헤더가 없던 문제. 바로 위 "Coming Soon → 활동 피드" 작업과 함께 해결: `InboxScreen`에 다른 탭과 통일된 두 줄 헤더("Inbox / 받은편지함", `MissionsTabScreen`과 동일한 `text-lg font-sans-semibold` + 서브타이틀) 추가. 이벤트 0개일 때 뜨는 `ComingSoonScreen`도 자체적으로 "Inbox / 받은편지함" 타이틀을 표시해 빈 상태에서도 정체성 유지. Playwright로 헤더 렌더 육안 확인 완료
 
 ## 🟡 P2 · 관리자 대시보드 (신규, `PRODUCT.md`의 "Admin Dashboard" 참고)
+
 CLAUDE.md "만들지 않음"에서 예외로 뺀 항목 — 내부 운영 도구 + 포트폴리오 목적. 스코프는 의도적으로 작게(차트 라이브러리 없음, 숫자 카드 위주).
+
 - [ ] `profiles.is_admin` 플래그 마이그레이션 + RLS: 관리자만 전체 `missions`/`profiles` 조회 가능하게(자기수락 버그 고칠 때 쓴 restrictive policy 패턴 재사용). 최초 관리자 계정은 SQL로 수동 지정(가입 플로우에 관리자 셀프 지정 넣지 않음 — 보안)
 - [ ] 웹 전용 관리자 라우트(Expo Router 내, 이 프로젝트에서 이미 Expo Web 검증 많이 해온 환경 재사용 — 새 앱/새 배포 파이프라인 안 만듦). 일반 유저는 접근 불가하도록 `is_admin` 체크로 가드
 - [ ] 화면 1 — 미션 관리: 전체 상태 필터 가능한 리스트, 막힌/방치된 요청 수동 취소 액션

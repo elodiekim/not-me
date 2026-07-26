@@ -111,6 +111,23 @@ export function ProfileScreen() {
           <Text className="font-sans text-xs text-text-secondary">Member since · 가입일</Text>
         </Card>
 
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="My Reviews"
+          onPress={() => router.push('/reviews')}
+        >
+          <Card>
+            <View className="flex-row items-center gap-3">
+              <Feather name="star" size={18} color={COLORS.textSecondary} />
+              <View className="flex-1">
+                <Text className="text-sm font-sans-semibold text-text-primary">My Reviews</Text>
+                <Text className="font-sans text-xs text-text-secondary">내 리뷰</Text>
+              </View>
+              <Feather name="chevron-right" size={18} color={COLORS.textDisabled} />
+            </View>
+          </Card>
+        </Pressable>
+
         <View className="gap-3">
           <SectionHeader title="Settings" />
           <Card>
