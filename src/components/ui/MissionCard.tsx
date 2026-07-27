@@ -30,7 +30,11 @@ export function MissionCard({
     <Card>
       <View className="flex-row items-center gap-4">
         <View className="items-center justify-center rounded-full bg-primary/20 p-2">
-          <Image source={avatar} style={{ width: 48, height: 48 }} resizeMode="contain" />
+          <Image
+            source={avatar}
+            style={{ width: 48, height: 48, borderRadius: 24 }}
+            resizeMode="contain"
+          />
         </View>
         <View className="flex-1 gap-1">
           <Badge label={statusLabel} variant={statusVariant} />
