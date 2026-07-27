@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
 import { getCategoryInfo } from '../../constants/categoryInfo';
@@ -66,6 +66,9 @@ export function MissionScreen() {
   // (accepted/on_the_way), cancelling raises trust/reward questions we don't
   // handle yet — left as a known gap, so no Cancel button in those states.
   const isRequested = mission.status === 'requested';
+  // Once a hero is assigned, their card links to their public reviews so the
+  // requester can vet who's coming. A still-'requested' mission has no hero → no link.
+  const heroId = mission.heroId;
 
   const handleCancel = async () => {
     try {
@@ -87,27 +90,43 @@ export function MissionScreen() {
         <Text className="text-lg font-sans-semibold text-text-primary">Mission Status</Text>
       </View>
       <View className="flex-1 gap-8 px-6">
-        <MissionCard
-          avatar={
-            mission.heroAvatarUrl
-              ? { uri: mission.heroAvatarUrl }
-              : require('../../../assets/icons/profile.png')
-          }
-          title={
-            isCancelled
-              ? 'Request cancelled'
-              : mission.heroName
-                ? `${mission.heroName} is on the way`
-                : 'Looking for your hero'
-          }
-          subtitle={`${category.title} · ${category.koTitle} · $${mission.rewardAmount}`}
-          statusLabel={
-            isCancelled ? 'Cancelled · 취소됨' : isCompleted ? 'Completed' : 'On the way'
-          }
-          statusVariant={isCancelled ? 'neutral' : isCompleted ? 'success' : 'info'}
-          rating={mission.heroRating ?? undefined}
-          reviewCount={mission.heroReviewCount}
-        />
+        {(() => {
+          const heroCard = (
+            <MissionCard
+              avatar={
+                mission.heroAvatarUrl
+                  ? { uri: mission.heroAvatarUrl }
+                  : require('../../../assets/icons/profile.png')
+              }
+              title={
+                isCancelled
+                  ? 'Request cancelled'
+                  : mission.heroName
+                    ? `${mission.heroName} is on the way`
+                    : 'Looking for your hero'
+              }
+              subtitle={`${category.title} · ${category.koTitle} · $${mission.rewardAmount}`}
+              statusLabel={
+                isCancelled ? 'Cancelled · 취소됨' : isCompleted ? 'Completed' : 'On the way'
+              }
+              statusVariant={isCancelled ? 'neutral' : isCompleted ? 'success' : 'info'}
+              rating={mission.heroRating ?? undefined}
+              reviewCount={mission.heroReviewCount}
+            />
+          );
+          // Wrap in a Pressable only when a hero is assigned — links to their reviews.
+          return heroId ? (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel={`View ${mission.heroName ?? 'hero'} reviews`}
+              onPress={() => router.push({ pathname: '/reviews', params: { heroId } })}
+            >
+              {heroCard}
+            </Pressable>
+          ) : (
+            heroCard
+          );
+        })()}
 
         <Text className="font-sans text-center text-sm text-text-secondary">
           {isCancelled

@@ -78,6 +78,7 @@
   - **구글 가입 유저는 지금 이메일 가입 폼의 필수 휴대전화 입력을 건너뜀** → `profiles.phone`이 비어있는 상태로 시작함. 별도 "가입 직후 전화번호 입력" 화면은 새로 안 만들고, 이미 계획된 Edit Profile 화면(프로필 수정 항목 참고)에서 나중에 채우는 걸로 충분 — 지금 강제할 필요 없음
   - `handle_new_user()` 트리거가 OAuth 가입에도 그대로 타는지 확인 필요(현재는 이메일/비번 가입 기준으로 짜여 있음) — `raw_user_meta_data`에 `phone` 키가 없는 경우 정상적으로 null로 들어가는지 확인
   - 로그인 화면에 "Continue with Google" 버튼 추가(이메일/비번 폼과 나란히), 로딩 중 상태 처리
+- [ ] **`missions`/`reviews`에 DELETE RLS 정책이 아예 없음** (점검 중 발견 · 2026-07-27) — RLS는 정책 없는 커맨드를 기본 거부하므로 보안 문제는 아니지만(안전한 기본값), 그 결과 ①실제 유저도 자기 미션/리뷰 row를 삭제할 방법이 전혀 없음(취소=`status` 변경만 가능, 진짜 삭제 불가) ②이번 세션 REST 테스트 정리용 DELETE 호출들이 `Prefer: return=representation` 없이는 204로 "성공"처럼 보였지만 실제로는 0건 삭제됨 — 원격 프로젝트에 테스트 계정/미션/리뷰 잔여 데이터가 생각보다 많이 남아있을 수 있음(무해한 더미, 지금은 그대로 둠). 나중에 처리할 때: `missions`는 아마 본인 소유 + `requested`(미매칭) 상태에서만 삭제 허용이 안전(수락/완료된 건 기록 보존 목적으로 삭제 막는 게 나을 수 있음), `reviews`는 신뢰 신호라 작성자가 임의로 지울 수 있게 할지 자체를 판단 필요 — 마이그레이션은 항상 그렇듯 파일만 작성, 직접 적용 금지
 - [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 꺼둔 상태 — 위 인증 폼 작업들과 함께 마무리하면서 다시 켤 것
 - [x] **비밀번호 최소 길이 클라이언트 검증** (점검에서 발견) — 가입(`AuthScreen`)·재설정(`ResetPasswordScreen`) 둘 다 `password.length > 0`만 확인. Supabase가 서버측 6자 최소를 걸어 막긴 하지만, 3자 등 입력 시 "Something went wrong"류 **모호한 에러**로 떨어져 사용자가 원인을 모름 → 두 화면에 "6자 이상" 안내 + `canSubmit` 가드 추가(서버 규칙과 숫자 일치시킬 것). 순수 클라 검증, DB 변경 없음
   - 서버 최소 길이 REST 확인: 5자→422 `weak_password`, 6자→200 → `MIN_PASSWORD_LENGTH = 6` (`src/features/auth/password.ts` 공유 상수)로 정확히 일치. 로그인 모드엔 미적용(기존 계정 로그인 막지 않게)
@@ -149,6 +150,12 @@
   - `isReviewed` 상태도 판단해서 같이 처리 — 볼 것도 없고 나가기만 하면 되는 상태인데 disabled "Reviewed ✓" 버튼 하나뿐이라 헤더 back도 없는 이 화면에서 나갈 방법이 전혀 없었음. "Reviewed ✓"(비활성) 아래에 "Back to Home" 버튼 추가해서 같은 패턴으로 대칭 처리
   - `isRequested`(Cancel)/`isCancelled`/진행 중 상태("Waiting for completion...")는 이번 범위 아니라 그대로 미변경
   - 검증(임시 테스트 계정 2개, expo web + Playwright, 실 REST): ① completed+미리뷰 미션 진입 → "Leave a Review"/"Not now" 두 버튼 다 노출 확인 → "Not now" 클릭 → 홈 이동 확인 ② Mission 탭 History에서 여전히 "Leave a Review" 카드로 남아있는지(리뷰 상태 안 바뀜) 확인 ③ 거기서 다시 들어가 실제로 별점 남기고 제출 → REST로 `reviews` row 생성 확인 ④ 같은 미션에 `/mission-status` 재진입 시 "Reviewed ✓" + "Back to Home" 두 버튼으로 바뀌는지, "Back to Home" 클릭 시 실제로 홈 이동하는지 확인 ⑤ 회귀: 별개 미션으로 "Leave a Review" 버튼이 기존처럼 `/complete`로 정상 이동하는지 확인. `npx tsc --noEmit` 통과, 13개 체크 전부 통과
+- [x] **리뷰 목록 화면 신규 — 리뷰 상세 열람 + 히어로 신뢰 확인** (사용자가 실기기 테스트 중 발견 · 완료 · 2026-07-27) — 별점/개수(`RatingRow`)는 여러 화면에 뜨지만 **실제 리뷰 코멘트를 읽을 화면이 아예 없던** 문제. 두 갈래(①본인 받은/쓴 리뷰 열람 불가 ②`/mission-status`에서 배정된 히어로를 숫자만 보고 믿어야 함)를 화면/훅 하나 재사용으로 동시 해결(화면 2개 안 만듦).
+  - 새 훅 `src/hooks/useReviews.ts`: `useReceivedReviews(heroId)`(리뷰 대상 = `hero_id` 매치)와 `useWrittenReviews(reviewerId)`(작성자 = `reviewer_id` 매치) 2개. `useMission`의 FK 임베드 패턴 그대로(`profiles!reviews_reviewer_id_fkey` / `profiles!reviews_hero_id_fkey`)로 상대방 이름까지 조인, 최신순 정렬. RLS 변경 불필요(이미 인증 유저 전체가 `reviews` SELECT 가능 — 공개 신뢰 신호)
+  - 새 화면 `app/reviews.tsx` + `src/features/reviews/ReviewsScreen.tsx`: `heroId` 쿼리 파라미터 유무로 2가지 모드. **있으면**(히어로 지정) 그 히어로가 "받은 리뷰"만 읽기 전용(`/mission-status`에서 진입, 신뢰 확인용), **없으면**(본인 프로필) "받은 리뷰"+"쓴 리뷰" 두 섹션(`SectionHeader` 재사용). 각 항목은 `RatingRow`(별점)+코멘트(없으면 생략)+상대방 이름(`by`/`for`)+날짜. back 버튼·빈 상태("No reviews yet.\n아직 리뷰가 없어요.", 죄책감 문구 없음)·로딩/에러(공통 패턴) 포함
+  - `MissionScreen.tsx`: `mission.heroId`가 있을 때만 히어로 정보 `MissionCard`를 **지역적으로 `Pressable`로 감싸** `/reviews?heroId=<heroId>`로 이동(공용 `MissionCard` API는 안 건드림 — `onPress` prop 추가 X). `requested`(히어로 미배정)면 안 감싸서 탭 불가
+  - `ProfileScreen.tsx`: "Member since" 카드 아래 "My Reviews · 내 리뷰" 링크 카드 하나 추가(`router.push('/reviews')`, 파라미터 없이). Settings 행과 동일한 아이콘+라벨+chevron 스타일
+  - 검증(expo web + Playwright, 실 Supabase 계정 2개로 양방향 리뷰 시딩): ① 프로필→My Reviews→받은 리뷰(H→R 코멘트)·쓴 리뷰(R→H 코멘트) 각각 정상 표시 ② `/reviews?heroId=H`는 H가 받은 리뷰만 뜨고 **다른 히어로 리뷰 안 섞임**(R이 받은 리뷰 미노출) 확인 ③ `/mission-status`(히어로 배정 미션)에서 히어로 카드 탭→`/reviews?heroId=H` 이동 확인 ④ 빈 상태(리뷰 응답 `[]` 가로채기) 정상 렌더 ⑤ `requested` 미션은 리뷰 버튼 없음 + 카드 탭해도 URL 불변(회귀) 확인. `npx tsc --noEmit` 통과. **주의**: `reviews`/`missions`에 DELETE RLS 정책이 없어(0009 avatars만 존재) 검증용 테스트 행은 REST로 삭제 불가 — 테스트 계정에 완료 미션/리뷰가 남음(기존 "service key 없어 남는 무해한 더미" 선례와 동일). 정리 원하면 아래 SQL을 Supabase에서 실행: `delete from missions where address = 'Seoul reviews test';`(리뷰는 `mission_id` on delete cascade로 함께 삭제됨)
 
 ## 🟡 P2 · 실시간 & 위치 (제품 핵심 경험)
 
@@ -204,6 +211,11 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 검증(Expo Web + Playwright, 실제 동작): ①localStorage 비운 첫 접속 → `/onboarding` 3장 표시 ②마지막 장 스크롤 시 Get Started 노출 → 탭 시 `/sign-in`, `hasOnboarded=true` 저장 ③온보딩 후 새로고침 → 온보딩 안 뜨고 바로 sign-in ④Skip → 즉시 sign-in + 플래그 저장 ⑤**회귀**: 실제 회원가입으로 세션 생성 후 `hasOnboarded` 플래그를 지우고 새로고침해도 온보딩 안 뜨고 `/`(홈) 유지, 로그인 상태로 `/onboarding` 딥링크해도 `/`로 리다이렉트 — 온보딩 로직이 로그인 유저 플로우를 안 건드림 확인. `npx tsc --noEmit` 통과
   - (테스트용 더미 계정 `onboard-test-*@example.com` 1개가 원격 auth에 남음 — service key 없어 삭제 불가, 무해한 더미)
 - [x] app.json 앱 아이콘 / 스플래시 설정 — `expo.icon`에 `./assets/logo/app-icon.png` 연결(ios/android 공용 하나, 과설계 안 함) + 위 스플래시 플러그인. `npx expo config`로 icon/splash 경로 정상 resolve 확인. ⚠️ **아이콘 실제 렌더링은 Web에서 검증 불가(네이티브 전용)**, 게다가 `app-icon.png`가 정사각형이 아님(586x619) — Expo는 1024x1024 정사각 아이콘 권장이라 네이티브 빌드 시 왜곡/패딩 경고 가능성 있음. 정식 아이콘 규격(1024x1024 square) 준비 후 EAS 빌드에서 재확인 필요
+- [x] **`expo-image-picker` 네이티브 권한 설정 누락 — 실기기에서 프로필 사진 수정 안 됨** (사용자가 실기기 테스트 중 발견 · 수정 완료 · 2026-07-19) — Edit Profile의 사진 선택 코드(`EditProfileScreen.tsx`)는 정상인데 `app.json`에 `expo-image-picker`의 iOS 권한 문구(`NSPhotoLibraryUsageDescription`)가 아예 없었음. Expo Go에선 기본값으로 어물쩍 넘어가지만 실기기 dev build/TestFlight에선 이게 없으면 사진 선택기가 조용히 실패/크래시할 수 있음 — 이번 세션 내내 Expo Web으로만 검증해서 놓쳤던, 처음 발견된 네이티브 전용 버그.
+  - `app.json` plugins에 `expo-location`과 동일한 패턴으로 `expo-image-picker` 추가: `photosPermission`(iOS `NSPhotoLibraryUsageDescription`) 커스텀 문구 설정. 앱이 `launchImageLibraryAsync`만 쓰고(카메라 촬영 기능 없음, `EditProfileScreen.tsx` 확인) 카메라/마이크는 안 쓰므로 `cameraPermission: false` / `microphonePermission: false`도 같이 설정해 불필요한 권한 요청 최소화(기본값대로 두면 마이크는 `RECORD_AUDIO`가 자동으로 Android 매니페스트에 추가됨 — 이 프로젝트엔 불필요)
+  - 다른 plugin 설정/코드는 미변경(순수 설정 누락 수정)
+  - 검증: `npx expo config --type public`으로 plugins 배열에 반영 확인, `npx tsc --noEmit` 통과. **네이티브 파일까지 실제로 확인**하려고 `npx expo prebuild --no-install --platform all`을 임시로 돌려서 `ios/NotMe/Info.plist`에 `NSPhotoLibraryUsageDescription`(커스텀 문구)이 실제로 생성되고 `NSCameraUsageDescription`/`NSMicrophoneUsageDescription`은 없는 것 확인, `android/app/src/main/AndroidManifest.xml`에도 `CAMERA`/`RECORD_AUDIO`가 `tools:node="remove"`로 명시적으로 막혀 있는 것 확인 — 둘 다 기대대로 정확히 반영됨. **managed workflow 유지**: prebuild가 생성한 `ios/`/`android/` 폴더는 확인 후 삭제, `app.json`/`package.json`에 prebuild가 자동으로 끼워넣은 `bundleIdentifier`/`package`/`android.permissions`/scripts 변경분도 git diff로 확인해서 되돌리고 plugins 추가분만 남김(`ios`/`android`는 `.gitignore`에도 이미 등록돼 있어 커밋 대상 아님)
+  - ⚠️ **이건 설정이 문서(Info.plist/AndroidManifest)에 정상 반영되는 것까지만 확인한 것 — 실기기에서 사진 선택기가 실제로 뜨는지는 다음 EAS dev build/TestFlight에서 직접 확인 필요.** Expo Web으로는 이 버그 자체가 재현되지 않아서(Expo Go/웹은 브라우저 파일 선택기를 씀) 이번 세션에서 실기기 검증은 불가능했음
 
 ## 🟢 P3 · 마감 완성도 (Definition of Done)
 
@@ -257,7 +269,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] **Inbox 탭에 상단 헤더가 없음** (디자인 리뷰에서 발견 · 2026-07-14) — Home(로고+벨) / Mission("My Missions") / Profile(아바타+이름)은 화면 상단에 타이틀이 있는데, Inbox는 헤더가 없던 문제. 바로 위 "Coming Soon → 활동 피드" 작업과 함께 해결: `InboxScreen`에 다른 탭과 통일된 두 줄 헤더("Inbox / 받은편지함", `MissionsTabScreen`과 동일한 `text-lg font-sans-semibold` + 서브타이틀) 추가. 이벤트 0개일 때 뜨는 `ComingSoonScreen`도 자체적으로 "Inbox / 받은편지함" 타이틀을 표시해 빈 상태에서도 정체성 유지. Playwright로 헤더 렌더 육안 확인 완료
 
 ## 🟡 P2 · 관리자 대시보드 (신규, `PRODUCT.md`의 "Admin Dashboard" 참고)
+
 CLAUDE.md "만들지 않음"에서 예외로 뺀 항목 — 내부 운영 도구 + 포트폴리오 목적. 스코프는 의도적으로 작게(차트 라이브러리 없음, 숫자 카드 위주).
+
 - [ ] `profiles.is_admin` 플래그 마이그레이션 + RLS: 관리자만 전체 `missions`/`profiles` 조회 가능하게(자기수락 버그 고칠 때 쓴 restrictive policy 패턴 재사용). 최초 관리자 계정은 SQL로 수동 지정(가입 플로우에 관리자 셀프 지정 넣지 않음 — 보안)
 - [ ] 웹 전용 관리자 라우트(Expo Router 내, 이 프로젝트에서 이미 Expo Web 검증 많이 해온 환경 재사용 — 새 앱/새 배포 파이프라인 안 만듦). 일반 유저는 접근 불가하도록 `is_admin` 체크로 가드
 - [ ] 화면 1 — 미션 관리: 전체 상태 필터 가능한 리스트, 막힌/방치된 요청 수동 취소 액션
