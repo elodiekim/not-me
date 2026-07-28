@@ -285,6 +285,18 @@ UPPER_SNAKE_CASE
 
 ---
 
+# Git Conventions
+
+Commit messages in English.
+
+Keep the subject short, one line.
+
+Avoid multi-paragraph bodies.
+
+Never commit directly to main — always use a feature branch.
+
+---
+
 # Error Handling
 
 Never expose raw server errors to the user.
