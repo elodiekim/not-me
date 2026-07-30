@@ -54,7 +54,13 @@ export function ProfileScreen() {
           />
           <Text className="text-xl font-sans-bold text-text-primary">{profile.name}</Text>
           {profile.heroReviewCount > 0 && profile.heroRating !== null ? (
-            <RatingRow rating={profile.heroRating} reviewCount={profile.heroReviewCount} />
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="View reviews"
+              onPress={() => router.push('/reviews')}
+            >
+              <RatingRow rating={profile.heroRating} reviewCount={profile.heroReviewCount} />
+            </Pressable>
           ) : (
             <View className="items-center">
               <Text className="font-sans-semibold text-xs text-primary">

@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/useAuthStore';
 import type { Mission, MissionCategory } from '../types/Mission';
@@ -13,6 +13,7 @@ interface CreateRequestInput {
 
 export function useCreateRequest() {
   const userId = useAuthStore((state) => state.session?.user.id);
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({
@@ -54,6 +55,9 @@ export function useCreateRequest() {
         createdAt: data.created_at,
         updatedAt: data.updated_at,
       };
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['missionHistory'] });
     },
   });
 }
