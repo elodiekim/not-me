@@ -291,7 +291,7 @@ CLAUDE.md "만들지 않음"에서 예외로 뺀 항목 — 내부 운영 도구
   - 검증: `npm run lint`(에러 0), `npm run format:check`(All matched files use Prettier code style), `npx tsc --noEmit` 통과, `expo start --web` 부팅 확인(온보딩 정상 렌더 — 포맷팅이 로직 안 건드림). ※ 콘솔의 NativeWind dark-mode 경고는 이번 작업과 무관한 기존 경고
 - [ ] 핵심 훅 · 유틸 기본 테스트
 - [ ] EAS Build → TestFlight 설정
-- [ ] AGENTS.md의 Expo 버전(57) vs 실제(54) 정리
+- [x] AGENTS.md의 Expo 버전(57) vs 실제(54) 정리 (완료 · 2026-07-28) — `docs.expo.dev/versions/v57.0.0/` → `v54.0.0/`로 수정, `package.json`의 `"expo": "^54.0.0"`과 일치시킴
 
 ---
 

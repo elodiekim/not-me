@@ -237,19 +237,9 @@ Avoid duplicated information.
 
 Create reusable components.
 
-Examples
-
-- Button
-- Card
-- Input
-- Badge
-- Chip
-- Avatar
-- MissionCard
-- FeatureCard
-- BottomSheet
-
 Never duplicate UI.
+
+For the component library, see @DESIGN.md.
 
 ---
 
@@ -287,9 +277,7 @@ UPPER_SNAKE_CASE
 
 # Error Handling
 
-Never expose raw server errors to the user.
-
-For message tone and copy examples, see @DESIGN.md.
+For error message rules, tone, and copy examples, see @DESIGN.md.
 
 ---
 
@@ -307,11 +295,9 @@ Do not optimize prematurely.
 
 # Accessibility
 
-Support Dynamic Type whenever possible.
-
 Provide accessibility labels.
 
-For touch target sizing and contrast requirements, see @DESIGN.md.
+For Dynamic Type, touch target sizing, and contrast requirements, see @DESIGN.md.
 
 ---
 
