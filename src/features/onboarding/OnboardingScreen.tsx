@@ -1,3 +1,4 @@
+import * as Haptics from 'expo-haptics';
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
@@ -91,6 +92,9 @@ export function OnboardingScreen() {
       if (size.width === 0) return;
       const nextPage = Math.round(event.nativeEvent.contentOffset.x / size.width);
       if (nextPage !== page) {
+        // A light "tick" at the moment a slide snaps into place (Apple §13:
+        // causality — fire on the actual snap event). No-op on web.
+        Haptics.selectionAsync();
         setPage(nextPage);
       }
     },
