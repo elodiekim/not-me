@@ -6,7 +6,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, MissionCard, MissionCardSkeleton, SectionHeader } from '../../components/ui';
 import { getCategoryInfo } from '../../constants/categoryInfo';
 import { COLORS } from '../../constants/colors';
-import { useMissionHistory } from '../../hooks/useMissionHistory';
+import { useMissionHistory, type MissionHistoryEntry } from '../../hooks/useMissionHistory';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
 import { isRequestStale } from '../../utils/missionExpiry';
 import type { MissionStatus } from '../../types/Mission';
@@ -20,6 +20,24 @@ const ACTIVE_STATUS_LABELS: Partial<Record<MissionStatus, string>> = {
 
 function formatMissionDate(dateString: string) {
   return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+}
+
+function formatMonthLabel(dateString: string) {
+  return new Date(dateString).toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+}
+
+function groupByMonth(missions: MissionHistoryEntry[]) {
+  const groups: { monthKey: string; monthLabel: string; missions: MissionHistoryEntry[] }[] = [];
+  for (const mission of missions) {
+    const monthKey = mission.createdAt.slice(0, 7);
+    const lastGroup = groups[groups.length - 1];
+    if (lastGroup?.monthKey === monthKey) {
+      lastGroup.missions.push(mission);
+    } else {
+      groups.push({ monthKey, monthLabel: formatMonthLabel(mission.createdAt), missions: [mission] });
+    }
+  }
+  return groups;
 }
 
 export function MissionsTabScreen() {
@@ -157,48 +175,70 @@ export function MissionsTabScreen() {
               </Text>
             </View>
           ) : (
-            <View className="gap-3">
-              {historyMissions.map((mission) => {
-                const category = getCategoryInfo(mission.category);
-                const isReviewable =
-                  mission.role === 'user' && mission.status === 'completed' && !mission.hasReview;
-                const isReviewed =
-                  mission.role === 'user' && mission.status === 'completed' && mission.hasReview;
-                const statusLabel =
-                  mission.status === 'cancelled'
-                    ? 'Cancelled · 취소됨'
-                    : isReviewable
-                      ? 'Leave a Review'
-                      : isReviewed
-                        ? 'Reviewed ✓'
-                        : `$${mission.rewardAmount}`;
-                const statusVariant =
-                  mission.status === 'cancelled' ? 'neutral' : isReviewable ? 'info' : 'success';
-                const card = (
-                  <MissionCard
-                    avatar={category.icon}
-                    title={category.title}
-                    subtitle={`${mission.role === 'user' ? 'Requested' : 'Helped'} · ${formatMissionDate(mission.createdAt)}`}
-                    detail={mission.address}
-                    statusLabel={statusLabel}
-                    statusVariant={statusVariant}
-                  />
-                );
-                return isReviewable ? (
-                  <Pressable
-                    key={mission.id}
-                    accessibilityRole="button"
-                    accessibilityLabel={`Leave a review for ${category.title}`}
-                    onPress={() =>
-                      router.push({ pathname: '/complete', params: { missionId: mission.id } })
-                    }
-                  >
-                    {card}
-                  </Pressable>
-                ) : (
-                  <View key={mission.id}>{card}</View>
-                );
-              })}
+            <View className="gap-10">
+              {groupByMonth(historyMissions).map((group) => (
+                <View key={group.monthKey}>
+                  <View className="mb-4 border-b border-surface pb-3">
+                    <Text className="text-xl font-sans-bold text-text-primary">
+                      {group.monthLabel}
+                    </Text>
+                  </View>
+                  <View className="gap-4">
+                    {group.missions.map((mission) => {
+                      const category = getCategoryInfo(mission.category);
+                      const isReviewable =
+                        mission.role === 'user' &&
+                        mission.status === 'completed' &&
+                        !mission.hasReview;
+                      const isReviewed =
+                        mission.role === 'user' &&
+                        mission.status === 'completed' &&
+                        mission.hasReview;
+                      const statusLabel =
+                        mission.status === 'cancelled'
+                          ? 'Cancelled · 취소됨'
+                          : isReviewable
+                            ? 'Leave a Review'
+                            : isReviewed
+                              ? 'Reviewed ✓'
+                              : `$${mission.rewardAmount}`;
+                      const statusVariant =
+                        mission.status === 'cancelled'
+                          ? 'neutral'
+                          : isReviewable
+                            ? 'info'
+                            : 'success';
+                      const card = (
+                        <MissionCard
+                          avatar={category.icon}
+                          title={category.title}
+                          subtitle={`${mission.role === 'user' ? 'Requested' : 'Helped'} · ${formatMissionDate(mission.createdAt)}`}
+                          detail={mission.address}
+                          statusLabel={statusLabel}
+                          statusVariant={statusVariant}
+                        />
+                      );
+                      return isReviewable ? (
+                        <Pressable
+                          key={mission.id}
+                          accessibilityRole="button"
+                          accessibilityLabel={`Leave a review for ${category.title}`}
+                          onPress={() =>
+                            router.push({
+                              pathname: '/complete',
+                              params: { missionId: mission.id },
+                            })
+                          }
+                        >
+                          {card}
+                        </Pressable>
+                      ) : (
+                        <View key={mission.id}>{card}</View>
+                      );
+                    })}
+                  </View>
+                </View>
+              ))}
             </View>
           )}
         </View>
