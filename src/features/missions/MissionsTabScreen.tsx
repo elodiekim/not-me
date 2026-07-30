@@ -1,7 +1,7 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, MissionCard, MissionCardSkeleton, SectionHeader } from '../../components/ui';
 import { getCategoryInfo } from '../../constants/categoryInfo';
@@ -42,8 +42,19 @@ function groupByMonth(missions: MissionHistoryEntry[]) {
 
 export function MissionsTabScreen() {
   const router = useRouter();
-  const { data: missions, isLoading, isError, refetch } = useMissionHistory();
+  const { data: missions, isLoading, isError, isRefetching, refetch } = useMissionHistory();
   const { mutate: updateStatusMutate } = useUpdateMissionStatus();
+
+  // Manual fallback for cache invalidation gaps (e.g. a status change from the other
+  // party) — same pattern as NearbyMissions/Inbox.
+  const refreshControl = (
+    <RefreshControl
+      refreshing={isRefetching}
+      onRefresh={refetch}
+      tintColor={COLORS.primary}
+      colors={[COLORS.primary]}
+    />
+  );
 
   // Opportunistic expiry: no server cron, so a stale 'requested' mission only
   // gets cancelled once someone looks at it — here, whenever this tab loads.
@@ -115,7 +126,7 @@ export function MissionsTabScreen() {
         <Text className="text-lg font-sans-semibold text-text-primary">My Missions</Text>
         <Text className="font-sans text-sm text-text-secondary">내 미션</Text>
       </View>
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
+      <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }} refreshControl={refreshControl}>
         <View className="gap-3">
           <SectionHeader title="Active" />
           {activeMissions.length === 0 ? (
