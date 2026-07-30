@@ -157,6 +157,8 @@
   - `ProfileScreen.tsx`: "Member since" 카드 아래 "My Reviews · 내 리뷰" 링크 카드 하나 추가(`router.push('/reviews')`, 파라미터 없이). Settings 행과 동일한 아이콘+라벨+chevron 스타일
   - 검증(expo web + Playwright, 실 Supabase 계정 2개로 양방향 리뷰 시딩): ① 프로필→My Reviews→받은 리뷰(H→R 코멘트)·쓴 리뷰(R→H 코멘트) 각각 정상 표시 ② `/reviews?heroId=H`는 H가 받은 리뷰만 뜨고 **다른 히어로 리뷰 안 섞임**(R이 받은 리뷰 미노출) 확인 ③ `/mission-status`(히어로 배정 미션)에서 히어로 카드 탭→`/reviews?heroId=H` 이동 확인 ④ 빈 상태(리뷰 응답 `[]` 가로채기) 정상 렌더 ⑤ `requested` 미션은 리뷰 버튼 없음 + 카드 탭해도 URL 불변(회귀) 확인. `npx tsc --noEmit` 통과. **주의**: `reviews`/`missions`에 DELETE RLS 정책이 없어(0009 avatars만 존재) 검증용 테스트 행은 REST로 삭제 불가 — 테스트 계정에 완료 미션/리뷰가 남음(기존 "service key 없어 남는 무해한 더미" 선례와 동일). 정리 원하면 아래 SQL을 Supabase에서 실행: `delete from missions where address = 'Seoul reviews test';`(리뷰는 `mission_id` on delete cascade로 함께 삭제됨)
 
+- [x] **Profile 화면 별점/리뷰 개수 클릭 → 리뷰 목록으로 이동** (사용자가 실기기 테스트 중 발견 · 완료 · 2026-07-31) — 별점(`RatingRow`)이 눌러도 반응 없는 정적 텍스트였음. `Pressable`로 감싸 `/reviews`로 이동하도록 수정, 아래 그룹 카드의 기존 "My Reviews" 진입점과 중복되지만 의도된 것(둘 다 자연스러운 진입 경로)
+
 ## 🟡 P2 · 실시간 & 위치 (제품 핵심 경험)
 
 - [x] 위치 권한 + 현재 위치 획득 (expo-location)
@@ -196,6 +198,11 @@
   - 검증: `created_at`을 16분 전으로 백데이트한 미션 2건으로 각각 Mission 탭 진입/`/mission-status` 직접 진입 테스트 → 둘 다 자동으로 `cancelled` 전환 확인(REST), Mission 탭은 Active에서 빠지고 History로 이동 확인, `/mission-status`는 "This request was cancelled" 문구로 정상 표시(예전처럼 "히어로가 오고 있어요" 안 뜸) 확인. X 버튼/Cancel 버튼 회귀 확인 — 둘 다 그대로 정상 동작
 - [x] Mission History 카드에 주소 표시: `MissionCard`에 `detail?: string` prop 추가(과설계 방지용으로 새 prop 하나만), History 섹션에서 `detail={mission.address}`로 전달. Active 섹션은 이번 범위 아니라 안 건드림. 취소된 미션/정상 완료된 미션 둘 다 History 카드에 주소가 정상 표시되는 것 실계정 2개로 수락→도착→완료 플로우까지 돌려서 확인
 - [x] Inbox 화면에 pull-to-refresh 추가 (완료 · 2026-07-28) — `InboxScreen`에 `NearbyMissionsScreen`과 동일한 `RefreshControl`+`isRefetching`+`refetch` 패턴 적용. 빈 상태는 기존 공용 `ComingSoonScreen`(스크롤/새로고침 미지원 정적 컴포넌트) 대신 인라인 스크롤 뷰로 교체해 pull-to-refresh를 붙임 (`ComingSoonScreen` 자체는 그대로 유지, 다른 곳에서 쓰지 않음)
+- [x] Mission History를 월별 섹션으로 그룹핑 (사용자 요청 · 완료 · 2026-07-31) — 리스트가 너무 길어 보인다는 피드백. 페이저(< 2026년 7월 >식 월 넘기기) 대신 한 스크롤 안에서 월별 헤더로만 구분(단순함 우선, 유저당 히스토리 아직 많지 않은 초기 단계라 페이저 도입 비용이 이득보다 큼 — 나중에 데이터 많아지면 재검토). `MissionsTabScreen.tsx`에 `groupByMonth` 유틸 추가, 기존 카드 렌더 로직은 그대로 재사용
+- [x] **Mission History 최신 미션이 Active에 안 뜨는 버그** (사용자가 실기기 테스트 중 발견 · 완료 · 2026-07-31) — 진행 중인 미션이 있는데 요청자 Missions 탭 Active에 안 보이던 문제.
+  - 원인: `missionHistory` 쿼리 캐시가 `useUpdateMissionStatus`에서만 invalidate되고, 미션 생성(`useCreateRequest`)·히어로 수락(`useAcceptMission`) 성공 시엔 한 번도 invalidate 안 됨. Expo Router 탭 화면은 언마운트 안 되고 유지되니, 생성/수락 직후 Missions 탭에 가도 그 미션이 없던 시절의 캐시를 계속 보여줌
+  - 수정: `useCreateRequest.ts`/`useAcceptMission.ts` 둘 다 `onSuccess`에 `queryClient.invalidateQueries({ queryKey: ['missionHistory'] })` 추가 (기존 `useUpdateMissionStatus`와 동일 패턴)
+- [x] **Mission Detail 화면 카테고리 아이콘 크기 과대** (사용자가 실기기 테스트 중 발견 · 완료 · 2026-07-31) — `MissionDetailScreen.tsx`만 유일하게 `MissionCard`를 안 거치고 직접 80×80 정사각 `Image`를 그려서, 앱 전체 48×48 원형 아이콘 스케일과 비교해 어색하게 커 보이던 문제. 56×56로 축소
 - [x] Nearby Missions 화면에 pull-to-refresh 추가 (완료 · 2026-07-20) — ⚠️ TODO 설명이 stale했음: "기존 30초 폴링·Realtime 구독과 공존"이라 적혀 있었지만 이 화면은 **폴링도 Realtime도 없이 마운트 시 1회만 조회**함(그게 이 작업의 전제). pull-to-refresh가 유일한 수동 재조회 수단.
   - `NearbyMissionsScreen.tsx`: `useNearbyMissions()`에서 `isRefetching` 추가 구조분해, RN 기본 `RefreshControl` import(프로젝트 최초 도입, 새 라이브러리 없음). `refreshControl` JSX를 한 번 만들어(`refreshing={isRefetching}`, `onRefresh={refetch}`, `tintColor`/`colors`는 `COLORS.primary`) 리스트/빈 상태 두 ScrollView에 재사용
   - **빈 상태도 pull 가능하게**: 기존엔 빈 상태가 일반 `View`(스크롤 불가)라 당길 수 없었음 → `ScrollView`(`contentContainerStyle: { flexGrow: 1, justifyContent: 'center' }`로 박스는 그대로 중앙 유지)로 교체하고 동일 `refreshControl` 부착. 빈 상태일 때가 오히려 "다시 당겨 확인"하고 싶은 순간이라 반드시 포함

@@ -53,7 +53,7 @@ export function MissionDetailScreen() {
       </View>
       <View className="flex-1 gap-6 px-6">
         <View className="items-center gap-2">
-          <Image source={category.icon} style={{ width: 80, height: 80 }} resizeMode="contain" />
+          <Image source={category.icon} style={{ width: 56, height: 56 }} resizeMode="contain" />
           <Text className="text-2xl font-sans-bold text-text-primary">{category.title}</Text>
           <Text className="font-sans text-sm text-text-secondary">{category.koTitle}</Text>
           <Badge label={`Reward $${mission.rewardAmount}`} variant="success" />
