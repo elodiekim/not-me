@@ -488,6 +488,18 @@ Spin
 
 Overly playful effects
 
+## Exception: Mission Complete Celebration
+
+One deliberate exception to "avoid bounce/overly playful": the moment Mission Status live-transitions to `completed` (Hero just finished, User is watching in real time) is the single peak emotional moment in the app and earns a punchier beat than everyday UI.
+
+Everywhere else, the calm rules above still apply. This is reserved for this one moment only — not a general license for bounce/playful effects elsewhere.
+
+Shape: a centered celebratory banner (not the bottom-bar `Toast` used for routine confirmations like cancellation — that shape should stay reserved for mundane notices so this one reads as different). Scale-in "pop" (e.g. 0.85 → 1.05 → 1.0) + fade, still RN `Animated`, no new animation library.
+
+Copy: "Mission Complete! Your hero saved the day" / 미션 완료! 히어로가 문제를 해결했어요.
+
+Fires once, only on a live status transition while the screen is open — not on landing on an already-completed mission (re-showing it every visit would wear out fast and undercuts the "just this one moment" intent).
+
 ---
 
 # Screen Structure
@@ -719,6 +731,36 @@ The roach next door is waiting.
 Frame it as an invitation to a future state, not a gap in the user's past behavior.
 
 Humor should come from the brand's core material (bugs, the cat mascot, the mission itself), never from the user's inaction.
+
+---
+
+# Easter Egg: Fake Pest Control Ad
+
+A one-off joke, not a real ad system. Parodies the "ad injected right after a payout" dark pattern real gig apps use, aimed at the User (not the Hero) — the joke only lands on the side that just had a bug removed.
+
+## Placement
+
+`CompleteScreen` (`/complete`), between the "Mission Complete! 바퀴벌레 문제 해결 완료!" message and the "How was your Hero?" review form. Must not cover or push down the Submit Review / Not now buttons.
+
+## Copy
+
+"Ad" label + small card, styled with existing card tokens (rounded-card, soft shadow, surface background) so it looks like a real ad slot — the joke is in the content, not in visual clutter.
+
+Company name: **TBD**.
+
+Tagline:
+
+> Need a permanent solution?
+>
+> 404 Bugs
+>
+> The bug you're looking for cannot be found.
+
+## Rules
+
+- Exactly one instance, one screen. No rotation system, no other placements — a recurring bit stops being funny.
+- Not a real link. Tapping it shows a small toast ("농담이에요, 광고 없어요 🐱" or similar) instead of navigating anywhere.
+- Never on the Hero side — this joke is specifically about the User's bug problem being "solved," which doesn't apply to the Hero's completion screen.
 
 ---
 
