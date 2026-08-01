@@ -209,6 +209,7 @@
   - **빈 상태도 pull 가능하게**: 기존엔 빈 상태가 일반 `View`(스크롤 불가)라 당길 수 없었음 → `ScrollView`(`contentContainerStyle: { flexGrow: 1, justifyContent: 'center' }`로 박스는 그대로 중앙 유지)로 교체하고 동일 `refreshControl` 부착. 빈 상태일 때가 오히려 "다시 당겨 확인"하고 싶은 순간이라 반드시 포함
   - 로딩 스켈레톤/에러 상태는 미변경(스켈레톤 위 당김은 무의미, 에러는 Try Again으로 이미 재시도 가능). 거리 정렬·반경 필터(`rankByDistance`/`useMemo`)는 그대로 — refetch로 새 데이터 들어와도 자동 재계산
   - 검증(`npx tsc --noEmit` 통과 + expo web + Playwright, 실 Supabase 계정 2개): 히어로 화면 진입(baseline $63 표시) → 요청자 계정으로 새 미션 $71 REST 생성 → **당기기 전엔 $71 안 보이고, 재조회 후 리스트에 나타남**(스크린샷 확인). 거리 라벨 정상 렌더(정렬/필터 회귀 없음), 빈 상태 박스가 스크롤 컨테이너 안에 정상 렌더, 에러 상태 Try Again 정상 노출(회귀). 테스트 미션은 종료 후 REST DELETE로 정리. **참고**: RefreshControl의 당김 제스처 자체는 react-native-web에서 마우스로 재현이 안 되는 네이티브 인터랙션이라, 웹에선 "재조회 시 새 데이터가 뜨는가"(pull이 호출하는 `refetch`와 동일한 queryFn)를 화면 재진입으로 검증함. RefreshControl→refetch 연결은 2-prop 배선이라 tsc + 코드 리뷰로 확인
+- [ ] **"이동 중" 단계 dot 은은한 펄스 애니메이션** (사용자 아이디어 · 2026-08-01) — `StatusTimeline.tsx`의 현재 단계 dot(`bg-primary`, 노란 원)이 지금은 정적. `status === 'on_the_way'`일 때만 그 dot에 opacity 오르내리는 부드러운 펄스 루프 추가해서 "실시간으로 진행 중"임을 시각적으로 전달. RN `Animated`만 사용(새 라이브러리 없음). **주의**: DESIGN.md의 "Bounce/과한 애니메이션 지양" 규칙 예외는 지금 Mission Complete 화면 하나뿐(일회성) — 이건 반복 루프라 성격이 다르므로 급격한 blink 말고 은은한 fade in/out으로, 딱 "이동 중" 단계의 현재 dot 하나에만 적용(다른 단계·다른 상태엔 미적용)
 
 ## 🟡 P2 · 온보딩 & 앱 진입
 
