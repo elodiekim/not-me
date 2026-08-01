@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
@@ -7,7 +7,6 @@ import { getCategoryInfo } from '../../constants/categoryInfo';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
 import { isRequestStale } from '../../utils/missionExpiry';
-import { CelebrationBanner } from './components/CelebrationBanner';
 import { StatusTimeline } from './components/StatusTimeline';
 
 const STEP_BY_STATUS: Record<string, number> = {
@@ -41,10 +40,9 @@ export function MissionScreen() {
     }
   }, [mission, updateStatusMutate]);
 
-  // Fires the celebration only on a live 'completed' transition witnessed while this
-  // screen is open — never on landing on an already-completed mission.
+  // Routes to the celebration screen only on a live 'completed' transition witnessed
+  // while this screen is open — never on landing on an already-completed mission.
   const prevStatusRef = useRef<string | undefined>(undefined);
-  const [showCelebration, setShowCelebration] = useState(false);
   useEffect(() => {
     const prevStatus = prevStatusRef.current;
     if (
@@ -53,10 +51,10 @@ export function MissionScreen() {
       prevStatus !== 'completed' &&
       mission.status === 'completed'
     ) {
-      setShowCelebration(true);
+      router.replace({ pathname: '/mission-complete', params: { missionId: mission.id } });
     }
     prevStatusRef.current = mission?.status;
-  }, [mission]);
+  }, [mission, router]);
 
   if (isLoading) {
     return <LoadingIndicator message="Loading mission..." />;
@@ -191,9 +189,6 @@ export function MissionScreen() {
           <Button label="Waiting for completion..." variant="secondary" disabled />
         )}
       </View>
-      {showCelebration && (
-        <CelebrationBanner onDismiss={() => setShowCelebration(false)} />
-      )}
     </SafeAreaView>
   );
 }

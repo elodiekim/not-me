@@ -282,9 +282,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [ ] 업체명 미정 — 문구("Need a permanent solution? / 404 Bugs / The bug you're looking for cannot be found.")는 확정, 업체명만 나중에 채워넣기
 
 ## 🟢 P3 · 미션 완료 축하 애니메이션 (완료 · 2026-08-01, `DESIGN.md`의 "Exception: Mission Complete Celebration" 참고)
-- [x] `MissionScreen`(`/mission-status`)에서 realtime으로 `status`가 `completed`로 **실시간 전환되는 순간에만** 축하 배너 표시. 기존 `Toast`(하단바, 취소 확인 등 평범한 알림용)와는 다른 모양 — 화면 중앙, scale-in "pop"(0.85→1.05→1.0) + fade, 여전히 RN `Animated`만 사용(새 애니메이션 라이브러리 없음). 신규 `CelebrationBanner.tsx`
-- [x] 문구: "Mission Complete! Your hero saved the day" / "미션 완료! 히어로가 문제를 해결했어요" — 사용자가 준 캐릭터 시안(점프 축하 포즈) 크롭+배경 투명화해서 `assets/characters/celebrate-cat.png`로 추가, 배너 문구 위에 표시
-- [x] **한 번만 발동하는 조건**: `prevStatusRef`로 이전 status 추적, "이전 값이 존재하고(undefined 아님) + completed가 아니었다가 + 지금 completed" 조건일 때만 발동 — 이미 완료된 미션 재진입/새로고침 시 재발동 안 함(구현·검증 완료)
+- [x] ~~`MissionScreen` 위에 팝업 배너로 표시~~ → 히어로 쪽 `/hero/reward`(`RewardEarnedScreen`)와 대칭되는 **전용 화면**으로 재설계(사용자 요청 · 2026-08-01): `status`가 `completed`로 **실시간 전환되는 순간** `/mission-complete`(신규 `MissionCompleteScreen.tsx`)로 이동. scale-in "pop"(0.85→1.05→1.0) + fade는 새 화면 안에서 그대로 재현(RN `Animated`만 사용). 기존 `CelebrationBanner.tsx`는 로직 이식 후 삭제
+- [x] 문구: "Mission Complete! Your hero saved the day" / "미션 완료! 히어로가 문제를 해결했어요" + 캐릭터(`assets/characters/celebrate-cat.png`, 점프 축하 포즈), 그 아래 **Leave a Review / Not now** 버튼 배치(`/complete`로 이동 · 홈으로 이동)
+- [x] **한 번만 발동하는 조건**: `prevStatusRef`로 이전 status 추적, "이전 값이 존재하고(undefined 아님) + completed가 아니었다가 + 지금 completed" 조건일 때만 새 화면으로 이동 — 이미 완료된 미션에 직접 재진입(예: History에서)했을 땐 이 리다이렉트가 안 타므로, `MissionScreen`의 기존 인라인 "Leave a Review"/"Not now" 버튼(`isCompleted && !isReviewed` 분기)은 그대로 유지 — 극적 연출 없이 바로 처리 가능해야 하는 케이스
 - [ ] DESIGN.md Animations 섹션의 "Avoid: Bounce/Overly playful" 규칙은 이 한 화면·한 순간만 예외, 나머지 UI는 기존 규칙(Fade/Scale/Slide) 그대로 유지 (문서화만 남음, 코드는 완료)
 
 ## 🟡 P2 · 관리자 대시보드 (신규, `PRODUCT.md`의 "Admin Dashboard" 참고)
