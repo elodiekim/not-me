@@ -7,6 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, LoadingIndicator } from '../../components/ui';
 import { useProfile } from '../../hooks/useProfile';
 import { useUpdateProfile } from '../../hooks/useUpdateProfile';
+import { useAuthStore } from '../../stores/useAuthStore';
 import type { Profile } from '../../types/Profile';
 
 // Same lenient phone check the sign-up form uses — digits plus common
@@ -45,6 +46,7 @@ export function EditProfileScreen() {
 function EditProfileForm({ profile }: { profile: Profile }) {
   const router = useRouter();
   const updateProfile = useUpdateProfile();
+  const email = useAuthStore((state) => state.session?.user.email) ?? '';
 
   const [name, setName] = useState(profile.name);
   const [phone, setPhone] = useState(profile.phone ?? '');
@@ -133,6 +135,7 @@ function EditProfileForm({ profile }: { profile: Profile }) {
         </View>
 
         <View className="gap-4">
+          <Input label="Email" value={email} editable={false} />
           <Input label="Name" placeholder="Your name" value={name} onChangeText={setName} />
           <Input
             label="Phone"
