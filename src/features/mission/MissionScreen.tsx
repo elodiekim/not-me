@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
@@ -39,6 +39,22 @@ export function MissionScreen() {
       updateStatusMutate({ missionId: mission.id, status: 'cancelled', fromStatus: 'requested' });
     }
   }, [mission, updateStatusMutate]);
+
+  // Routes to the celebration screen only on a live 'completed' transition witnessed
+  // while this screen is open — never on landing on an already-completed mission.
+  const prevStatusRef = useRef<string | undefined>(undefined);
+  useEffect(() => {
+    const prevStatus = prevStatusRef.current;
+    if (
+      mission &&
+      prevStatus !== undefined &&
+      prevStatus !== 'completed' &&
+      mission.status === 'completed'
+    ) {
+      router.replace({ pathname: '/mission-complete', params: { missionId: mission.id } });
+    }
+    prevStatusRef.current = mission?.status;
+  }, [mission, router]);
 
   if (isLoading) {
     return <LoadingIndicator message="Loading mission..." />;

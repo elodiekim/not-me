@@ -277,6 +277,16 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 다만 `DESIGN.md` 「Icons」 섹션이 Lucide/outline만 명시하고 이 2단 체계를 문서화하지 않아 "기준 불명확"으로 보였던 것 — 사용자 승인 받아 「Icons」 섹션에 "기능적 UI 아이콘에만 적용, 카테고리/브랜드 아이콘은 Illustrations 섹션 참고" 2줄 추가해 명문화. PRODUCT.md는 건드리지 않음
 - [x] **Inbox 탭에 상단 헤더가 없음** (디자인 리뷰에서 발견 · 2026-07-14) — Home(로고+벨) / Mission("My Missions") / Profile(아바타+이름)은 화면 상단에 타이틀이 있는데, Inbox는 헤더가 없던 문제. 바로 위 "Coming Soon → 활동 피드" 작업과 함께 해결: `InboxScreen`에 다른 탭과 통일된 두 줄 헤더("Inbox / 받은편지함", `MissionsTabScreen`과 동일한 `text-lg font-sans-semibold` + 서브타이틀) 추가. 이벤트 0개일 때 뜨는 `ComingSoonScreen`도 자체적으로 "Inbox / 받은편지함" 타이틀을 표시해 빈 상태에서도 정체성 유지. Playwright로 헤더 렌더 육안 확인 완료
 
+## 🟢 P3 · 이스터에그 (신규, `DESIGN.md`의 "Easter Egg: Fake Pest Control Ad" 참고)
+- [ ] `CompleteScreen`(`/complete`)의 "Mission Complete!" 메시지와 리뷰 폼 사이에 가짜 방역업체 광고 카드 하나 삽입. 회색 배경 + "Ad" 라벨 + 기존 카드 토큰(rounded-card/soft shadow), 탭하면 실제 링크 없이 토스트("농담이에요, 광고 없어요 🐱")만. 딱 이 화면 하나에만, 로테이션 없음. 히어로 쪽 화면엔 넣지 않음
+- [ ] 업체명 미정 — 문구("Need a permanent solution? / 404 Bugs / The bug you're looking for cannot be found.")는 확정, 업체명만 나중에 채워넣기
+
+## 🟢 P3 · 미션 완료 축하 애니메이션 (완료 · 2026-08-01, `DESIGN.md`의 "Exception: Mission Complete Celebration" 참고)
+- [x] ~~`MissionScreen` 위에 팝업 배너로 표시~~ → 히어로 쪽 `/hero/reward`(`RewardEarnedScreen`)와 대칭되는 **전용 화면**으로 재설계(사용자 요청 · 2026-08-01): `status`가 `completed`로 **실시간 전환되는 순간** `/mission-complete`(신규 `MissionCompleteScreen.tsx`)로 이동. scale-in "pop"(0.85→1.05→1.0) + fade는 새 화면 안에서 그대로 재현(RN `Animated`만 사용). 기존 `CelebrationBanner.tsx`는 로직 이식 후 삭제
+- [x] 문구: "Mission Complete! Your hero saved the day" / "미션 완료! 히어로가 문제를 해결했어요" + 캐릭터(`assets/characters/celebrate-cat.png`, 점프 축하 포즈), 그 아래 **Leave a Review / Not now** 버튼 배치(`/complete`로 이동 · 홈으로 이동)
+- [x] **한 번만 발동하는 조건**: `prevStatusRef`로 이전 status 추적, "이전 값이 존재하고(undefined 아님) + completed가 아니었다가 + 지금 completed" 조건일 때만 새 화면으로 이동 — 이미 완료된 미션에 직접 재진입(예: History에서)했을 땐 이 리다이렉트가 안 타므로, `MissionScreen`의 기존 인라인 "Leave a Review"/"Not now" 버튼(`isCompleted && !isReviewed` 분기)은 그대로 유지 — 극적 연출 없이 바로 처리 가능해야 하는 케이스
+- [ ] DESIGN.md Animations 섹션의 "Avoid: Bounce/Overly playful" 규칙은 이 한 화면·한 순간만 예외, 나머지 UI는 기존 규칙(Fade/Scale/Slide) 그대로 유지 (문서화만 남음, 코드는 완료)
+
 ## 🟡 P2 · 관리자 대시보드 (신규, `PRODUCT.md`의 "Admin Dashboard" 참고)
 
 CLAUDE.md "만들지 않음"에서 예외로 뺀 항목 — 내부 운영 도구 + 포트폴리오 목적. 스코프는 의도적으로 작게(차트 라이브러리 없음, 숫자 카드 위주).
