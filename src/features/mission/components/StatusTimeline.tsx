@@ -1,4 +1,5 @@
-import { Text, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Text, View } from 'react-native';
 
 interface TimelineStep {
   label: string;
@@ -14,9 +15,27 @@ const STEPS: TimelineStep[] = [
 
 interface StatusTimelineProps {
   currentStep: number;
+  pulseCurrentStep?: boolean;
 }
 
-export function StatusTimeline({ currentStep }: StatusTimelineProps) {
+export function StatusTimeline({ currentStep, pulseCurrentStep = false }: StatusTimelineProps) {
+  const pulseOpacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!pulseCurrentStep) return;
+    const loop = Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseOpacity, { toValue: 0.4, duration: 700, useNativeDriver: true }),
+        Animated.timing(pulseOpacity, { toValue: 1, duration: 700, useNativeDriver: true }),
+      ]),
+    );
+    loop.start();
+    return () => {
+      loop.stop();
+      pulseOpacity.setValue(1);
+    };
+  }, [pulseCurrentStep, pulseOpacity]);
+
   return (
     <View className="gap-4">
       {STEPS.map((step, index) => {
@@ -26,9 +45,13 @@ export function StatusTimeline({ currentStep }: StatusTimelineProps) {
 
         return (
           <View key={step.label} className="flex-row items-center gap-3">
-            <View
-              className={`h-3 w-3 rounded-full ${isActive ? 'bg-primary' : 'bg-surface border border-text-disabled'}`}
-            />
+            {isCurrent && pulseCurrentStep ? (
+              <Animated.View style={{ opacity: pulseOpacity }} className="h-3 w-3 rounded-full bg-primary" />
+            ) : (
+              <View
+                className={`h-3 w-3 rounded-full ${isActive ? 'bg-primary' : 'bg-surface border border-text-disabled'}`}
+              />
+            )}
             <View className="flex-1 flex-row items-baseline gap-2">
               <Text
                 className={`text-sm ${isActive ? 'font-sans-semibold text-text-primary' : 'font-sans text-text-disabled'}`}

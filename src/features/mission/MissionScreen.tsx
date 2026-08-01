@@ -136,7 +136,12 @@ export function MissionScreen() {
               : 'Your hero is on the way.\n히어로가 오고 있어요.'}
         </Text>
 
-        {!isCancelled && <StatusTimeline currentStep={STEP_BY_STATUS[mission.status] ?? 0} />}
+        {!isCancelled && (
+          <StatusTimeline
+            currentStep={STEP_BY_STATUS[mission.status] ?? 0}
+            pulseCurrentStep={mission.status === 'on_the_way'}
+          />
+        )}
       </View>
       <View className="px-6 pb-6 gap-3">
         {isCancelled ? (
