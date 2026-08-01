@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, LoadingIndicator, RatingRow } from '../../components/ui';
 import { COLORS } from '../../constants/colors';
@@ -14,8 +14,19 @@ function formatMemberSince(dateString: string) {
 
 export function ProfileScreen() {
   const router = useRouter();
-  const { data: profile, isLoading: isProfileLoading, isError, refetch } = useProfile();
-  const { data: missions, isLoading: isHistoryLoading } = useMissionHistory();
+  const {
+    data: profile,
+    isLoading: isProfileLoading,
+    isError,
+    isRefetching,
+    refetch,
+  } = useProfile();
+  const {
+    data: missions,
+    isLoading: isHistoryLoading,
+    isRefetching: isHistoryRefetching,
+    refetch: refetchHistory,
+  } = useMissionHistory();
   const requestedCount = (missions ?? []).filter((item) => item.role === 'user').length;
   const helpedCount = (missions ?? []).filter((item) => item.role === 'hero').length;
   const totalEarned = (missions ?? [])
@@ -40,9 +51,21 @@ export function ProfileScreen() {
     );
   }
 
+  const refreshControl = (
+    <RefreshControl
+      refreshing={isRefetching || isHistoryRefetching}
+      onRefresh={() => {
+        refetch();
+        refetchHistory();
+      }}
+      tintColor={COLORS.primary}
+      colors={[COLORS.primary]}
+    />
+  );
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
+      <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }} refreshControl={refreshControl}>
         <View className="items-center gap-2">
           <Image
             source={
