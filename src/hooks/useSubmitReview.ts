@@ -1,4 +1,4 @@
-import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/useAuthStore';
 
@@ -11,7 +11,6 @@ interface SubmitReviewInput {
 
 export function useSubmitReview() {
   const userId = useAuthStore((state) => state.session?.user.id);
-  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ missionId, heroId, rating, comment }: SubmitReviewInput) => {
@@ -26,9 +25,6 @@ export function useSubmitReview() {
       });
 
       if (error) throw error;
-    },
-    onSuccess: (_data, { heroId }) => {
-      queryClient.invalidateQueries({ queryKey: ['profile', heroId] });
     },
   });
 }
