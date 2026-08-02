@@ -39,5 +39,10 @@ jobs:
           plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
           plugins: 'code-review@claude-code-plugins'
           prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          # Without an explicit allowlist, every tool call (git diff, gh pr view, reading
+          # files, etc.) gets denied in CI, so the review agent burns through denials and
+          # errors out instead of actually reviewing anything. Read-only tools only — a
+          # review run shouldn't be able to modify the repo.
+          claude_args: '--allowedTools "Bash,Read,Grep,Glob"'
           # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
           # or https://code.claude.com/docs/en/cli-reference for available options
