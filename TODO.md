@@ -109,8 +109,7 @@
   - `src/hooks/useActiveMission.ts` 신규(가벼운 훅): 로그인 유저가 requester인 미션 중 `status in ('requested','accepted','on_the_way')` 하나를 `id, status`만 `limit(1).maybeSingle()`로 조회(있으면 `{id,status}`, 없으면 null). `useMissionHistory` 재사용 안 함
   - `RequestScreen.tsx` 진입 시점에서 이 훅으로 체크 — 활성 미션 있으면 폼을 안 그리고 곧바로 그 미션의 `/mission-status`로 `router.replace`(새로 안 만들고 기존 걸로 보냄, 가장 단순). 로딩/리다이렉트 중엔 `LoadingIndicator`로 폼 깜빡임 방지. Request 플로우의 단일 관문이라 Home 버튼/직접 진입 모두 커버
   - 검증(expo web + Playwright): 활성(`requested`) 미션 있는 상태에서 Home→Request Help → 폼 대신 `/mission-status?missionId=<활성미션>`로 이동 확인. 활성 미션 없으면 정상적으로 `/request` 폼(Roach Catcher 등) 렌더 확인(회귀). 기존 Searching Cancel/X·opportunistic 만료 로직 미변경
-
-## 🟠 P1 · 상태 연결 (플로우 간 데이터 전달)
+- [ ] **`accepted`/`on_the_way` 취소 금지가 UI에서만 막혀있고 RLS엔 없음** (점검 중 발견 · 2026-08-03) — `MissionScreen.tsx`는 `status === 'requested'`일 때만 Cancel 버튼을 보여줘서 히어로가 수락한 뒤엔 취소 못 하게 되어 있지만(101번 항목의 Known Gap), 이건 순전히 UI 레벨 제한임. `0001_init.sql`의 "Requester or accepted hero can update a mission" 정책이 `with check` 없이 `using(auth.uid() = requester_id or auth.uid() = hero_id)`만 걸려 있어서, 상태(status) 조건이 전혀 없음 — 요청자가 앱을 거치지 않고 REST로 직접 update하면 `accepted`/`on_the_way`/`arrived` 상태에서도 `status='cancelled'`로 바꿀 수 있음. 실사용자에게 열기 전에 `with check`로 상태 전이 제한(예: 취소는 `requester_id` 본인 + `status = 'requested'`일 때만) 추가 필요. 지금은 개인 테스트 단계라 의도적으로 스킵.
 
 - [x] ~~Zustand `useRequestStore`~~ — 불필요 판단: 카테고리는 바퀴벌레 하나뿐이라 선택지 없음, 리워드는 쿼리 파라미터로 충분
 - [x] **1/5 Reward 확정 → 실제 `missions` row 생성** (`useCreateRequest`), `missionId`를 Searching로 전달 — REST로 실제 insert 확인 완료
@@ -283,6 +282,10 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 손그림 PNG vs Feather 아웃라인 "혼재"도 버그 아님 — 실제로는 의도된 2단 체계: Feather(`@expo/vector-icons`) = 기능적 UI 아이콘(뒤로가기/닫기/검색/설정 리스트/빈 상태, 12곳 전수 확인 일관됨), 손그림 PNG = 브랜드·카테고리 일러스트(카테고리 아이콘, Become a Hero 등). `CategoryTile`의 Feather `more-horizontal`도 "아이콘 없는 카테고리" 폴백으로 의도된 것
   - 다만 `DESIGN.md` 「Icons」 섹션이 Lucide/outline만 명시하고 이 2단 체계를 문서화하지 않아 "기준 불명확"으로 보였던 것 — 사용자 승인 받아 「Icons」 섹션에 "기능적 UI 아이콘에만 적용, 카테고리/브랜드 아이콘은 Illustrations 섹션 참고" 2줄 추가해 명문화. PRODUCT.md는 건드리지 않음
 - [x] **Inbox 탭에 상단 헤더가 없음** (디자인 리뷰에서 발견 · 2026-07-14) — Home(로고+벨) / Mission("My Missions") / Profile(아바타+이름)은 화면 상단에 타이틀이 있는데, Inbox는 헤더가 없던 문제. 바로 위 "Coming Soon → 활동 피드" 작업과 함께 해결: `InboxScreen`에 다른 탭과 통일된 두 줄 헤더("Inbox / 받은편지함", `MissionsTabScreen`과 동일한 `text-lg font-sans-semibold` + 서브타이틀) 추가. 이벤트 0개일 때 뜨는 `ComingSoonScreen`도 자체적으로 "Inbox / 받은편지함" 타이틀을 표시해 빈 상태에서도 정체성 유지. Playwright로 헤더 렌더 육안 확인 완료
+
+## 🟢 P3 · 마감 완성도 (기타)
+
+- [ ] **proud cat 무늬 수정** — `assets/characters/proud-cat.png`(온보딩 3번째 슬라이드에서 사용) 무늬 디자인 손보기
 
 ## 🟢 P3 · 이스터에그 (신규, `DESIGN.md`의 "Easter Egg: Fake Pest Control Ad" 참고)
 - [ ] `CompleteScreen`(`/complete`)의 "Mission Complete!" 메시지와 리뷰 폼 사이에 가짜 방역업체 광고 카드 하나 삽입. 회색 배경 + "Ad" 라벨 + 기존 카드 토큰(rounded-card/soft shadow), 탭하면 실제 링크 없이 토스트("농담이에요, 광고 없어요 🐱")만. 딱 이 화면 하나에만, 로테이션 없음. 히어로 쪽 화면엔 넣지 않음
