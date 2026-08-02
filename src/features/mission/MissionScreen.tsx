@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
@@ -43,6 +43,10 @@ export function MissionScreen() {
   // Routes to the celebration screen only on a live 'completed' transition witnessed
   // while this screen is open — never on landing on an already-completed mission.
   const prevStatusRef = useRef<string | undefined>(undefined);
+  // True only during the brief pause between the live transition and the redirect —
+  // hides the Leave a Review/Not now buttons so they don't flash right before the
+  // dedicated Mission Complete screen (with its own buttons) takes over.
+  const [isTransitioningToComplete, setIsTransitioningToComplete] = useState(false);
   useEffect(() => {
     const prevStatus = prevStatusRef.current;
     const justCompleted =
@@ -56,6 +60,7 @@ export function MissionScreen() {
 
     // Brief pause so the timeline's last dot is visibly seen turning yellow
     // before navigating away, instead of jumping straight to the next screen.
+    setIsTransitioningToComplete(true);
     const missionId = mission.id;
     const timer = setTimeout(() => {
       router.replace({ pathname: '/mission-complete', params: { missionId } });
@@ -183,7 +188,7 @@ export function MissionScreen() {
             loading={updateStatus.isPending}
             disabled={updateStatus.isPending}
           />
-        ) : isCompleted && !isReviewed ? (
+        ) : isTransitioningToComplete ? null : isCompleted && !isReviewed ? (
           <>
             <Button
               label="Leave a Review"
