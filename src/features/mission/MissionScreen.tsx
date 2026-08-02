@@ -45,15 +45,22 @@ export function MissionScreen() {
   const prevStatusRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     const prevStatus = prevStatusRef.current;
-    if (
-      mission &&
+    const justCompleted =
+      !!mission &&
       prevStatus !== undefined &&
       prevStatus !== 'completed' &&
-      mission.status === 'completed'
-    ) {
-      router.replace({ pathname: '/mission-complete', params: { missionId: mission.id } });
-    }
+      mission.status === 'completed';
     prevStatusRef.current = mission?.status;
+
+    if (!justCompleted || !mission) return;
+
+    // Brief pause so the timeline's last dot is visibly seen turning yellow
+    // before navigating away, instead of jumping straight to the next screen.
+    const missionId = mission.id;
+    const timer = setTimeout(() => {
+      router.replace({ pathname: '/mission-complete', params: { missionId } });
+    }, 900);
+    return () => clearTimeout(timer);
   }, [mission, router]);
 
   if (isLoading) {
