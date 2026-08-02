@@ -155,7 +155,9 @@ export function MissionScreen() {
         {!isCancelled && (
           <StatusTimeline
             currentStep={STEP_BY_STATUS[mission.status] ?? 0}
-            pulseCurrentStep={mission.status === 'on_the_way'}
+            // 'on_the_way' is never actually set by any status transition today — the
+            // real in-transit period is 'accepted' (before the hero marks 'arrived').
+            pulseCurrentStep={mission.status === 'accepted'}
           />
         )}
       </View>
