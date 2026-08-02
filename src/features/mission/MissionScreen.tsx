@@ -2,7 +2,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
+import { Button, LoadingIndicator, MissionCard, Toast } from '../../components/ui';
 import { getCategoryInfo } from '../../constants/categoryInfo';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
@@ -67,6 +67,20 @@ export function MissionScreen() {
     }, 900);
     return () => clearTimeout(timer);
   }, [mission, router]);
+
+  // A hero can back out of an accepted mission (useCancelAcceptedMission), which
+  // resets it to an open request with no hero — surface that with a reassuring
+  // toast instead of letting the hero card silently vanish.
+  const prevHeroIdRef = useRef<string | null | undefined>(undefined);
+  const [showHeroBackedOutToast, setShowHeroBackedOutToast] = useState(false);
+  useEffect(() => {
+    const prevHeroId = prevHeroIdRef.current;
+    const heroBackedOut =
+      !!mission && !!prevHeroId && mission.heroId === null && mission.status === 'requested';
+    prevHeroIdRef.current = mission ? mission.heroId : undefined;
+
+    if (heroBackedOut) setShowHeroBackedOutToast(true);
+  }, [mission]);
 
   if (isLoading) {
     return <LoadingIndicator message="Loading mission..." />;
@@ -212,6 +226,12 @@ export function MissionScreen() {
           <Button label="Waiting for completion..." variant="secondary" disabled />
         )}
       </View>
+      {showHeroBackedOutToast && (
+        <Toast
+          message="Your hero had to step away · 새 히어로를 찾고 있어요"
+          onDismiss={() => setShowHeroBackedOutToast(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }
