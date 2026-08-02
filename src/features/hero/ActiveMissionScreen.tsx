@@ -1,7 +1,9 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator, MissionCard } from '../../components/ui';
+import { useCancelAcceptedMission } from '../../hooks/useCancelAcceptedMission';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
 import { getCategoryInfo } from '../../constants/categoryInfo';
@@ -13,6 +15,8 @@ export function ActiveMissionScreen() {
   const router = useRouter();
   const { data: mission, isLoading, isError, refetch } = useMission(id);
   const updateStatus = useUpdateMissionStatus();
+  const cancelMission = useCancelAcceptedMission();
+  const [cancelError, setCancelError] = useState<string | null>(null);
 
   if (isLoading) {
     return <LoadingIndicator message="Loading mission..." />;
@@ -43,6 +47,16 @@ export function ActiveMissionScreen() {
     router.replace({ pathname: '/hero/reward', params: { amount: String(mission.rewardAmount) } });
   };
 
+  const handleCancel = async () => {
+    setCancelError(null);
+    try {
+      await cancelMission.mutateAsync(mission.id);
+      router.replace('/');
+    } catch {
+      setCancelError('Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.');
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="px-6 py-4">
@@ -58,7 +72,10 @@ export function ActiveMissionScreen() {
         />
         <LocationCard address={mission.address} />
       </View>
-      <View className="px-6 pb-6">
+      <View className="gap-3 px-6 pb-6">
+        {cancelError && (
+          <Text className="text-center text-sm text-danger">{cancelError}</Text>
+        )}
         {arrived ? (
           <Button
             label="Complete Mission"
@@ -81,6 +98,13 @@ export function ActiveMissionScreen() {
             onPress={handleOnTheWay}
           />
         )}
+        <Button
+          label="Cancel · 취소할게요"
+          variant="ghost"
+          loading={cancelMission.isPending}
+          disabled={updateStatus.isPending || cancelMission.isPending}
+          onPress={handleCancel}
+        />
       </View>
     </SafeAreaView>
   );
