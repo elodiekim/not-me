@@ -9,7 +9,11 @@ import { useProfile } from '../../hooks/useProfile';
 import { formatEarned } from '../../utils/formatEarned';
 
 function formatMemberSince(dateString: string) {
-  return new Date(dateString).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+  return new Date(dateString).toLocaleDateString('en-US', {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  });
 }
 
 export function ProfileScreen() {
