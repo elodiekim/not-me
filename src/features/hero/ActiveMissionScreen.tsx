@@ -23,14 +23,23 @@ export function ActiveMissionScreen() {
   }
 
   const category = getCategoryInfo(mission.category);
+  const onTheWay = mission.status === 'on_the_way';
   const arrived = mission.status === 'arrived';
 
+  const handleOnTheWay = () => {
+    updateStatus.mutate({ missionId: mission.id, status: 'on_the_way', fromStatus: 'accepted' });
+  };
+
   const handleArrived = () => {
-    updateStatus.mutate({ missionId: mission.id, status: 'arrived' });
+    updateStatus.mutate({ missionId: mission.id, status: 'arrived', fromStatus: 'on_the_way' });
   };
 
   const handleComplete = async () => {
-    await updateStatus.mutateAsync({ missionId: mission.id, status: 'completed' });
+    await updateStatus.mutateAsync({
+      missionId: mission.id,
+      status: 'completed',
+      fromStatus: 'arrived',
+    });
     router.replace({ pathname: '/hero/reward', params: { amount: String(mission.rewardAmount) } });
   };
 
@@ -44,7 +53,7 @@ export function ActiveMissionScreen() {
           avatar={category.icon}
           title={mission.requesterName}
           subtitle={`${category.title} · ${category.koTitle}`}
-          statusLabel={arrived ? 'Arrived' : 'On my way'}
+          statusLabel={arrived ? 'Arrived' : onTheWay ? 'On my way' : 'Accepted'}
           statusVariant={arrived ? 'success' : 'info'}
         />
         <LocationCard address={mission.address} />
@@ -57,12 +66,19 @@ export function ActiveMissionScreen() {
             loading={updateStatus.isPending}
             onPress={handleComplete}
           />
-        ) : (
+        ) : onTheWay ? (
           <Button
             label="I've Arrived"
             variant="secondary"
             loading={updateStatus.isPending}
             onPress={handleArrived}
+          />
+        ) : (
+          <Button
+            label="On my way · 이동중이에요"
+            variant="secondary"
+            loading={updateStatus.isPending}
+            onPress={handleOnTheWay}
           />
         )}
       </View>
