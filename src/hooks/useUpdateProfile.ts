@@ -8,6 +8,10 @@ interface UpdateProfileInput {
   // Local file URI from the image picker when the user chose a new photo,
   // or null to leave the existing avatar untouched.
   avatarUri: string | null;
+  // True when the user chose "Use Default" — clears avatar_url back to null
+  // instead of uploading. Takes precedence over avatarUri (mutually exclusive
+  // in the UI: picking a new photo clears this, picking default clears avatarUri).
+  removeAvatar?: boolean;
 }
 
 // Fixed path per user so each new upload overwrites the last (upsert) instead
@@ -22,15 +26,17 @@ export function useUpdateProfile() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({ name, phone, avatarUri }: UpdateProfileInput) => {
+    mutationFn: async ({ name, phone, avatarUri, removeAvatar }: UpdateProfileInput) => {
       if (!userId) throw new Error('Not signed in.');
 
-      const fields: { name: string; phone: string | null; avatar_url?: string } = {
+      const fields: { name: string; phone: string | null; avatar_url?: string | null } = {
         name,
         phone,
       };
 
-      if (avatarUri) {
+      if (removeAvatar) {
+        fields.avatar_url = null;
+      } else if (avatarUri) {
         // fetch(uri).arrayBuffer() is the Supabase-recommended way to read a
         // local Expo asset for upload — no extra file-system dependency needed.
         const arrayBuffer = await fetch(avatarUri).then((res) => res.arrayBuffer());
