@@ -79,20 +79,31 @@ function useCurrentCoords() {
 
 export function NearbyMissionsScreen() {
   const router = useRouter();
-  const { data: missions, isLoading, isError, isRefetching, refetch } = useNearbyMissions();
+  const { data: missions, isLoading, isError, refetch } = useNearbyMissions();
   const heroCoords = useCurrentCoords();
+  // Tied to the pull gesture only — see ProfileScreen for why isRefetching isn't used here.
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   const rankedMissions = useMemo(
     () => rankByDistance(missions ?? [], heroCoords),
     [missions, heroCoords],
   );
 
+  const handleRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  };
+
   // Only manual entry point for fresh data — this screen has no polling/Realtime, so
   // a new nearby request otherwise stays invisible until the hero re-opens the screen.
   const refreshControl = (
     <RefreshControl
-      refreshing={isRefetching}
-      onRefresh={refetch}
+      refreshing={isManualRefreshing}
+      onRefresh={handleRefresh}
       tintColor={COLORS.primary}
       colors={[COLORS.primary]}
     />

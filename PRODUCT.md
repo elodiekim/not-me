@@ -214,6 +214,7 @@ These categories are visible to communicate the product vision, but they are not
 - View Activity Feed (read-only timeline of mission status changes and reviews — not chat)
 - Leave Review
 - Edit Profile (name, phone, avatar photo)
+- View About NotMe (founder story — see DESIGN.md for full spec)
 
 ---
 

@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, LoadingIndicator } from '../../components/ui';
@@ -33,14 +33,25 @@ function InboxHeader() {
 
 export function InboxScreen() {
   const router = useRouter();
-  const { data: missions, isLoading, isError, isRefetching, refetch } = useMissionHistory();
+  const { data: missions, isLoading, isError, refetch } = useMissionHistory();
+  // Tied to the pull gesture only — see ProfileScreen for why isRefetching isn't used here.
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
 
   const events = useMemo(() => deriveActivityEvents(missions ?? []), [missions]);
 
+  const handleRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  };
+
   const refreshControl = (
     <RefreshControl
-      refreshing={isRefetching}
-      onRefresh={refetch}
+      refreshing={isManualRefreshing}
+      onRefresh={handleRefresh}
       tintColor={COLORS.primary}
       colors={[COLORS.primary]}
     />
