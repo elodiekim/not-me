@@ -2,9 +2,9 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input, LoadingIndicator } from '../../components/ui';
+import { BottomSheet, Button, Input, LoadingIndicator } from '../../components/ui';
 import { useProfile } from '../../hooks/useProfile';
 import { useUpdateProfile } from '../../hooks/useUpdateProfile';
 import { useAuthStore } from '../../stores/useAuthStore';
@@ -56,6 +56,7 @@ function EditProfileForm({ profile }: { profile: Profile }) {
   // tells Save to clear avatar_url. Mutually exclusive with pickedAvatarUri.
   const [removeAvatar, setRemoveAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isAvatarSheetOpen, setIsAvatarSheetOpen] = useState(false);
 
   const trimmedName = name.trim();
   const trimmedPhone = phone.trim();
@@ -75,6 +76,7 @@ function EditProfileForm({ profile }: { profile: Profile }) {
         : FALLBACK_AVATAR;
 
   const handlePickFromLibrary = async () => {
+    setIsAvatarSheetOpen(false);
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
@@ -91,14 +93,7 @@ function EditProfileForm({ profile }: { profile: Profile }) {
   const handleUseDefault = () => {
     setPickedAvatarUri(null);
     setRemoveAvatar(true);
-  };
-
-  const handleChangeAvatar = () => {
-    Alert.alert('Change profile photo · 프로필 사진 변경', undefined, [
-      { text: 'Choose Photo · 사진 선택', onPress: handlePickFromLibrary },
-      { text: 'Use Default · 기본 이미지 사용', onPress: handleUseDefault },
-      { text: 'Cancel · 취소', style: 'cancel' },
-    ]);
+    setIsAvatarSheetOpen(false);
   };
 
   const handleSave = async () => {
@@ -141,7 +136,7 @@ function EditProfileForm({ profile }: { profile: Profile }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Change profile photo"
-            onPress={handleChangeAvatar}
+            onPress={() => setIsAvatarSheetOpen(true)}
             disabled={updateProfile.isPending}
           >
             <Image source={avatarSource} style={{ width: 96, height: 96, borderRadius: 48 }} />
@@ -176,6 +171,22 @@ function EditProfileForm({ profile }: { profile: Profile }) {
           onPress={handleSave}
         />
       </ScrollView>
+
+      <BottomSheet visible={isAvatarSheetOpen} onClose={() => setIsAvatarSheetOpen(false)}>
+        <View className="items-center gap-1 pb-2">
+          <Text className="text-lg font-sans-semibold text-text-primary">
+            Change profile photo
+          </Text>
+          <Text className="text-sm text-text-secondary">프로필 사진 변경</Text>
+        </View>
+        <Button label="Choose Photo · 사진 선택" variant="primary" onPress={handlePickFromLibrary} />
+        <Button label="Use Default · 기본 이미지 사용" variant="secondary" onPress={handleUseDefault} />
+        <Button
+          label="Cancel · 취소"
+          variant="ghost"
+          onPress={() => setIsAvatarSheetOpen(false)}
+        />
+      </BottomSheet>
     </SafeAreaView>
   );
 }

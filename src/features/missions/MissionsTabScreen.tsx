@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, MissionCard, MissionCardSkeleton, SectionHeader } from '../../components/ui';
@@ -42,15 +42,26 @@ function groupByMonth(missions: MissionHistoryEntry[]) {
 
 export function MissionsTabScreen() {
   const router = useRouter();
-  const { data: missions, isLoading, isError, isRefetching, refetch } = useMissionHistory();
+  const { data: missions, isLoading, isError, refetch } = useMissionHistory();
   const { mutate: updateStatusMutate } = useUpdateMissionStatus();
+  // Tied to the pull gesture only — see ProfileScreen for why isRefetching isn't used here.
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  };
 
   // Manual fallback for cache invalidation gaps (e.g. a status change from the other
   // party) — same pattern as NearbyMissions/Inbox.
   const refreshControl = (
     <RefreshControl
-      refreshing={isRefetching}
-      onRefresh={refetch}
+      refreshing={isManualRefreshing}
+      onRefresh={handleRefresh}
       tintColor={COLORS.primary}
       colors={[COLORS.primary]}
     />

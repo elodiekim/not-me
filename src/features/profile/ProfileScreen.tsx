@@ -1,5 +1,6 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Image, Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Card, LoadingIndicator, RatingRow } from '../../components/ui';
@@ -18,19 +19,16 @@ function formatMemberSince(dateString: string) {
 
 export function ProfileScreen() {
   const router = useRouter();
-  const {
-    data: profile,
-    isLoading: isProfileLoading,
-    isError,
-    isRefetching,
-    refetch,
-  } = useProfile();
+  const { data: profile, isLoading: isProfileLoading, isError, refetch } = useProfile();
   const {
     data: missions,
     isLoading: isHistoryLoading,
-    isRefetching: isHistoryRefetching,
     refetch: refetchHistory,
   } = useMissionHistory();
+  // Tied to the pull gesture only — isRefetching also flips true for background
+  // refetches (e.g. cache invalidation after Edit Profile saves), which would
+  // otherwise pop the native spinner without the user ever pulling down.
+  const [isManualRefreshing, setIsManualRefreshing] = useState(false);
   const requestedCount = (missions ?? []).filter((item) => item.role === 'user').length;
   const helpedCount = (missions ?? []).filter((item) => item.role === 'hero').length;
   const totalEarned = (missions ?? [])
@@ -55,13 +53,19 @@ export function ProfileScreen() {
     );
   }
 
+  const handleRefresh = async () => {
+    setIsManualRefreshing(true);
+    try {
+      await Promise.all([refetch(), refetchHistory()]);
+    } finally {
+      setIsManualRefreshing(false);
+    }
+  };
+
   const refreshControl = (
     <RefreshControl
-      refreshing={isRefetching || isHistoryRefetching}
-      onRefresh={() => {
-        refetch();
-        refetchHistory();
-      }}
+      refreshing={isManualRefreshing}
+      onRefresh={handleRefresh}
       tintColor={COLORS.primary}
       colors={[COLORS.primary]}
     />
