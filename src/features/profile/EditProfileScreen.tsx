@@ -76,13 +76,17 @@ function EditProfileForm({ profile }: { profile: Profile }) {
         : FALLBACK_AVATAR;
 
   const handlePickFromLibrary = async () => {
-    setIsAvatarSheetOpen(false);
+    // Don't close the sheet first — dismissing our Modal at the same moment the
+    // native image picker tries to present causes a presentation conflict on iOS
+    // (picker fails to open or the selection never comes back). Close it only
+    // once the picker session has fully resolved.
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
       aspect: [1, 1],
       quality: 0.7,
     });
+    setIsAvatarSheetOpen(false);
 
     if (!result.canceled) {
       setPickedAvatarUri(result.assets[0].uri);
