@@ -2,7 +2,7 @@ import { Feather } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { Image, Pressable, ScrollView, Text, View } from 'react-native';
+import { Alert, Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, LoadingIndicator } from '../../components/ui';
 import { useProfile } from '../../hooks/useProfile';
@@ -52,6 +52,9 @@ function EditProfileForm({ profile }: { profile: Profile }) {
   const [phone, setPhone] = useState(profile.phone ?? '');
   // Local URI of a freshly picked photo, shown as a preview until Save uploads it.
   const [pickedAvatarUri, setPickedAvatarUri] = useState<string | null>(null);
+  // True once the user chooses "Use Default" — previews the fallback icon and
+  // tells Save to clear avatar_url. Mutually exclusive with pickedAvatarUri.
+  const [removeAvatar, setRemoveAvatar] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const trimmedName = name.trim();
@@ -63,13 +66,15 @@ function EditProfileForm({ profile }: { profile: Profile }) {
       : undefined;
   const canSave = trimmedName.length > 0 && phoneValid && !updateProfile.isPending;
 
-  const avatarSource = pickedAvatarUri
-    ? { uri: pickedAvatarUri }
-    : profile.avatarUrl
-      ? { uri: profile.avatarUrl }
-      : FALLBACK_AVATAR;
+  const avatarSource = removeAvatar
+    ? FALLBACK_AVATAR
+    : pickedAvatarUri
+      ? { uri: pickedAvatarUri }
+      : profile.avatarUrl
+        ? { uri: profile.avatarUrl }
+        : FALLBACK_AVATAR;
 
-  const handlePickAvatar = async () => {
+  const handlePickFromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images'],
       allowsEditing: true,
@@ -79,7 +84,21 @@ function EditProfileForm({ profile }: { profile: Profile }) {
 
     if (!result.canceled) {
       setPickedAvatarUri(result.assets[0].uri);
+      setRemoveAvatar(false);
     }
+  };
+
+  const handleUseDefault = () => {
+    setPickedAvatarUri(null);
+    setRemoveAvatar(true);
+  };
+
+  const handleChangeAvatar = () => {
+    Alert.alert('Change profile photo · 프로필 사진 변경', undefined, [
+      { text: 'Choose Photo · 사진 선택', onPress: handlePickFromLibrary },
+      { text: 'Use Default · 기본 이미지 사용', onPress: handleUseDefault },
+      { text: 'Cancel · 취소', style: 'cancel' },
+    ]);
   };
 
   const handleSave = async () => {
@@ -89,6 +108,7 @@ function EditProfileForm({ profile }: { profile: Profile }) {
         name: trimmedName,
         phone: trimmedPhone.length > 0 ? trimmedPhone : null,
         avatarUri: pickedAvatarUri,
+        removeAvatar,
       });
       router.back();
     } catch {
@@ -121,7 +141,7 @@ function EditProfileForm({ profile }: { profile: Profile }) {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Change profile photo"
-            onPress={handlePickAvatar}
+            onPress={handleChangeAvatar}
             disabled={updateProfile.isPending}
           >
             <Image source={avatarSource} style={{ width: 96, height: 96, borderRadius: 48 }} />
