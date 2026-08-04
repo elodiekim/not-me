@@ -287,13 +287,14 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 
 - [ ] **proud cat 무늬 수정** — `assets/characters/proud-cat.png`(온보딩 3번째 슬라이드에서 사용) 무늬 디자인 손보기
 
-## 🟢 P3 · About NotMe (신규, `DESIGN.md`의 "About NotMe" 섹션 참고 — `about-notme/` 폴더 여러 초안을 하나로 정리한 최종 스펙)
-- [ ] 실제 사진 자산 이전: `about-notme/upscale-cat.png`, `about-notme/Upscale-cockroach.png` → `notme-app/assets/about/`로 복사(원본 iPhone 사진 `real-cat.jpg`/`cockroach.jpg`는 소스 보관용, 앱엔 업스케일된 버전만 사용). `DESIGN.md` Asset Rules에 `about/` 폴더 이미 추가해둠
-- [ ] Profile 설정 리스트에 "About NotMe" 항목 추가(Account/Notifications/Help 옆), 탭하면 새 플로우 진입
-- [ ] **언어 선택 화면 신규** — 이 플로우만의 예외(앱 전체는 영/한 동시 표기가 기본인데, 여기만 언어 하나 골라서 그 언어로만 진행). 🇺🇸 English / 🇰🇷 한국어 선택 UI
-- [ ] Screen A "About NotMe": 로고 + Proud Cat + "How NotMe Started" 타이틀 + 창업자 스토리(선택한 언어로만) + 중간 pull-quote 카드 + Continue 버튼
-- [ ] Screen B "The Real Story": 실제 바퀴벌레 사진+캡션, 실제 고양이 사진+캡션, Hero Cat 일러스트+캡션, 푸터, 마지막 CTA 버튼(앱으로 복귀, dead-end 아님)
-- [ ] 새 애니메이션 불필요(DESIGN.md 명시), 기존 타이포/스페이싱 토큰만 재사용, 사진은 rounded corner + 여백 넉넉하게
+## 🟢 P3 · About NotMe (구현 완료 · 2026-08-04, `DESIGN.md`의 "About NotMe" 섹션 참고 — `about-notme/` 폴더 여러 초안을 하나로 정리한 최종 스펙)
+- [x] 실제 사진 자산 이전: `about-notme/upscale-cat.png`, `about-notme/Upscale-cockroach.png` → `notme-app/assets/about/real-cat.png`, `real-cockroach.png`로 복사(이름 정리). 원본 iPhone 사진은 `about-notme/`에 소스 보관용으로 그대로 둠
+- [x] Profile 설정 리스트에 "About NotMe" 항목 추가(Account/Notifications/Help 옆) — `SettingsScreen.tsx`의 `SETTINGS_ITEMS`/`SETTINGS_ROUTES`에 추가, 탭하면 `/about`으로 이동
+- [x] **언어 선택 화면 신규** (`app/about/index.tsx` → `LanguageSelectScreen`) — 🇺🇸 English / 🇰🇷 한국어 선택, 고른 언어는 `lang` 라우트 파라미터로 다음 화면들에 전달(기존 missionId/heroId 패턴과 동일, 새 store 안 만듦)
+- [x] Screen A "About NotMe" (`app/about/story.tsx` → `AboutStoryScreen`): 로고 + Proud Cat + "How NotMe Started" 타이틀 + 창업자 스토리(선택한 언어로만) + 중간 pull-quote 카드(`Card` 재사용) + Continue 버튼
+- [x] Screen B "The Real Story" (`app/about/real-story.tsx` → `RealStoryScreen`): 실제 바퀴벌레 사진+캡션, 실제 고양이 사진+캡션, Hero Cat 일러스트+캡션, 푸터, 마지막 CTA 버튼 → `router.replace('/')`로 홈 복귀(dead-end 아님)
+- [x] 애니메이션 없음, 기존 `Button`/`Card`/타이포·스페이싱 토큰만 재사용, 사진은 `borderRadius: 24` + 화면 간 여백 넉넉하게(`gap: 40`)
+- 검증: `npx tsc --noEmit` / `npx eslint .` 통과, `expo start --web`으로 `/about`, `/about/story?lang=en`, `/about/real-story?lang=kr` 전부 200 응답 + Metro 번들 에러 없음 확인. **다만 이번 세션엔 브라우저 자동화 도구가 없어서 실제 화면 흐름(언어 선택→Screen A→Screen B→홈 복귀)을 클릭해서 눈으로 확인은 못 했음 — 실기기/시뮬레이터 확인 필요**
 
 ## 🟢 P3 · 이스터에그 (신규, `DESIGN.md`의 "Easter Egg: Fake Pest Control Ad" 참고)
 - [ ] `CompleteScreen`(`/complete`)의 "Mission Complete!" 메시지와 리뷰 폼 사이에 가짜 방역업체 광고 카드 하나 삽입. 회색 배경 + "Ad" 라벨 + 기존 카드 토큰(rounded-card/soft shadow), 탭하면 실제 링크 없이 토스트("농담이에요, 광고 없어요 🐱")만. 딱 이 화면 하나에만, 로테이션 없음. 히어로 쪽 화면엔 넣지 않음

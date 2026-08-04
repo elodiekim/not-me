@@ -18,7 +18,15 @@ const SETTINGS_ITEMS: { icon: keyof typeof Feather.glyphMap; label: string; koLa
   { icon: 'user', label: 'Account', koLabel: '계정' },
   { icon: 'bell', label: 'Notifications', koLabel: '알림' },
   { icon: 'help-circle', label: 'Help', koLabel: '도움말' },
+  { icon: 'info', label: 'About NotMe', koLabel: 'NotMe 소개' },
 ];
+
+// Only Account and About NotMe are wired up so far — Notifications/Help have
+// no destination yet, so they fall through to undefined (no-op tap).
+const SETTINGS_ROUTES: Partial<Record<string, string>> = {
+  Account: '/edit-profile',
+  'About NotMe': '/about',
+};
 
 export function SettingsScreen() {
   const router = useRouter();
@@ -47,7 +55,11 @@ export function SettingsScreen() {
                 key={item.label}
                 accessibilityRole="button"
                 accessibilityLabel={item.label}
-                onPress={item.label === 'Account' ? () => router.push('/edit-profile') : undefined}
+                onPress={
+                  SETTINGS_ROUTES[item.label]
+                    ? () => router.push(SETTINGS_ROUTES[item.label] as never)
+                    : undefined
+                }
               >
                 <View
                   className={`flex-row items-center gap-3 ${index > 0 ? 'border-t border-surface pt-4' : ''}`}
