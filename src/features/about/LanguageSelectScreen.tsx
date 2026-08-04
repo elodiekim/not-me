@@ -50,7 +50,7 @@ export function LanguageSelectScreen() {
           gap: 32,
         }}
       >
-        <View className="items-center gap-5">
+        <View className="items-center gap-3">
           <Image
             source={require('../../../assets/logo/brand-logo.png')}
             style={{ width: 164, height: 55 }}
