@@ -11,11 +11,11 @@ import { parseLang, type AboutLang } from './lang';
 // (fixed width + real aspect ratio + resizeMode="contain"). No animations
 // (DESIGN.md excludes them here). Hero Cat stays out of this flow —
 // celebrate-cat carries the "mascot inspired by my cat" beat at the end.
-const PHOTO_WIDTH = 120;
+const PHOTO_WIDTH = 190;
 // Heights computed from each photo's real pixel ratio at PHOTO_WIDTH — fixed
 // numbers instead of aspectRatio (see Photo component).
-const COCKROACH_HEIGHT = Math.round((PHOTO_WIDTH * 1448) / 1086); // 160
-const CAT_HEIGHT = Math.round((PHOTO_WIDTH * 1402) / 1122); // 150
+const COCKROACH_HEIGHT = Math.round((PHOTO_WIDTH * 1448) / 1086); // 253
+const CAT_HEIGHT = Math.round((PHOTO_WIDTH * 1402) / 1122); // 237
 
 const COPY: Record<
   AboutLang,
