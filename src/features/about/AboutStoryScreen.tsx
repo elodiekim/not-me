@@ -134,8 +134,9 @@ function PhotoStep({ lang }: { lang: 'en' | 'kr' }) {
       </View>
       <Image
         source={require('../../../assets/about/real-cockroach.png')}
-        style={{ width: '100%', aspectRatio: 355 / 250, borderRadius: 24 }}
-        resizeMode="cover"
+        // Full original photo, just scaled down — not cropped/zoomed.
+        style={{ width: 240, aspectRatio: 1086 / 1448, borderRadius: 24, alignSelf: 'center' }}
+        resizeMode="contain"
       />
       <View className="flex-row items-start justify-center gap-2 px-4">
         <Feather name="clock" size={16} color={COLORS.textSecondary} style={{ marginTop: 2 }} />
@@ -159,15 +160,16 @@ function PhotoQuoteStep({ lang }: { lang: 'en' | 'kr' }) {
           </Text>
         ))}
       </View>
-      <View className="w-full">
+      <View style={{ alignSelf: 'center' }}>
         <Image
           source={require('../../../assets/about/real-cat.png')}
-          style={{ width: '100%', aspectRatio: 850 / 560, borderRadius: 24 }}
-          resizeMode="cover"
+          // Full original photo, just scaled down — not cropped/zoomed.
+          style={{ width: 240, aspectRatio: 1122 / 1402, borderRadius: 24 }}
+          resizeMode="contain"
         />
         <View
           className="absolute rounded-input border bg-background px-4 py-3"
-          style={{ borderColor: COLORS.surface, left: 16, bottom: -28, maxWidth: '75%' }}
+          style={{ borderColor: COLORS.surface, left: 16, bottom: -28, maxWidth: '80%' }}
         >
           <View className="flex-row items-start gap-2">
             <Feather name="heart" size={14} color={COLORS.primary} style={{ marginTop: 2 }} />
