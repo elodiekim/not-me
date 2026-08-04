@@ -50,7 +50,7 @@ export function LanguageSelectScreen() {
           gap: 32,
         }}
       >
-        <View className="items-center gap-2">
+        <View className="items-center gap-5">
           <Image
             source={require('../../../assets/logo/brand-logo.png')}
             style={{ width: 164, height: 55 }}
@@ -60,20 +60,9 @@ export function LanguageSelectScreen() {
         </View>
 
         <View className="items-center">
-          {/* Speech-bubble tail: a small rotated square peeking out under the bubble */}
-          <View
-            className="items-center justify-center rounded-input bg-primary"
-            style={{ width: 38, height: 30 }}
-          >
-            <Text style={{ fontSize: 14 }}>🖤</Text>
-          </View>
-          <View
-            className="bg-primary"
-            style={{ width: 8, height: 8, marginTop: -4, transform: [{ rotate: '45deg' }] }}
-          />
           <Image
             source={require('../../../assets/characters/avatar-cat.png')}
-            style={{ width: 112, height: 101, marginTop: 4 }}
+            style={{ width: 112, height: 101 }}
             resizeMode="contain"
           />
         </View>
