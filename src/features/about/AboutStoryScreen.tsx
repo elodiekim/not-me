@@ -9,8 +9,8 @@ import { parseLang, type AboutLang } from './lang';
 // flowing left-aligned paragraphs, not fragmented lines — reads like a short
 // essay rather than an app-UI pattern. Photos are modest and never cropped
 // (fixed width + real aspect ratio + resizeMode="contain"). No animations
-// (DESIGN.md excludes them here). Hero Cat stays out of this flow —
-// celebrate-cat carries the "mascot inspired by my cat" beat at the end.
+// (DESIGN.md excludes them here). Everything is left-aligned except the
+// closing Hero Cat illustration, which is centered as the final visual beat.
 const PHOTO_WIDTH = 190;
 // Heights computed from each photo's real pixel ratio at PHOTO_WIDTH — fixed
 // numbers instead of aspectRatio (see Photo component).
@@ -75,7 +75,7 @@ function Wordmark({ size = 18 }: { size?: number }) {
 
 function Photo({ source, height, caption }: { source: number; height: number; caption: string }) {
   return (
-    <View className="items-center gap-2 py-2">
+    <View className="items-start gap-2 py-2">
       {/* Fixed width AND height (no aspectRatio) — aspectRatio-computed sizing
           wasn't being respected on-device, rendering the photo edge-to-edge. */}
       <Image
@@ -83,7 +83,7 @@ function Photo({ source, height, caption }: { source: number; height: number; ca
         style={{ width: PHOTO_WIDTH, height, borderRadius: 16 }}
         resizeMode="contain"
       />
-      <Text className="text-center font-sans text-xs italic text-text-secondary">{caption}</Text>
+      <Text className="font-sans text-xs italic text-text-secondary">{caption}</Text>
     </View>
   );
 }
@@ -107,18 +107,18 @@ export function AboutStoryScreen() {
       </View>
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 28, paddingBottom: 32, gap: 12 }}>
-        <View className="items-center gap-3 pb-6">
-          <View className="items-center gap-1">
-            <Text className="text-center text-3xl font-sans-bold text-text-primary">
-              {copy.title}
-            </Text>
-            <Text className="text-center text-base text-text-secondary">{copy.titleSub}</Text>
-          </View>
+        <View className="items-start gap-3 pb-6">
           <Image
             source={require('../../../assets/characters/proud-cat.png')}
-            style={{ width: 112, height: 112 }}
+            style={{ width: 100, height: 100 }}
             resizeMode="contain"
           />
+          <View className="items-start gap-1">
+            <Text className="text-3xl font-sans-bold text-text-primary">{copy.title}</Text>
+            {lang !== 'en' && (
+              <Text className="text-base text-text-secondary">{copy.titleSub}</Text>
+            )}
+          </View>
         </View>
 
         <Text className="font-sans text-base text-text-primary" style={{ lineHeight: 26 }}>
@@ -142,7 +142,7 @@ export function AboutStoryScreen() {
         />
 
         <Text
-          className="text-center font-sans text-base italic text-text-secondary"
+          className="font-sans text-base italic text-text-secondary"
           style={{ lineHeight: 24, marginTop: 8 }}
         >
           {copy.aside}
@@ -170,8 +170,8 @@ export function AboutStoryScreen() {
         </Text>
 
         <Image
-          source={require('../../../assets/characters/celebrate-cat.png')}
-          style={{ width: 100, height: 100, alignSelf: 'center', marginTop: 16 }}
+          source={require('../../../assets/characters/hero-cat.png')}
+          style={{ width: 140, height: 125, marginTop: 16, alignSelf: 'center' }}
           resizeMode="contain"
         />
 
