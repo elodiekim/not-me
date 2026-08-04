@@ -287,14 +287,13 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 
 - [ ] **proud cat 무늬 수정** — `assets/characters/proud-cat.png`(온보딩 3번째 슬라이드에서 사용) 무늬 디자인 손보기
 
-## 🟢 P3 · About NotMe (구현 완료 · 2026-08-04, `DESIGN.md`의 "About NotMe" 섹션 참고 — `about-notme/` 폴더 여러 초안을 하나로 정리한 최종 스펙)
-- [x] 실제 사진 자산 이전: `about-notme/upscale-cat.png`, `about-notme/Upscale-cockroach.png` → `notme-app/assets/about/real-cat.png`, `real-cockroach.png`로 복사(이름 정리). 원본 iPhone 사진은 `about-notme/`에 소스 보관용으로 그대로 둠
+## 🟢 P3 · About NotMe (구현 완료 · 2026-08-04, `about-notme/others.PNG`·`first.PNG` 목업 기준으로 재설계)
+- [x] 실제 사진 자산 이전 + 목업에 맞게 크롭: `about-notme/upscale-cat.png`, `about-notme/Upscale-cockroach.png` → `notme-app/assets/about/real-cat.png`(850x560), `real-cockroach.png`(355x250)로 복사 후 크롭. 원본 iPhone 사진은 `about-notme/`에 소스 보관용으로 그대로 둠. 바퀴벌레 원본 사진은 벌레가 작게 찍혀 있어 크롭이 목업만큼 선명하진 않음(실물 사진 기준 최선)
 - [x] Profile 설정 리스트에 "About NotMe" 항목 추가(Account/Notifications/Help 옆) — `SettingsScreen.tsx`의 `SETTINGS_ITEMS`/`SETTINGS_ROUTES`에 추가, 탭하면 `/about`으로 이동
-- [x] **언어 선택 화면 신규** (`app/about/index.tsx` → `LanguageSelectScreen`) — 🇺🇸 English / 🇰🇷 한국어 선택, 고른 언어는 `lang` 라우트 파라미터로 다음 화면들에 전달(기존 missionId/heroId 패턴과 동일, 새 store 안 만듦)
-- [x] Screen A "About NotMe" (`app/about/story.tsx` → `AboutStoryScreen`): 로고 + Proud Cat + "How NotMe Started" 타이틀 + 창업자 스토리(선택한 언어로만) + 중간 pull-quote 카드(`Card` 재사용) + Continue 버튼
-- [x] Screen B "The Real Story" (`app/about/real-story.tsx` → `RealStoryScreen`): 실제 바퀴벌레 사진+캡션, 실제 고양이 사진+캡션, Hero Cat 일러스트+캡션, 푸터, 마지막 CTA 버튼 → `router.replace('/')`로 홈 복귀(dead-end 아님)
-- [x] 애니메이션 없음, 기존 `Button`/`Card`/타이포·스페이싱 토큰만 재사용, 사진은 `borderRadius: 24` + 화면 간 여백 넉넉하게(`gap: 40`)
-- 검증: `npx tsc --noEmit` / `npx eslint .` 통과, `expo start --web`으로 `/about`, `/about/story?lang=en`, `/about/real-story?lang=kr` 전부 200 응답 + Metro 번들 에러 없음 확인. **다만 이번 세션엔 브라우저 자동화 도구가 없어서 실제 화면 흐름(언어 선택→Screen A→Screen B→홈 복귀)을 클릭해서 눈으로 확인은 못 했음 — 실기기/시뮬레이터 확인 필요**
+- [x] **언어 선택 화면** (`app/about/index.tsx` → `LanguageSelectScreen`) — `first.PNG` 목업대로 재설계: 큰 로고+태그라인, 캐릭터, 이중언어 헤드라인("Every great app starts with a story." + 한글), 언어 선택 박스 2개. 국기 이모지는 특정 국가로 언어를 대표하는 게 편향돼 보일 수 있어(🇺🇸=영어 논쟁 등) 아이콘 없이 텍스트만 사용하기로 결정. 고른 언어는 `lang` 라우트 파라미터로 다음 화면에 전달(기존 missionId/heroId 패턴과 동일, 새 store 안 만듦)
+- [x] **스토리 화면을 4단계로 재구성** (`app/about/story.tsx` → `AboutStoryScreen`, `others.PNG` 목업 기준) — 기존 "Screen A(스크롤 스토리) + Screen B(사진 모음)" 2화면 구조를 폐기하고, 화면 하나에 `step`(0~3) 상태로 페이지당 비트 하나씩 보여주는 구조로 통합. 1단계는 좌측 정렬 커버 레이아웃(로고+큰 타이틀+Proud Cat+첫 문장), 2~4단계는 중앙 정렬(단계 배지 + 헤드라인 + 사진/캐릭터 + 캡션), 4단계는 하이라이터 스타일 인용구 + NotMe 워드마크 + "Start Using NotMe" 버튼으로 `router.replace('/')` 홈 복귀. **Hero Cat 일러스트는 목업에 없어서 이번 재설계에서 완전히 제외**(원래 스펙엔 있었으나 사용자가 목업 기준으로 빼기로 결정) — 대신 2/4단계 모두 celebrate-cat 사용
+- [x] 진행 점(4개, 활성 단계만 확대) + 뒤로가기(1단계에서 누르면 언어 선택으로), 애니메이션 없음, `Button` 컴포넌트 재사용
+- 검증: `npx tsc --noEmit` / `npx eslint .` 통과, `expo start --web`으로 `/about`, `/about/story?lang=en`, `/about/story?lang=kr` 200 응답 + Metro 번들 에러 없음 확인. **다만 이번 세션엔 브라우저 자동화 도구가 없어서 실제 화면 흐름을 클릭해서 눈으로 확인은 못 했음 — 특히 4단계 하이라이터 인용구/사진 캡션 말풍선 위치는 실기기에서 꼭 확인 필요**
 
 ## 🟢 P3 · 이스터에그 (신규, `DESIGN.md`의 "Easter Egg: Fake Pest Control Ad" 참고)
 - [ ] `CompleteScreen`(`/complete`)의 "Mission Complete!" 메시지와 리뷰 폼 사이에 가짜 방역업체 광고 카드 하나 삽입. 회색 배경 + "Ad" 라벨 + 기존 카드 토큰(rounded-card/soft shadow), 탭하면 실제 링크 없이 토스트("농담이에요, 광고 없어요 🐱")만. 딱 이 화면 하나에만, 로테이션 없음. 히어로 쪽 화면엔 넣지 않음
