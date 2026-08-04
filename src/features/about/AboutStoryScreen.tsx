@@ -108,7 +108,6 @@ export function AboutStoryScreen() {
 
       <ScrollView contentContainerStyle={{ paddingHorizontal: 28, paddingBottom: 32, gap: 12 }}>
         <View className="items-center gap-3 pb-6">
-          <Wordmark size={22} />
           <View className="items-center gap-1">
             <Text className="text-center text-3xl font-sans-bold text-text-primary">
               {copy.title}
