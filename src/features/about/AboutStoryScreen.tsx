@@ -58,7 +58,7 @@ const COPY: Record<
     bornAfter: ' was born.',
     bornDetail: 'One cockroach, one very brave cat.',
     catBoxCaption: 'Every character in this app is inspired by him.',
-    startLabel: 'Start Using NotMe',
+    startLabel: 'Continue to NotMe',
   },
   kr: {
     title: '이 앱을 만든 이유',
@@ -79,7 +79,7 @@ const COPY: Record<
     bornAfter: '가 시작되었습니다.',
     bornDetail: '바퀴벌레 한 마리와, 나보다 용감했던 고양이 한 마리 덕분에.',
     catBoxCaption: '캐릭터들은 전부 얘한테서 영감을 받았어요.',
-    startLabel: 'NotMe 시작하기',
+    startLabel: 'NotMe로 돌아가기',
   },
 };
 
