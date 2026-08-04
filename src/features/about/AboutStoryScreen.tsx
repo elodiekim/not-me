@@ -11,7 +11,11 @@ import { parseLang, type AboutLang } from './lang';
 // (fixed width + real aspect ratio + resizeMode="contain"). No animations
 // (DESIGN.md excludes them here). Hero Cat stays out of this flow —
 // celebrate-cat carries the "mascot inspired by my cat" beat at the end.
-const PHOTO_WIDTH = 170;
+const PHOTO_WIDTH = 120;
+// Heights computed from each photo's real pixel ratio at PHOTO_WIDTH — fixed
+// numbers instead of aspectRatio (see Photo component).
+const COCKROACH_HEIGHT = Math.round((PHOTO_WIDTH * 1448) / 1086); // 160
+const CAT_HEIGHT = Math.round((PHOTO_WIDTH * 1402) / 1122); // 150
 
 const COPY: Record<
   AboutLang,
@@ -69,12 +73,14 @@ function Wordmark({ size = 18 }: { size?: number }) {
   );
 }
 
-function Photo({ source, ratio, caption }: { source: number; ratio: number; caption: string }) {
+function Photo({ source, height, caption }: { source: number; height: number; caption: string }) {
   return (
     <View className="items-center gap-2 py-2">
+      {/* Fixed width AND height (no aspectRatio) — aspectRatio-computed sizing
+          wasn't being respected on-device, rendering the photo edge-to-edge. */}
       <Image
         source={source}
-        style={{ width: PHOTO_WIDTH, aspectRatio: ratio, borderRadius: 16 }}
+        style={{ width: PHOTO_WIDTH, height, borderRadius: 16 }}
         resizeMode="contain"
       />
       <Text className="text-center font-sans text-xs italic text-text-secondary">{caption}</Text>
@@ -122,7 +128,7 @@ export function AboutStoryScreen() {
 
         <Photo
           source={require('../../../assets/about/real-cockroach.png')}
-          ratio={1086 / 1448}
+          height={COCKROACH_HEIGHT}
           caption={copy.cockroachCaption}
         />
 
@@ -132,7 +138,7 @@ export function AboutStoryScreen() {
 
         <Photo
           source={require('../../../assets/about/real-cat.png')}
-          ratio={1122 / 1402}
+          height={CAT_HEIGHT}
           caption={copy.catCaption}
         />
 
