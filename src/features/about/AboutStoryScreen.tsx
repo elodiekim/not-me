@@ -24,7 +24,6 @@ const COPY: Record<
   AboutLang,
   {
     title: string;
-    titleSub: string;
     p1: string[];
     cockroachCaption: string;
     p2: string[];
@@ -34,13 +33,13 @@ const COPY: Record<
     pullQuote: string;
     bornBefore: string;
     bornAfter: string;
+    bornDetail: string;
     catBoxCaption: string;
     startLabel: string;
   }
 > = {
   en: {
     title: 'How NotMe Started',
-    titleSub: '이 앱을 만든 이유',
     p1: [
       'One day, a cockroach appeared in my apartment.',
       "I couldn't kill it — I stood there for almost an hour, waiting for a friend to come and rescue me.",
@@ -56,13 +55,13 @@ const COPY: Record<
     pullLead: 'That day, I had one thought:',
     pullQuote: '"There should be an app for this."',
     bornBefore: "That's how ",
-    bornAfter: ' was born — one cockroach, one very brave cat.',
+    bornAfter: ' was born.',
+    bornDetail: 'One cockroach, one very brave cat.',
     catBoxCaption: 'Every character in this app is inspired by him.',
     startLabel: 'Start Using NotMe',
   },
   kr: {
     title: '이 앱을 만든 이유',
-    titleSub: 'How NotMe Started',
     p1: [
       '어느 날 집에 바퀴벌레가 나타났습니다.',
       '저는 잡을 용기가 나지 않아, 친구가 올 때까지 거의 한 시간을 그 자리에 서 있었습니다.',
@@ -77,8 +76,9 @@ const COPY: Record<
     pullLead: '그 순간 생각했습니다.',
     pullQuote: '"이런 것도 대신 도와주는 앱이 있으면 좋지 않을까?"',
     bornBefore: '그렇게 ',
-    bornAfter: '가 시작되었습니다 — 바퀴벌레 한 마리와, 그보다 용감했던 고양이 한 마리 덕분에.',
-    catBoxCaption: '이 앱에 나오는 캐릭터들은 전부 얘한테서 영감을 받았어요.',
+    bornAfter: '가 시작되었습니다.',
+    bornDetail: '바퀴벌레 한 마리와, 나보다 용감했던 고양이 한 마리 덕분에.',
+    catBoxCaption: '캐릭터들은 전부 얘한테서 영감을 받았어요.',
     startLabel: 'NotMe 시작하기',
   },
 };
@@ -132,12 +132,7 @@ export function AboutStoryScreen() {
             style={{ width: 72, height: 72 }}
             resizeMode="contain"
           />
-          <View className="items-start gap-1">
-            <Text className="text-3xl font-sans-bold text-text-primary">{copy.title}</Text>
-            {lang !== 'en' && (
-              <Text className="text-base text-text-secondary">{copy.titleSub}</Text>
-            )}
-          </View>
+          <Text className="text-3xl font-sans-bold text-text-primary">{copy.title}</Text>
         </View>
 
         {copy.p1.map((sentence, i) => (
@@ -198,6 +193,10 @@ export function AboutStoryScreen() {
           {copy.bornBefore}
           <Wordmark size={16} />
           {copy.bornAfter}
+        </Text>
+
+        <Text className="font-sans text-base text-text-primary" style={{ lineHeight: 26 }}>
+          {copy.bornDetail}
         </Text>
 
         <View style={{ marginTop: 8 }}>
