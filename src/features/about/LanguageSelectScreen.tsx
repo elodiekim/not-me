@@ -5,29 +5,20 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { COLORS } from '../../constants/colors';
 import type { AboutLang } from './lang';
 
-const LANGUAGES: { lang: AboutLang; flag: string; label: string }[] = [
-  { lang: 'en', flag: '🇺🇸', label: 'English' },
-  { lang: 'kr', flag: '🇰🇷', label: '한국어' },
+const LANGUAGES: { lang: AboutLang; label: string }[] = [
+  { lang: 'en', label: 'English' },
+  { lang: 'kr', label: '한국어' },
 ];
 
-function LanguageRow({
-  flag,
-  label,
-  onPress,
-}: {
-  flag: string;
-  label: string;
-  onPress: () => void;
-}) {
+function LanguageRow({ label, onPress }: { label: string; onPress: () => void }) {
   return (
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      className="flex-row items-center gap-3 rounded-input border px-4 py-4"
+      className="items-center rounded-input border px-4 py-4"
       style={{ borderColor: COLORS.textDisabled }}
     >
-      <Text style={{ fontSize: 22 }}>{flag}</Text>
       <Text className="text-lg font-sans-semibold text-text-primary">{label}</Text>
     </Pressable>
   );
@@ -81,8 +72,8 @@ export function LanguageSelectScreen() {
         </View>
 
         <View className="gap-3">
-          {LANGUAGES.map(({ lang, flag, label }) => (
-            <LanguageRow key={lang} flag={flag} label={label} onPress={() => choose(lang)} />
+          {LANGUAGES.map(({ lang, label }) => (
+            <LanguageRow key={lang} label={label} onPress={() => choose(lang)} />
           ))}
         </View>
 
