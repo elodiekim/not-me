@@ -7,15 +7,18 @@ import { parseLang, type AboutLang } from './lang';
 
 // Editorial layout (chosen over card-sections and timeline mockups): normal
 // flowing left-aligned paragraphs, not fragmented lines — reads like a short
-// essay rather than an app-UI pattern. Photos are modest and never cropped
-// (fixed width + real aspect ratio + resizeMode="contain"). No animations
-// (DESIGN.md excludes them here). Everything is left-aligned except the
-// closing Hero Cat illustration, which is centered as the final visual beat.
+// essay rather than an app-UI pattern. Everything left-aligned, no exceptions
+// — the closing beat is a third real photo (not an illustration) so the
+// piece stays photographic/authentic all the way through instead of
+// snapping back to a cartoon mascot at the emotional peak. Photos are modest
+// and never cropped (fixed width/height, resizeMode="contain"). No
+// animations (DESIGN.md excludes them here).
 const PHOTO_WIDTH = 190;
 // Heights computed from each photo's real pixel ratio at PHOTO_WIDTH — fixed
 // numbers instead of aspectRatio (see Photo component).
 const COCKROACH_HEIGHT = Math.round((PHOTO_WIDTH * 1448) / 1086); // 253
 const CAT_HEIGHT = Math.round((PHOTO_WIDTH * 1402) / 1122); // 237
+const CAT_BOX_HEIGHT = Math.round((PHOTO_WIDTH * 1440) / 1080); // 253
 
 const COPY: Record<
   AboutLang,
@@ -31,6 +34,7 @@ const COPY: Record<
     pullQuote: string;
     bornBefore: string;
     bornAfter: string;
+    catBoxCaption: string;
     startLabel: string;
   }
 > = {
@@ -46,6 +50,7 @@ const COPY: Record<
     pullQuote: '"There should be an app for this."',
     bornBefore: "That's how ",
     bornAfter: ' was born — one cockroach, one very brave cat.',
+    catBoxCaption: 'The real hero of this story.',
     startLabel: 'Start Using NotMe',
   },
   kr: {
@@ -60,6 +65,7 @@ const COPY: Record<
     pullQuote: '"이런 것도 대신 도와주는 앱이 있으면 좋지 않을까?"',
     bornBefore: '그렇게 ',
     bornAfter: '가 시작되었습니다 — 바퀴벌레 한 마리와, 그보다 용감했던 고양이 한 마리 덕분에.',
+    catBoxCaption: '우리 집 진짜 히어로예요.',
     startLabel: 'NotMe 시작하기',
   },
 };
@@ -110,7 +116,7 @@ export function AboutStoryScreen() {
         <View className="items-start gap-3 pb-6">
           <Image
             source={require('../../../assets/characters/proud-cat.png')}
-            style={{ width: 100, height: 100 }}
+            style={{ width: 72, height: 72 }}
             resizeMode="contain"
           />
           <View className="items-start gap-1">
@@ -169,11 +175,13 @@ export function AboutStoryScreen() {
           {copy.bornAfter}
         </Text>
 
-        <Image
-          source={require('../../../assets/characters/hero-cat.png')}
-          style={{ width: 140, height: 125, marginTop: 16, alignSelf: 'center' }}
-          resizeMode="contain"
-        />
+        <View style={{ marginTop: 8 }}>
+          <Photo
+            source={require('../../../assets/about/real-cat-box.jpg')}
+            height={CAT_BOX_HEIGHT}
+            caption={copy.catBoxCaption}
+          />
+        </View>
 
         <View className="pt-8">
           <Button label={copy.startLabel} variant="primary" onPress={() => router.replace('/')} />
