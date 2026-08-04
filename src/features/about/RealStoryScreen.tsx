@@ -37,8 +37,10 @@ function PhotoBlock({
     <View className="items-center gap-3">
       <Image
         source={source}
-        style={{ width: '100%', aspectRatio, borderRadius: 24 }}
-        resizeMode="cover"
+        // contain (not cover) so the whole photo always shows, never cropped —
+        // and capped well under full width so it reads as a photo, not a banner.
+        style={{ width: 240, aspectRatio, borderRadius: 24 }}
+        resizeMode="contain"
       />
       <Text className="text-center font-sans text-sm text-text-secondary">{caption}</Text>
     </View>
