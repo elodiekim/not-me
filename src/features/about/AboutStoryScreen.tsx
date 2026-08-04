@@ -25,9 +25,9 @@ const COPY: Record<
   {
     title: string;
     titleSub: string;
-    p1: string;
+    p1: string[];
     cockroachCaption: string;
-    p2: string;
+    p2: string[];
     catCaption: string;
     aside: string;
     pullLead: string;
@@ -41,31 +41,44 @@ const COPY: Record<
   en: {
     title: 'How NotMe Started',
     titleSub: '이 앱을 만든 이유',
-    p1: "One day, a cockroach appeared in my apartment. I couldn't kill it — I stood there for almost an hour, waiting for a friend to come and rescue me.",
+    p1: [
+      'One day, a cockroach appeared in my apartment.',
+      "I couldn't kill it — I stood there for almost an hour, waiting for a friend to come and rescue me.",
+    ],
     cockroachCaption: 'The actual cockroach.',
-    p2: 'Meanwhile, my cat sat right underneath it, meowing — it wanted to catch it. I was terrified. My cat was ready.',
+    p2: [
+      'Meanwhile, my cat sat right underneath it, meowing — it wanted to catch it.',
+      'I was terrified.',
+      'My cat was ready.',
+    ],
     catCaption: 'He really wanted to catch it.',
     aside: '💭 "Please... don\'t run away..."',
     pullLead: 'That day, I had one thought:',
     pullQuote: '"There should be an app for this."',
     bornBefore: "That's how ",
     bornAfter: ' was born — one cockroach, one very brave cat.',
-    catBoxCaption: 'The real hero of this story.',
+    catBoxCaption: 'Every character in this app is inspired by him.',
     startLabel: 'Start Using NotMe',
   },
   kr: {
     title: '이 앱을 만든 이유',
     titleSub: 'How NotMe Started',
-    p1: '어느 날 집에 바퀴벌레가 나타났습니다. 저는 잡을 용기가 나지 않아, 친구가 올 때까지 거의 한 시간을 그 자리에 서 있었습니다.',
+    p1: [
+      '어느 날 집에 바퀴벌레가 나타났습니다.',
+      '저는 잡을 용기가 나지 않아, 친구가 올 때까지 거의 한 시간을 그 자리에 서 있었습니다.',
+    ],
     cockroachCaption: '실제 그 바퀴벌레입니다.',
-    p2: '그런데 아래를 보니 우리 집 고양이는 계속 잡고 싶다고 야옹거리고 있었습니다. 저는 무서웠고, 고양이는 준비되어 있었습니다.',
+    p2: [
+      '그런데 아래를 보니 우리 집 고양이는 계속 잡고 싶다고 야옹거리고 있었습니다.',
+      '저는 무서웠고, 고양이는 준비되어 있었습니다.',
+    ],
     catCaption: '계속 잡고 싶어했던 우리 집 고양이.',
     aside: '💭 "제발... 도망가지 마..."',
     pullLead: '그 순간 생각했습니다.',
     pullQuote: '"이런 것도 대신 도와주는 앱이 있으면 좋지 않을까?"',
     bornBefore: '그렇게 ',
     bornAfter: '가 시작되었습니다 — 바퀴벌레 한 마리와, 그보다 용감했던 고양이 한 마리 덕분에.',
-    catBoxCaption: '우리 집 진짜 히어로예요.',
+    catBoxCaption: '이 앱에 나오는 캐릭터들은 전부 얘한테서 영감을 받았어요.',
     startLabel: 'NotMe 시작하기',
   },
 };
@@ -127,9 +140,15 @@ export function AboutStoryScreen() {
           </View>
         </View>
 
-        <Text className="font-sans text-base text-text-primary" style={{ lineHeight: 26 }}>
-          {copy.p1}
-        </Text>
+        {copy.p1.map((sentence, i) => (
+          <Text
+            key={i}
+            className="font-sans text-base text-text-primary"
+            style={{ lineHeight: 26 }}
+          >
+            {sentence}
+          </Text>
+        ))}
 
         <Photo
           source={require('../../../assets/about/real-cockroach.png')}
@@ -137,9 +156,15 @@ export function AboutStoryScreen() {
           caption={copy.cockroachCaption}
         />
 
-        <Text className="font-sans text-base text-text-primary" style={{ lineHeight: 26 }}>
-          {copy.p2}
-        </Text>
+        {copy.p2.map((sentence, i) => (
+          <Text
+            key={i}
+            className="font-sans text-base text-text-primary"
+            style={{ lineHeight: 26 }}
+          >
+            {sentence}
+          </Text>
+        ))}
 
         <Photo
           source={require('../../../assets/about/real-cat.png')}
