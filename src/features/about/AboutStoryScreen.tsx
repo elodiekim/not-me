@@ -139,7 +139,7 @@ export function AboutStoryScreen() {
                 <View key={index} className="items-center gap-3">
                   <Image
                     source={block.source}
-                    style={{ width: 220, aspectRatio: block.ratio, borderRadius: 20 }}
+                    style={{ width: 160, aspectRatio: block.ratio, borderRadius: 16 }}
                     resizeMode="contain"
                   />
                   <Text className="text-center font-sans text-sm text-text-secondary">
