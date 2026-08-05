@@ -6,7 +6,7 @@ import { BottomSheet, Button, LoadingIndicator, MissionCard, Toast } from '../..
 import { getCategoryInfo } from '../../constants/categoryInfo';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
-import { isRequestStale } from '../../utils/missionExpiry';
+import { isMissionStalled, isRequestStale } from '../../utils/missionExpiry';
 import type { MissionStatus } from '../../types/Mission';
 import { StatusTimeline } from './components/StatusTimeline';
 
@@ -115,6 +115,15 @@ export function MissionScreen() {
     mission.status === 'accepted' ||
     mission.status === 'on_the_way' ||
     mission.status === 'arrived';
+  // Nothing expires a mission once a hero accepts, so a hero who goes quiet leaves
+  // it sitting here indefinitely. Rather than auto-cancelling — 'arrived' especially
+  // often means the job was finished and only the Complete tap is missing, and
+  // cancelling that would erase the hero's earnings and the requester's review —
+  // just tell the requester it's been quiet and let them decide. 'arrived' is left
+  // out for the same reason: "no response" would be the wrong thing to say.
+  const isStalled =
+    (mission.status === 'accepted' || mission.status === 'on_the_way') &&
+    isMissionStalled(mission.updatedAt);
   // Once a hero is assigned, their card links to their public reviews so the
   // requester can vet who's coming. A still-'requested' mission has no hero → no link.
   const heroId = mission.heroId;
@@ -185,7 +194,12 @@ export function MissionScreen() {
             ? 'This request was cancelled.\n요청이 취소됐어요.'
             : isCompleted
               ? 'Your hero finished the mission.\n미션이 완료됐어요.'
-              : 'Your hero is on the way.\n히어로가 오고 있어요.'}
+              : isStalled
+                ? // Saying "on the way" here would be actively misleading — nothing
+                  // has moved in a while. Names the situation without blaming the
+                  // hero, who may simply be stuck somewhere.
+                  "It's been quiet for a while.\n히어로가 한동안 응답이 없어요."
+                : 'Your hero is on the way.\n히어로가 오고 있어요.'}
         </Text>
 
         {!isCancelled && (
@@ -214,10 +228,12 @@ export function MissionScreen() {
           />
         ) : isTransitioningToComplete ? null : isHeroOnTheWay ? (
           <>
-            <Button label="Waiting for completion..." variant="secondary" disabled />
+            {/* Dropped once stalled: "waiting for completion" reads as reassurance
+                that nothing is wrong, and cancelling becomes the live option. */}
+            {!isStalled && <Button label="Waiting for completion..." variant="secondary" disabled />}
             <Button
               label="Cancel request · 요청 취소"
-              variant="ghost"
+              variant={isStalled ? 'secondary' : 'ghost'}
               onPress={() => setIsCancelSheetOpen(true)}
               loading={updateStatus.isPending}
               disabled={updateStatus.isPending}
@@ -259,8 +275,9 @@ export function MissionScreen() {
           Cancel this request?{'\n'}요청을 취소할까요?
         </Text>
         <Text className="font-sans text-sm text-text-secondary">
-          {mission.heroName ?? 'Your hero'} is already on the way.
-          {'\n'}히어로가 이미 오고 있어요.
+          {isStalled
+            ? `${mission.heroName ?? 'Your hero'} may still show up.\n히어로가 아직 올 수도 있어요.`
+            : `${mission.heroName ?? 'Your hero'} is already on the way.\n히어로가 이미 오고 있어요.`}
         </Text>
         <Button
           label="Yes, cancel · 취소할게요"
