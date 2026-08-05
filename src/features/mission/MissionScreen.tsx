@@ -2,11 +2,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, LoadingIndicator, MissionCard, Toast } from '../../components/ui';
+import { BottomSheet, Button, LoadingIndicator, MissionCard, Toast } from '../../components/ui';
 import { getCategoryInfo } from '../../constants/categoryInfo';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
-import { isRequestStale } from '../../utils/missionExpiry';
+import { isMissionStalled, isRequestStale } from '../../utils/missionExpiry';
+import type { MissionStatus } from '../../types/Mission';
 import { StatusTimeline } from './components/StatusTimeline';
 
 const STEP_BY_STATUS: Record<string, number> = {
@@ -73,6 +74,7 @@ export function MissionScreen() {
   // toast instead of letting the hero card silently vanish.
   const prevHeroIdRef = useRef<string | null | undefined>(undefined);
   const [showHeroBackedOutToast, setShowHeroBackedOutToast] = useState(false);
+  const [isCancelSheetOpen, setIsCancelSheetOpen] = useState(false);
   useEffect(() => {
     const prevHeroId = prevHeroIdRef.current;
     const heroBackedOut =
@@ -104,20 +106,37 @@ export function MissionScreen() {
   const isCompleted = mission.status === 'completed';
   const isReviewed = isCompleted && mission.hasReview;
   const isCancelled = mission.status === 'cancelled';
-  // Only a still-unmatched request is cancellable here. Once a hero has accepted
-  // (accepted/on_the_way), cancelling raises trust/reward questions we don't
-  // handle yet — left as a known gap, so no Cancel button in those states.
   const isRequested = mission.status === 'requested';
+  // A stranger is on their way to the requester's home, so they keep a way out
+  // even after a hero accepts — seeing who accepted (the hero card links to
+  // their reviews) is worthless without being able to act on it. Confirmed
+  // through a sheet rather than a bare button, since someone is already en route.
+  const isHeroOnTheWay =
+    mission.status === 'accepted' ||
+    mission.status === 'on_the_way' ||
+    mission.status === 'arrived';
+  // Nothing expires a mission once a hero accepts, so a hero who goes quiet leaves
+  // it sitting here indefinitely. Rather than auto-cancelling — 'arrived' especially
+  // often means the job was finished and only the Complete tap is missing, and
+  // cancelling that would erase the hero's earnings and the requester's review —
+  // just tell the requester it's been quiet and let them decide. 'arrived' is left
+  // out for the same reason: "no response" would be the wrong thing to say.
+  const isStalled =
+    (mission.status === 'accepted' || mission.status === 'on_the_way') &&
+    isMissionStalled(mission.updatedAt);
   // Once a hero is assigned, their card links to their public reviews so the
   // requester can vet who's coming. A still-'requested' mission has no hero → no link.
   const heroId = mission.heroId;
 
-  const handleCancel = async () => {
+  // fromStatus guards against cancelling something that moved on mid-tap — most
+  // importantly a mission the hero completed in the same moment.
+  const handleCancel = async (fromStatus: MissionStatus) => {
+    setIsCancelSheetOpen(false);
     try {
       await updateStatus.mutateAsync({
         missionId: mission.id,
         status: 'cancelled',
-        fromStatus: 'requested',
+        fromStatus,
       });
     } catch {
       // Cancellation failed (e.g. offline) — never trap the user, still go home.
@@ -175,7 +194,12 @@ export function MissionScreen() {
             ? 'This request was cancelled.\n요청이 취소됐어요.'
             : isCompleted
               ? 'Your hero finished the mission.\n미션이 완료됐어요.'
-              : 'Your hero is on the way.\n히어로가 오고 있어요.'}
+              : isStalled
+                ? // Saying "on the way" here would be actively misleading — nothing
+                  // has moved in a while. Names the situation without blaming the
+                  // hero, who may simply be stuck somewhere.
+                  "It's been quiet for a while.\n히어로가 한동안 응답이 없어요."
+                : 'Your hero is on the way.\n히어로가 오고 있어요.'}
         </Text>
 
         {!isCancelled && (
@@ -198,11 +222,24 @@ export function MissionScreen() {
           <Button
             label="Cancel"
             variant="ghost"
-            onPress={handleCancel}
+            onPress={() => handleCancel('requested')}
             loading={updateStatus.isPending}
             disabled={updateStatus.isPending}
           />
-        ) : isTransitioningToComplete ? null : isCompleted && !isReviewed ? (
+        ) : isTransitioningToComplete ? null : isHeroOnTheWay ? (
+          <>
+            {/* Dropped once stalled: "waiting for completion" reads as reassurance
+                that nothing is wrong, and cancelling becomes the live option. */}
+            {!isStalled && <Button label="Waiting for completion..." variant="secondary" disabled />}
+            <Button
+              label="Cancel request · 요청 취소"
+              variant={isStalled ? 'secondary' : 'ghost'}
+              onPress={() => setIsCancelSheetOpen(true)}
+              loading={updateStatus.isPending}
+              disabled={updateStatus.isPending}
+            />
+          </>
+        ) : isCompleted && !isReviewed ? (
           <>
             <Button
               label="Leave a Review"
@@ -232,6 +269,27 @@ export function MissionScreen() {
           onDismiss={() => setShowHeroBackedOutToast(false)}
         />
       )}
+
+      <BottomSheet visible={isCancelSheetOpen} onClose={() => setIsCancelSheetOpen(false)}>
+        <Text className="text-lg font-sans-semibold text-text-primary">
+          Cancel this request?{'\n'}요청을 취소할까요?
+        </Text>
+        <Text className="font-sans text-sm text-text-secondary">
+          {isStalled
+            ? `${mission.heroName ?? 'Your hero'} may still show up.\n히어로가 아직 올 수도 있어요.`
+            : `${mission.heroName ?? 'Your hero'} is already on the way.\n히어로가 이미 오고 있어요.`}
+        </Text>
+        <Button
+          label="Yes, cancel · 취소할게요"
+          variant="danger"
+          onPress={() => handleCancel(mission.status)}
+        />
+        <Button
+          label="Keep waiting · 기다릴게요"
+          variant="ghost"
+          onPress={() => setIsCancelSheetOpen(false)}
+        />
+      </BottomSheet>
     </SafeAreaView>
   );
 }

@@ -1,10 +1,11 @@
 import { Feather } from '@expo/vector-icons';
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Keyboard, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input } from '../../components/ui';
+import { Button, Input, LoadingIndicator } from '../../components/ui';
+import { useActiveMission } from '../../hooks/useActiveMission';
 import { useCreateRequest } from '../../hooks/useCreateRequest';
 
 function formatAddress(parts: (string | null | undefined)[]): string {
@@ -15,6 +16,7 @@ export function ConfirmLocationScreen() {
   const router = useRouter();
   const { amount } = useLocalSearchParams<{ amount?: string }>();
   const createRequest = useCreateRequest();
+  const { data: activeMission, isLoading: isCheckingActive } = useActiveMission();
 
   const [address, setAddress] = useState('');
   const [detailAddress, setDetailAddress] = useState('');
@@ -63,6 +65,20 @@ export function ConfirmLocationScreen() {
     };
   }, []);
 
+  // This screen, not RequestScreen, is where a mission actually gets created, so
+  // the one-request-at-a-time rule has to hold here too: after confirming, a back
+  // press lands right back on this form and Confirm would create a second mission.
+  // useFocusEffect rather than useEffect — this screen stays mounted underneath
+  // /searching, and a plain effect would fire router.replace while the user is
+  // still on that screen, yanking it out from under them.
+  useFocusEffect(
+    useCallback(() => {
+      if (activeMission) {
+        router.replace({ pathname: '/mission-status', params: { missionId: activeMission.id } });
+      }
+    }, [activeMission, router]),
+  );
+
   const handleConfirm = async () => {
     const trimmedAddress = address.trim();
     const trimmedDetail = detailAddress.trim();
@@ -82,6 +98,14 @@ export function ConfirmLocationScreen() {
       setError('Something went wrong. Please try again.');
     }
   };
+
+  if (isCheckingActive || activeMission) {
+    return (
+      <SafeAreaView className="flex-1 items-center justify-center bg-background" edges={['top']}>
+        <LoadingIndicator />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>

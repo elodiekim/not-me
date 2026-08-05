@@ -58,6 +58,9 @@ export function useCreateRequest() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['missionHistory'] });
+      // The just-created mission is now the active one — without this the
+      // one-request-at-a-time guards keep reading a cached "no active mission".
+      queryClient.invalidateQueries({ queryKey: ['activeMission'] });
     },
   });
 }
