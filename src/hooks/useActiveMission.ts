@@ -4,8 +4,10 @@ import { useAuthStore } from '../stores/useAuthStore';
 import type { MissionStatus } from '../types/Mission';
 
 // A requester's mission is "active" while it's still in flight — one of these.
-// Used to block a second request while one is already going (see RequestScreen).
-const ACTIVE_STATUSES: MissionStatus[] = ['requested', 'accepted', 'on_the_way'];
+// Used to block a second request while one is already going (RequestScreen and
+// ConfirmLocationScreen). 'arrived' counts too: the hero is literally at the
+// door, which is the last moment a second request would make sense.
+const ACTIVE_STATUSES: MissionStatus[] = ['requested', 'accepted', 'on_the_way', 'arrived'];
 
 export interface ActiveMission {
   id: string;
