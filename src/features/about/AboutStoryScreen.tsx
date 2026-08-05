@@ -41,7 +41,8 @@ const COPY: Record<
   en: {
     title: 'How NotMe Started',
     p1: [
-      'One day, a cockroach appeared in my apartment.',
+      'One day...',
+      'A cockroach appeared in my apartment.',
       "I couldn't kill it — I stood there for almost an hour, waiting for a friend to come and rescue me.",
     ],
     cockroachCaption: 'The actual cockroach.',
@@ -63,7 +64,8 @@ const COPY: Record<
   kr: {
     title: '이 앱을 만든 이유',
     p1: [
-      '어느 날 집에 바퀴벌레가 나타났습니다.',
+      '어느 날...',
+      '집에 바퀴벌레가 나타났습니다.',
       '저는 잡을 용기가 나지 않아, 친구가 올 때까지 거의 한 시간을 그 자리에 서 있었습니다.',
     ],
     cockroachCaption: '실제 그 바퀴벌레입니다.',
