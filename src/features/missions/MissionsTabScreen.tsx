@@ -6,17 +6,10 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, MissionCard, MissionCardSkeleton, SectionHeader } from '../../components/ui';
 import { getCategoryInfo } from '../../constants/categoryInfo';
 import { COLORS } from '../../constants/colors';
+import { getMissionStatusLabel } from '../../constants/mission';
 import { useMissionHistory, type MissionHistoryEntry } from '../../hooks/useMissionHistory';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
 import { isRequestStale } from '../../utils/missionExpiry';
-import type { MissionStatus } from '../../types/Mission';
-
-const ACTIVE_STATUS_LABELS: Partial<Record<MissionStatus, string>> = {
-  requested: 'Requested',
-  accepted: 'Accepted',
-  on_the_way: 'On the way',
-  arrived: 'Arrived',
-};
 
 function formatMissionDate(dateString: string) {
   return new Date(dateString).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -34,7 +27,11 @@ function groupByMonth(missions: MissionHistoryEntry[]) {
     if (lastGroup?.monthKey === monthKey) {
       lastGroup.missions.push(mission);
     } else {
-      groups.push({ monthKey, monthLabel: formatMonthLabel(mission.createdAt), missions: [mission] });
+      groups.push({
+        monthKey,
+        monthLabel: formatMonthLabel(mission.createdAt),
+        missions: [mission],
+      });
     }
   }
   return groups;
@@ -178,7 +175,7 @@ export function MissionsTabScreen() {
                       avatar={category.icon}
                       title={category.title}
                       subtitle={`${mission.role === 'user' ? 'Requested' : 'Helping'} · ${formatMissionDate(mission.createdAt)}`}
-                      statusLabel={ACTIVE_STATUS_LABELS[mission.status] ?? 'In progress'}
+                      statusLabel={getMissionStatusLabel(mission.status)}
                       statusVariant="info"
                     />
                   </Pressable>
@@ -218,7 +215,7 @@ export function MissionsTabScreen() {
                         mission.hasReview;
                       const statusLabel =
                         mission.status === 'cancelled'
-                          ? 'Cancelled · 취소됨'
+                          ? 'Cancelled'
                           : isReviewable
                             ? 'Leave a Review'
                             : isReviewed

@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { BottomSheet, Button, LoadingIndicator, MissionCard, Toast } from '../../components/ui';
 import { getCategoryInfo } from '../../constants/categoryInfo';
+import { getMissionStatusLabel } from '../../constants/mission';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
 import { isMissionStalled, isRequestStale } from '../../utils/missionExpiry';
@@ -16,6 +17,23 @@ const STEP_BY_STATUS: Record<string, number> = {
   on_the_way: 2,
   arrived: 2,
   completed: 3,
+};
+
+// Completes "{heroName} ...". Accepting, travelling and standing at the door were
+// all being reported as "is on the way", which was wrong at both ends of that range.
+const HERO_TITLE_BY_STATUS: Record<string, string> = {
+  accepted: 'accepted your request',
+  on_the_way: 'is on the way',
+  arrived: 'has arrived',
+  completed: 'finished the mission',
+};
+
+// Same three states, spelled out for the line under the card. Cancelled, completed,
+// stalled and unmatched cases are handled separately at the call site.
+const STATUS_MESSAGE: Record<string, string> = {
+  accepted: 'Your hero accepted your request.\n히어로가 요청을 수락했어요.',
+  on_the_way: 'Your hero is on the way.\n히어로가 오고 있어요.',
+  arrived: 'Your hero has arrived.\n히어로가 도착했어요.',
 };
 
 export function MissionScreen() {
@@ -163,13 +181,14 @@ export function MissionScreen() {
                 isCancelled
                   ? 'Request cancelled'
                   : mission.heroName
-                    ? `${mission.heroName} is on the way`
+                    ? `${mission.heroName} ${HERO_TITLE_BY_STATUS[mission.status] ?? 'is on the way'}`
                     : 'Looking for your hero'
               }
               subtitle={`${category.title} · ${category.koTitle} · $${mission.rewardAmount}`}
-              statusLabel={
-                isCancelled ? 'Cancelled · 취소됨' : isCompleted ? 'Completed' : 'On the way'
-              }
+              // Shared with the Missions tab so the same status can't be called two
+              // different things. English only, like every status badge in the app —
+              // the Korean half of the message lives in the line under this card.
+              statusLabel={getMissionStatusLabel(mission.status)}
               statusVariant={isCancelled ? 'neutral' : isCompleted ? 'success' : 'info'}
               rating={mission.heroRating ?? undefined}
               reviewCount={mission.heroReviewCount}
@@ -199,7 +218,11 @@ export function MissionScreen() {
                   // has moved in a while. Names the situation without blaming the
                   // hero, who may simply be stuck somewhere.
                   "It's been quiet for a while.\n히어로가 한동안 응답이 없어요."
-                : 'Your hero is on the way.\n히어로가 오고 있어요.'}
+                : isRequested
+                  ? // Nobody has accepted yet, so there is no hero to be on the way.
+                    "We're looking for your hero.\n히어로를 찾고 있어요."
+                  : (STATUS_MESSAGE[mission.status] ??
+                    'Your hero is on the way.\n히어로가 오고 있어요.')}
         </Text>
 
         {!isCancelled && (
@@ -230,7 +253,9 @@ export function MissionScreen() {
           <>
             {/* Dropped once stalled: "waiting for completion" reads as reassurance
                 that nothing is wrong, and cancelling becomes the live option. */}
-            {!isStalled && <Button label="Waiting for completion..." variant="secondary" disabled />}
+            {!isStalled && (
+              <Button label="Waiting for completion..." variant="secondary" disabled />
+            )}
             <Button
               label="Cancel request · 요청 취소"
               variant={isStalled ? 'secondary' : 'ghost'}
