@@ -29,6 +29,12 @@ export function ActiveMissionScreen() {
   const category = getCategoryInfo(mission.category);
   const onTheWay = mission.status === 'on_the_way';
   const arrived = mission.status === 'arrived';
+  // The requester can cancel at any point up to completion, and useMission's
+  // realtime subscription delivers that here — but without this the screen kept
+  // showing "On my way", so a hero could keep travelling to a mission that no
+  // longer exists. Terminal state with an exit rather than an auto-redirect: a
+  // hero who may be mid-journey should get to read what happened.
+  const isCancelled = mission.status === 'cancelled';
 
   const handleOnTheWay = () => {
     updateStatus.mutate({ missionId: mission.id, status: 'on_the_way', fromStatus: 'accepted' });
@@ -53,7 +59,9 @@ export function ActiveMissionScreen() {
       await cancelMission.mutateAsync(mission.id);
       router.replace('/');
     } catch {
-      setCancelError('Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.');
+      setCancelError(
+        'Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.',
+      );
     }
   };
 
@@ -67,16 +75,30 @@ export function ActiveMissionScreen() {
           avatar={category.icon}
           title={mission.requesterName}
           subtitle={`${category.title} · ${category.koTitle}`}
-          statusLabel={arrived ? 'Arrived' : onTheWay ? 'On my way' : 'Accepted'}
-          statusVariant={arrived ? 'success' : 'info'}
+          statusLabel={
+            isCancelled
+              ? 'Cancelled · 취소됨'
+              : arrived
+                ? 'Arrived'
+                : onTheWay
+                  ? 'On my way'
+                  : 'Accepted'
+          }
+          statusVariant={isCancelled ? 'neutral' : arrived ? 'success' : 'info'}
         />
-        <LocationCard address={mission.address} />
+        {isCancelled ? (
+          <Text className="text-center font-sans text-sm text-text-secondary">
+            The requester cancelled this mission.{'\n'}요청자가 미션을 취소했어요.
+          </Text>
+        ) : (
+          <LocationCard address={mission.address} />
+        )}
       </View>
       <View className="gap-3 px-6 pb-6">
-        {cancelError && (
-          <Text className="text-center text-sm text-danger">{cancelError}</Text>
-        )}
-        {arrived ? (
+        {cancelError && <Text className="text-center text-sm text-danger">{cancelError}</Text>}
+        {isCancelled ? (
+          <Button label="Back to Home" variant="secondary" onPress={() => router.replace('/')} />
+        ) : arrived ? (
           <Button
             label="Complete Mission"
             variant="primary"
@@ -98,13 +120,15 @@ export function ActiveMissionScreen() {
             onPress={handleOnTheWay}
           />
         )}
-        <Button
-          label="Cancel · 취소할게요"
-          variant="ghost"
-          loading={cancelMission.isPending}
-          disabled={updateStatus.isPending || cancelMission.isPending}
-          onPress={handleCancel}
-        />
+        {!isCancelled && (
+          <Button
+            label="Cancel · 취소할게요"
+            variant="ghost"
+            loading={cancelMission.isPending}
+            disabled={updateStatus.isPending || cancelMission.isPending}
+            onPress={handleCancel}
+          />
+        )}
       </View>
     </SafeAreaView>
   );
