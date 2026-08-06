@@ -199,7 +199,10 @@ export function MissionScreen() {
                   // has moved in a while. Names the situation without blaming the
                   // hero, who may simply be stuck somewhere.
                   "It's been quiet for a while.\n히어로가 한동안 응답이 없어요."
-                : 'Your hero is on the way.\n히어로가 오고 있어요.'}
+                : isRequested
+                  ? // Nobody has accepted yet, so there is no hero to be on the way.
+                    "We're looking for your hero.\n히어로를 찾고 있어요."
+                  : 'Your hero is on the way.\n히어로가 오고 있어요.'}
         </Text>
 
         {!isCancelled && (
@@ -230,7 +233,9 @@ export function MissionScreen() {
           <>
             {/* Dropped once stalled: "waiting for completion" reads as reassurance
                 that nothing is wrong, and cancelling becomes the live option. */}
-            {!isStalled && <Button label="Waiting for completion..." variant="secondary" disabled />}
+            {!isStalled && (
+              <Button label="Waiting for completion..." variant="secondary" disabled />
+            )}
             <Button
               label="Cancel request · 요청 취소"
               variant={isStalled ? 'secondary' : 'ghost'}
