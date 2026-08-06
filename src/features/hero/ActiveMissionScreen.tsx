@@ -76,13 +76,7 @@ export function ActiveMissionScreen() {
           title={mission.requesterName}
           subtitle={`${category.title} · ${category.koTitle}`}
           statusLabel={
-            isCancelled
-              ? 'Cancelled · 취소됨'
-              : arrived
-                ? 'Arrived'
-                : onTheWay
-                  ? 'On my way'
-                  : 'Accepted'
+            isCancelled ? 'Cancelled' : arrived ? 'Arrived' : onTheWay ? 'On my way' : 'Accepted'
           }
           statusVariant={isCancelled ? 'neutral' : arrived ? 'success' : 'info'}
         />

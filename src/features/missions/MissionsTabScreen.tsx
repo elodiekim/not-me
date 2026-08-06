@@ -34,7 +34,11 @@ function groupByMonth(missions: MissionHistoryEntry[]) {
     if (lastGroup?.monthKey === monthKey) {
       lastGroup.missions.push(mission);
     } else {
-      groups.push({ monthKey, monthLabel: formatMonthLabel(mission.createdAt), missions: [mission] });
+      groups.push({
+        monthKey,
+        monthLabel: formatMonthLabel(mission.createdAt),
+        missions: [mission],
+      });
     }
   }
   return groups;
@@ -218,7 +222,7 @@ export function MissionsTabScreen() {
                         mission.hasReview;
                       const statusLabel =
                         mission.status === 'cancelled'
-                          ? 'Cancelled · 취소됨'
+                          ? 'Cancelled'
                           : isReviewable
                             ? 'Leave a Review'
                             : isReviewed

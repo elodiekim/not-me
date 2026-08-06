@@ -167,16 +167,18 @@ export function MissionScreen() {
                     : 'Looking for your hero'
               }
               subtitle={`${category.title} · ${category.koTitle} · $${mission.rewardAmount}`}
+              // English only, like every other status badge in the app — the Korean
+              // half of the message lives in the bilingual line under this card.
               statusLabel={
                 isCancelled
-                  ? 'Cancelled · 취소됨'
+                  ? 'Cancelled'
                   : isCompleted
                     ? 'Completed'
                     : // Without this the badge said "On the way" while the card's own
                       // title still read "Looking for your hero" — same card, opposite
                       // claims, before anyone had even accepted.
                       isRequested
-                      ? 'Searching · 찾는 중'
+                      ? 'Searching'
                       : 'On the way'
               }
               statusVariant={isCancelled ? 'neutral' : isCompleted ? 'success' : 'info'}
