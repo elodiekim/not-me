@@ -168,7 +168,16 @@ export function MissionScreen() {
               }
               subtitle={`${category.title} · ${category.koTitle} · $${mission.rewardAmount}`}
               statusLabel={
-                isCancelled ? 'Cancelled · 취소됨' : isCompleted ? 'Completed' : 'On the way'
+                isCancelled
+                  ? 'Cancelled · 취소됨'
+                  : isCompleted
+                    ? 'Completed'
+                    : // Without this the badge said "On the way" while the card's own
+                      // title still read "Looking for your hero" — same card, opposite
+                      // claims, before anyone had even accepted.
+                      isRequested
+                      ? 'Searching · 찾는 중'
+                      : 'On the way'
               }
               statusVariant={isCancelled ? 'neutral' : isCompleted ? 'success' : 'info'}
               rating={mission.heroRating ?? undefined}
