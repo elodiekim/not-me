@@ -74,6 +74,19 @@ export function AuthScreen() {
         });
         if (signUpError) throw signUpError;
 
+        // Signing up with an address that already has an account is not an error
+        // to Supabase: it returns 200 with a decoy user and even fills in
+        // confirmation_sent_at, while sending no email at all. That is deliberate
+        // (it stops anyone probing which emails are registered), but it left the
+        // real case indistinguishable from success — people sat waiting for a mail
+        // that was never sent. An empty identities array is what gives it away.
+        if (data.user && data.user.identities?.length === 0) {
+          setError(
+            'This email is already registered. Try signing in instead.\n이미 가입된 이메일이에요. 로그인해주세요.',
+          );
+          return;
+        }
+
         if (!data.session) {
           setMessage(
             'Check your email to confirm your account.\n이메일을 확인해서 계정을 인증해주세요.',
