@@ -62,7 +62,11 @@
 - [x] Profile 하드코딩("Yuna") → 실제 유저 정보 표시 (`useProfile` 훅)
 - [x] Sign Out 동작 구현
 - [x] 회원가입 시 `profiles` row 자동 생성 (DB 트리거 `handle_new_user`, 클라이언트 insert 아님 — 이메일 미확인 상태에서도 안전하게 동작)
-- [x] ~~이메일 중복 체크~~ — Supabase Auth의 `auth.users.email` unique 제약으로 이미 처리됨, 별도 구현 불필요
+- [x] ~~이메일 중복 체크 불필요~~ → **필요했음. 구현 완료 (2026-08-08)** — "unique 제약이 막아주니 됐다"는 옛 판단이 틀렸음. DB가 막는 것과 **사용자에게 뭐가 잘못됐는지 알려주는 것은 별개**였음. 실제로 이미 가입된 주소로 가입하니 "이메일을 확인해주세요"가 떠서, 오지 않을 메일을 기다리며 한참 헤맴(이 세션의 메일 삽질 전체가 여기서 시작됨)
+  - **Supabase가 중복을 알려주는 방식이 Confirm email 설정에 따라 완전히 다름** — 한쪽만 처리하면 토글을 바꾸는 순간 조용히 깨짐. 둘 다 처리함:
+    - **Confirm email 켜짐**: 에러가 아니라 **200 + 가짜 유저**를 돌려주고, `confirmation_sent_at`까지 채워 보냄(실제로는 발송 안 함). 계정 존재 여부를 못 캐게 하려는 의도적 설계. 구분 단서는 **`identities`가 빈 배열**인 것뿐 — REST로 직접 확인함
+    - **Confirm email 꺼짐**: 평범하게 `user_already_exists` 에러로 떨어짐 → catch에서 처리
+  - 절충 인지하고 진행: 중복을 알려주는 건 Supabase의 계정 열거(enumeration) 방어를 끄는 것. 단 `identities`로 이미 새고 있어서 실질 방어력이 약하고, 오지 않는 메일을 기다리는 사용자 피해가 더 크다고 판단
 - [x] 회원가입 폼: 비밀번호 확인(재입력) 필드 추가 — 회원가입 모드에만 표시, `password !== passwordConfirm`이면 canSubmit 막고 Input `error`로 "Passwords don't match" 영/한 문구 표시, toggleMode 시 초기화. DB 변경 없음(클라 전용)
 - [x] 회원가입 폼: 휴대전화 번호 입력 필드 추가 (`profiles.phone`)
   - `0005_add_profile_phone.sql`: `profiles.phone` nullable text 추가(unique 없음) + `handle_new_user()`를 `create or replace`로 재정의해 `raw_user_meta_data->>'phone'`도 insert (0002 소급수정 안 함) — Management API로 실제 원격 DB에 적용 완료
@@ -79,7 +83,11 @@
   - `handle_new_user()` 트리거가 OAuth 가입에도 그대로 타는지 확인 필요(현재는 이메일/비번 가입 기준으로 짜여 있음) — `raw_user_meta_data`에 `phone` 키가 없는 경우 정상적으로 null로 들어가는지 확인
   - 로그인 화면에 "Continue with Google" 버튼 추가(이메일/비번 폼과 나란히), 로딩 중 상태 처리
 - [ ] **`missions`/`reviews`에 DELETE RLS 정책이 아예 없음** (점검 중 발견 · 2026-07-27) — RLS는 정책 없는 커맨드를 기본 거부하므로 보안 문제는 아니지만(안전한 기본값), 그 결과 ①실제 유저도 자기 미션/리뷰 row를 삭제할 방법이 전혀 없음(취소=`status` 변경만 가능, 진짜 삭제 불가) ②이번 세션 REST 테스트 정리용 DELETE 호출들이 `Prefer: return=representation` 없이는 204로 "성공"처럼 보였지만 실제로는 0건 삭제됨 — 원격 프로젝트에 테스트 계정/미션/리뷰 잔여 데이터가 생각보다 많이 남아있을 수 있음(무해한 더미, 지금은 그대로 둠). 나중에 처리할 때: `missions`는 아마 본인 소유 + `requested`(미매칭) 상태에서만 삭제 허용이 안전(수락/완료된 건 기록 보존 목적으로 삭제 막는 게 나을 수 있음), `reviews`는 신뢰 신호라 작성자가 임의로 지울 수 있게 할지 자체를 판단 필요 — 마이그레이션은 항상 그렇듯 파일만 작성, 직접 적용 금지
-- [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 꺼둔 상태 — 위 인증 폼 작업들과 함께 마무리하면서 다시 켤 것
+- [ ] 🚨 **메일 발송용 도메인 인증 — 출시 블로커** (2026-08-08 확인) — 현재 Resend를 커스텀 SMTP로 붙여뒀지만 도메인을 인증하지 않아서, 발신 주소가 테스트용 `onboarding@resend.dev`임. 이 상태에선 **Resend 계정 소유자 주소(`elodiekim93@gmail.com`) 딱 하나로만 발송되고 나머지는 전부 550으로 거절됨**. Gmail 별칭(`+t3`)도 다른 주소로 취급돼서 안 됨
+  - **영향이 Confirm email 하나가 아님**: 비밀번호 재설정 메일도 같은 경로라 **똑같이 막힘**. 즉 지금 실사용자를 받으면 ①가입 확인 불가 ②비번 분실 시 계정 영구 복구 불가. Confirm email을 꺼도 재설정은 여전히 필요하므로 **도메인 인증은 토글과 무관하게 어차피 해야 함**
+  - 할 일: 도메인 구입 → resend.com/domains에서 DNS 레코드 등록·인증 → Supabase SMTP의 Sender email을 `noreply@<도메인>`으로 교체 → 그 다음에 Confirm email 다시 켜기(아래 항목)
+  - 참고(삽질 기록): 도메인 없이 우회하려고 Gmail SMTP(앱 비밀번호)를 시도했으나 `535 BadCredentials`로 실패해 포기하고 Resend로 롤백. 개발 중 확인 메일 흐름을 봐야 하면 ①`elodiekim93@gmail.com` 계정을 지우고 그 주소로 가입하거나 ②Mailtrap(모든 메일을 웹 화면에 가로채는 개발용 서비스) 사용
+- [ ] **출시 전 재확인**: 개발 편의상 Supabase "Confirm email"을 다시 꺼둔 상태(2026-08-08) — 위 도메인 인증을 끝낸 뒤 다시 켤 것. 켜면 중복 이메일 응답 형태가 바뀌므로(위 중복 체크 항목 참고) 그때 가입 플로우 재확인 필요
 - [x] **Account(계정) 화면에 이메일 표시 추가, 수정은 불가하게** (완료 · 2026-08-01) — `EditProfileScreen.tsx`에 `useAuthStore`의 `session.user.email`을 읽어 `<Input label="Email" value={email} editable={false} />`로 Name 위에 추가. 폼 상태로 관리 안 하고 저장 로직(`handleSave`/`useUpdateProfile`)도 안 건드림 — 표시만, 수정 불가
 - [x] **비밀번호 최소 길이 클라이언트 검증** (점검에서 발견) — 가입(`AuthScreen`)·재설정(`ResetPasswordScreen`) 둘 다 `password.length > 0`만 확인. Supabase가 서버측 6자 최소를 걸어 막긴 하지만, 3자 등 입력 시 "Something went wrong"류 **모호한 에러**로 떨어져 사용자가 원인을 모름 → 두 화면에 "6자 이상" 안내 + `canSubmit` 가드 추가(서버 규칙과 숫자 일치시킬 것). 순수 클라 검증, DB 변경 없음
   - 서버 최소 길이 REST 확인: 5자→422 `weak_password`, 6자→200 → `MIN_PASSWORD_LENGTH = 6` (`src/features/auth/password.ts` 공유 상수)로 정확히 일치. 로그인 모드엔 미적용(기존 계정 로그인 막지 않게)

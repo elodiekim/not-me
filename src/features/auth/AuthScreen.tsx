@@ -74,12 +74,17 @@ export function AuthScreen() {
         });
         if (signUpError) throw signUpError;
 
-        // Signing up with an address that already has an account is not an error
-        // to Supabase: it returns 200 with a decoy user and even fills in
-        // confirmation_sent_at, while sending no email at all. That is deliberate
-        // (it stops anyone probing which emails are registered), but it left the
-        // real case indistinguishable from success — people sat waiting for a mail
-        // that was never sent. An empty identities array is what gives it away.
+        // How Supabase reports "this email already has an account" depends on
+        // whether email confirmation is switched on, so both shapes have to be
+        // handled or the message breaks the next time that setting is flipped.
+        //
+        // Confirmation ON: 200 with a decoy user and even a confirmation_sent_at,
+        // while no mail is sent at all — deliberate, so nobody can probe which
+        // emails are registered, but it left the real case indistinguishable from
+        // success and people sat waiting for a mail that was never coming. An
+        // empty identities array is what gives it away.
+        //
+        // Confirmation OFF: a plain user_already_exists error, handled in catch.
         if (data.user && data.user.identities?.length === 0) {
           setError(
             'This email is already registered. Try signing in instead.\n이미 가입된 이메일이에요. 로그인해주세요.',
@@ -101,6 +106,11 @@ export function AuthScreen() {
       if (code === 'invalid_credentials') {
         setError(
           "That email or password doesn't look right.\n이메일 또는 비밀번호를 확인해주세요.",
+        );
+      } else if (code === 'user_already_exists') {
+        // Same message as the identities check above — see the note there.
+        setError(
+          'This email is already registered. Try signing in instead.\n이미 가입된 이메일이에요. 로그인해주세요.',
         );
       } else {
         setError('Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.');
