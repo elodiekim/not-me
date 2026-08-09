@@ -4,6 +4,7 @@ import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
 import { supabase } from '../../services/supabase';
+import { EMAIL_TAKEN_ERROR, isEmailRegistered, looksLikeEmail } from './emailCheck';
 import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT_ERROR } from './password';
 
 type AuthMode = 'sign-in' | 'sign-up';
@@ -23,6 +24,9 @@ export function AuthScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  // Checked when the email field loses focus, so a taken address is caught before
+  // the rest of the form is filled in rather than on submit.
+  const [emailTaken, setEmailTaken] = useState(false);
 
   const isSignUp = mode === 'sign-up';
   const passwordsMatch = password === passwordConfirm;
@@ -42,11 +46,23 @@ export function AuthScreen() {
       ? "That phone number doesn't look right.\n휴대전화 번호를 확인해주세요."
       : undefined;
 
+  const handleEmailBlur = async () => {
+    if (!isSignUp || !looksLikeEmail(email)) return;
+    setEmailTaken(await isEmailRegistered(email));
+  };
+
+  // Editing the address invalidates whatever the last check said.
+  const handleEmailChange = (value: string) => {
+    setEmail(value);
+    setEmailTaken(false);
+  };
+
   const canSubmit =
     email.length > 0 &&
     password.length > 0 &&
     (!isSignUp ||
-      (name.length > 0 &&
+      (!emailTaken &&
+        name.length > 0 &&
         password.length >= MIN_PASSWORD_LENGTH &&
         passwordConfirm.length > 0 &&
         passwordsMatch &&
@@ -57,6 +73,7 @@ export function AuthScreen() {
     setMessage(null);
     setPasswordConfirm('');
     setPhone('');
+    setEmailTaken(false);
     setMode(isSignUp ? 'sign-in' : 'sign-up');
   };
 
@@ -74,6 +91,22 @@ export function AuthScreen() {
         });
         if (signUpError) throw signUpError;
 
+        // How Supabase reports "this email already has an account" depends on
+        // whether email confirmation is switched on, so both shapes have to be
+        // handled or the message breaks the next time that setting is flipped.
+        //
+        // Confirmation ON: 200 with a decoy user and even a confirmation_sent_at,
+        // while no mail is sent at all — deliberate, so nobody can probe which
+        // emails are registered, but it left the real case indistinguishable from
+        // success and people sat waiting for a mail that was never coming. An
+        // empty identities array is what gives it away.
+        //
+        // Confirmation OFF: a plain user_already_exists error, handled in catch.
+        if (data.user && data.user.identities?.length === 0) {
+          setEmailTaken(true);
+          return;
+        }
+
         if (!data.session) {
           setMessage(
             'Check your email to confirm your account.\n이메일을 확인해서 계정을 인증해주세요.',
@@ -89,6 +122,10 @@ export function AuthScreen() {
         setError(
           "That email or password doesn't look right.\n이메일 또는 비밀번호를 확인해주세요.",
         );
+      } else if (code === 'user_already_exists') {
+        // Surfaced on the email field rather than as a form error, so the message
+        // lands in the same place whether it came from the blur check or from here.
+        setEmailTaken(true);
       } else {
         setError('Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.');
       }
@@ -119,7 +156,9 @@ export function AuthScreen() {
             autoCapitalize="none"
             keyboardType="email-address"
             value={email}
-            onChangeText={setEmail}
+            onChangeText={handleEmailChange}
+            onBlur={handleEmailBlur}
+            error={emailTaken ? EMAIL_TAKEN_ERROR : undefined}
           />
           {isSignUp && (
             <Input
