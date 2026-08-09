@@ -121,7 +121,7 @@
     - `ConfirmLocationScreen.tsx`: `useActiveMission` 가드 추가(`RequestScreen`과 동일 패턴). 단 `useEffect`가 아니라 **`useFocusEffect`** — 이 화면은 `/searching` 밑에 마운트된 채로 남아있어서, 평범한 effect로 `router.replace`를 부르면 유저가 보고 있는 Searching 화면을 갈아치워버림
     - `useCreateRequest.ts`: `onSuccess`에서 `['activeMission']` 무효화 추가. **이게 없으면 가드를 붙여도 안 먹힘** — 화면이 언마운트되지 않으니 캐시된 "활성 미션 없음"(null)을 계속 읽음. 기존엔 `missionHistory`만 무효화하고 있었음
     - `useActiveMission.ts`: `ACTIVE_STATUSES`에 **`'arrived'`가 빠져 있던 별개 버그** — 히어로가 도착한 상태면 "활성 미션 없음"으로 판정돼서 `RequestScreen` 가드까지 뚫렸음. 추가함
-  - 검증: `npx tsc --noEmit` / `npx eslint` 통과. **이번 세션엔 브라우저 자동화 도구가 없어 실제 뒤로가기 재현은 못 함** — 실기기에서 ①수락된 상태로 뒤로가기 → Confirm Location이 폼 대신 `/mission-status`로 튕기는지 ②Searching 화면이 뒤에서 갈아치워지지 않는지 확인 필요
+  - 검증: `npx tsc --noEmit` / `npx eslint` 통과. **실기기(iOS 시뮬레이터, 2026-08-09) 확인 완료** — 수락된 상태로 뒤로가기 → Confirm Location이 폼 대신 `/mission-status`로 튕기는 것, Searching 화면이 뒤에서 갈아치워지지 않는 것 둘 다 정상 동작 확인
 - [x] **취소 규칙이 UI에만 있고 DB엔 없음 → 트리거로 이관 + 제품 방향 자체를 뒤집음** (점검 중 발견 · 2026-08-03, 처리 · 2026-08-05)
   - 발견 당시 진단: `MissionScreen.tsx`가 `status === 'requested'`일 때만 Cancel 버튼을 그려서 히어로 수락 후엔 취소가 막혀 보이지만, 이건 **화면에 안 그리는 것뿐**이었음. `0001_init.sql`의 "Requester or accepted hero can update a mission" 정책은 `with check` 없이 `using(auth.uid() = requester_id or auth.uid() = hero_id)`만 걸려 있고, 암묵적 `with check`도 같은 식을 NEW row에 재평가하는데 두 id 모두 안 변하므로 **모든 상태 전이가 통과**함 → 앱을 우회해 REST로 직접 치면 요청자가 `accepted`/`on_the_way`/`arrived`는 물론 **`completed` 미션까지 `cancelled`로 되돌릴 수 있었음**(히어로의 완료 기록·수입이 사후에 지워짐 — 원래 못 봤던 진짜 구멍)
   - **처음엔 "requested일 때만 취소 가능"으로 잠그려 했으나, 그 규칙 자체가 틀렸다고 결론남**: 이 앱은 낯선 사람이 집 안에 들어오는 서비스라 리스크가 요청자 쪽으로 크게 기울어 있는데, 선착순 수락이라 "누가 오는지"에 대한 거부권이 요청자한테 없었음. 게다가 이미 `/mission-status`의 히어로 카드 → `/reviews` 링크로 **평판을 보라고 만들어놓고 보고 나서 할 수 있는 게 없는** 모순 상태였음(별점 낮은 걸 확인해도 기다리는 수밖에). 그래서 **요청자는 완료 전까지 언제든 취소 가능**으로 방향을 바꿈
@@ -362,9 +362,13 @@ CLAUDE.md "만들지 않음"에서 예외로 뺀 항목 — 내부 운영 도구
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
   - **막힐 뻔한 것**: 첫 빌드를 환경변수 없이 그대로 돌렸다가 뒤늦게 발견 — `.env`는 gitignore 대상이라 **클라우드 빌드는 로컬 `.env` 값을 전혀 모름**. 그대로 뒀으면 빌드는 성공하고 앱이 Supabase에 아예 못 붙는 상태로 나올 뻔함. 빌드 취소 후 `eas env:set`으로 `EXPO_PUBLIC_SUPABASE_URL`/`EXPO_PUBLIC_SUPABASE_ANON_KEY`를 development/preview/production 세 환경 전부에 등록하고 재시작. **앞으로 `.env`에 새 키 추가할 때마다 EAS 쪽에도 같이 등록해야 함** — 안 하면 로컬에선 되는데 빌드본에서만 조용히 깨짐
-  - Android 첫 빌드(`preview` 프로필, 내부 배포용 APK) 진행 중. 키스토어는 EAS가 자동 생성(Expo 서버 관리)
+  - Android 첫 빌드(`preview` 프로필, 내부 배포용 APK) **완료**. 키스토어는 EAS가 자동 생성(Expo 서버 관리)
   - **iOS는 미착수** — Apple Developer 계정($99/년) 필요, 사용자 확인 후 진행 예정
-  - Android 빌드 끝나면: APK 링크로 실기기 설치 → 이번 세션에서 "실기기 확인 필요"로 남아있던 항목들(취소 플로우, Confirm Location 뒤로가기, 멈춘 미션 안내 등) 실제 검증
+  - **실기기 검증은 Android APK 대신 iOS 시뮬레이터로 진행** (안드로이드 실기기가 없어서) — Xcode CLT만 있던 환경이라 `xcode-select`를 풀 Xcode로 전환 + 라이선스 동의 + iOS 18.3 시뮬레이터 런타임(8.72GB) 신규 설치부터 필요했음. 시뮬레이터 2대(iPhone 16 Pro/iPhone 16)를 동시에 띄우고(한쪽 기기에 설치된 Expo Go `.app`을 `simctl install`로 복사) 요청자/히어로 계정을 각각 로그인해서 실시간 상호작용까지 확인(2026-08-09) — 아래 항목들 전부 정상 동작 확인:
+    - 이미 가입된 이메일 blur 시 경고
+    - 요청자가 수락 후 취소 → 확인 시트 → 히어로 화면에 즉시 반영
+    - Confirm Location 뒤로가기 시 폼 대신 mission-status로 튕김, Searching 화면 안 갈아치워짐
+    - 히어로 back-out → 요청자 쪽 토스트
 - [x] AGENTS.md의 Expo 버전(57) vs 실제(54) 정리 (완료 · 2026-07-28) — `docs.expo.dev/versions/v57.0.0/` → `v54.0.0/`로 수정, `package.json`의 `"expo": "^54.0.0"`과 일치시킴
 
 ---
