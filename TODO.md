@@ -337,15 +337,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] **한 번만 발동하는 조건**: `prevStatusRef`로 이전 status 추적, "이전 값이 존재하고(undefined 아님) + completed가 아니었다가 + 지금 completed" 조건일 때만 새 화면으로 이동 — 이미 완료된 미션에 직접 재진입(예: History에서)했을 땐 이 리다이렉트가 안 타므로, `MissionScreen`의 기존 인라인 "Leave a Review"/"Not now" 버튼(`isCompleted && !isReviewed` 분기)은 그대로 유지 — 극적 연출 없이 바로 처리 가능해야 하는 케이스
 - [ ] DESIGN.md Animations 섹션의 "Avoid: Bounce/Overly playful" 규칙은 이 한 화면·한 순간만 예외, 나머지 UI는 기존 규칙(Fade/Scale/Slide) 그대로 유지 (문서화만 남음, 코드는 완료)
 
-## 🟡 P2 · 관리자 대시보드 (신규, `PRODUCT.md`의 "Admin Dashboard" 참고)
+## 🟡 P2 · 관리자 대시보드 — **`notme-admin` 독립 레포로 이전 (2026-08-11)**
 
-CLAUDE.md "만들지 않음"에서 예외로 뺀 항목 — 내부 운영 도구 + 포트폴리오 목적. 스코프는 의도적으로 작게(차트 라이브러리 없음, 숫자 카드 위주).
-
-- [ ] `profiles.is_admin` 플래그 마이그레이션 + RLS: 관리자만 전체 `missions`/`profiles` 조회 가능하게(자기수락 버그 고칠 때 쓴 restrictive policy 패턴 재사용). 최초 관리자 계정은 SQL로 수동 지정(가입 플로우에 관리자 셀프 지정 넣지 않음 — 보안)
-- [ ] 웹 전용 관리자 라우트(Expo Router 내, 이 프로젝트에서 이미 Expo Web 검증 많이 해온 환경 재사용 — 새 앱/새 배포 파이프라인 안 만듦). 일반 유저는 접근 불가하도록 `is_admin` 체크로 가드
-- [ ] 화면 1 — 미션 관리: 전체 상태 필터 가능한 리스트, 막힌/방치된 요청 수동 취소 액션
-- [ ] 화면 2 — 유저 관리: 가입자 리스트, 문제 유저 비활성화 액션
-- [ ] 화면 3 — 통계: 총 미션 수 / 완료율 / 가입자 추이 / 평균 히어로 평점 — 숫자 카드만, 차트 라이브러리 신규 설치 안 함
+~~아래 계획(Expo Router 내 웹 라우트, 새 앱 안 만듦)은 폐기됨~~ — 실제로는 별도 레포 `notme-admin`(`/Users/sujung/Desktop/NotMe/notme-admin`, `github.com/elodiekim/not-me-admin`)으로 이미 방향이 잡혀 있었음. 그 레포에 `CLAUDE.md`/`PRODUCT.md`/`DESIGN.md`/`ADMIN.md`까지 문서가 준비돼 있어 이쪽이 최신 계획. 상세 스코프·화면 구성은 그 레포의 문서 참고, 여기서는 더 추적 안 함. `profiles.is_admin` + RLS는 어느 쪽이든 `notme-app`의 DB에 마이그레이션이 필요해서 착수 시 `notme-app`/`notme-admin` 양쪽에 걸치는 작업이 될 것
 
 ## ⚪ 품질 / 인프라 (선택)
 
