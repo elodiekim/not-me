@@ -15,7 +15,7 @@ export interface MissionHistoryEntry extends Mission {
 }
 
 const MISSION_SELECT =
-  'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at, ' +
+  'id, requester_id, hero_id, category, reward_amount, status, cancelled_reason, address, latitude, longitude, created_at, updated_at, ' +
   'requester:profiles!missions_requester_id_fkey(name), ' +
   'hero:profiles!missions_hero_id_fkey(name), ' +
   'reviews(id, rating)';
@@ -29,6 +29,7 @@ function mapMissionHistoryEntry(row: any, userId: string): MissionHistoryEntry {
     category: row.category,
     rewardAmount: row.reward_amount,
     status: row.status,
+    cancelledReason: row.cancelled_reason,
     address: row.address,
     latitude: row.latitude,
     longitude: row.longitude,

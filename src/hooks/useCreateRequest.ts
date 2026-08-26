@@ -36,7 +36,7 @@ export function useCreateRequest() {
           longitude,
         })
         .select(
-          'id, requester_id, hero_id, category, reward_amount, status, address, latitude, longitude, created_at, updated_at',
+          'id, requester_id, hero_id, category, reward_amount, status, cancelled_reason, address, latitude, longitude, created_at, updated_at',
         )
         .single();
 
@@ -49,6 +49,7 @@ export function useCreateRequest() {
         category: data.category,
         rewardAmount: data.reward_amount,
         status: data.status,
+        cancelledReason: data.cancelled_reason,
         address: data.address,
         latitude: data.latitude,
         longitude: data.longitude,

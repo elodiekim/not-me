@@ -37,7 +37,12 @@ export function SearchingScreen() {
     const remaining = millisUntilStale(mission.createdAt);
     const expire = () => {
       setExpired(true);
-      updateStatusMutate({ missionId: mission.id, status: 'cancelled', fromStatus: 'requested' });
+      updateStatusMutate({
+        missionId: mission.id,
+        status: 'cancelled',
+        fromStatus: 'requested',
+        cancelledReason: 'timeout',
+      });
     };
 
     if (remaining <= 0) {
@@ -51,7 +56,12 @@ export function SearchingScreen() {
   const handleCancel = async () => {
     if (missionId) {
       try {
-        await updateStatus.mutateAsync({ missionId, status: 'cancelled', fromStatus: 'requested' });
+        await updateStatus.mutateAsync({
+          missionId,
+          status: 'cancelled',
+          fromStatus: 'requested',
+          cancelledReason: 'requester',
+        });
       } catch {
         // Cancellation failed (e.g. offline) — never trap the user on this screen.
       }
