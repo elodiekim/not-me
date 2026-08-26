@@ -50,12 +50,17 @@ export function MissionScreen() {
   const updateStatus = useUpdateMissionStatus();
   const { mutate: updateStatusMutate } = updateStatus;
 
-  // Opportunistic expiry: no server cron, so a stale 'requested' mission only gets
-  // cancelled once someone looks at it — here, whenever this screen loads/polls.
-  // The 3s poll above then picks up the resulting 'cancelled' status.
+  // Opportunistic expiry: a pg_cron job (0017/0018) also expires stale 'requested'
+  // missions every 5 minutes, but this gives instant feedback if this exact screen
+  // happens to be open when the timeout passes, instead of waiting for the next tick.
   useEffect(() => {
     if (mission && mission.status === 'requested' && isRequestStale(mission.createdAt)) {
-      updateStatusMutate({ missionId: mission.id, status: 'cancelled', fromStatus: 'requested' });
+      updateStatusMutate({
+        missionId: mission.id,
+        status: 'cancelled',
+        fromStatus: 'requested',
+        cancelledReason: 'timeout',
+      });
     }
   }, [mission, updateStatusMutate]);
 
@@ -155,6 +160,7 @@ export function MissionScreen() {
         missionId: mission.id,
         status: 'cancelled',
         fromStatus,
+        cancelledReason: 'requester',
       });
     } catch {
       // Cancellation failed (e.g. offline) — never trap the user, still go home.
@@ -210,7 +216,12 @@ export function MissionScreen() {
 
         <Text className="font-sans text-center text-sm text-text-secondary">
           {isCancelled
-            ? 'This request was cancelled.\n요청이 취소됐어요.'
+            ? // 'requester' and legacy (null, cancelled before 0018) rows keep the
+              // original wording; only 'timeout' gets called out separately — a
+              // requester who clicked Cancel doesn't need it explained back to them.
+              mission.cancelledReason === 'timeout'
+              ? 'No hero was available in time.\n시간 내에 히어로를 찾지 못했어요.'
+              : 'This request was cancelled.\n요청이 취소됐어요.'
             : isCompleted
               ? 'Your hero finished the mission.\n미션이 완료됐어요.'
               : isStalled

@@ -64,9 +64,10 @@ export function MissionsTabScreen() {
     />
   );
 
-  // Opportunistic expiry: no server cron, so a stale 'requested' mission only
-  // gets cancelled once someone looks at it — here, whenever this tab loads.
-  // Same fromStatus guard as SearchingScreen covers the hero-accepts-at-the-same-time race.
+  // Opportunistic expiry: a pg_cron job (0017/0018) now also expires stale
+  // 'requested' missions on a 5-minute cycle, but this gives the requester's own
+  // screen instant feedback instead of waiting for the next tick. Same fromStatus
+  // guard as SearchingScreen covers the hero-accepts-at-the-same-time race.
   useEffect(() => {
     (missions ?? [])
       .filter(
@@ -76,7 +77,12 @@ export function MissionsTabScreen() {
           isRequestStale(mission.createdAt),
       )
       .forEach((mission) =>
-        updateStatusMutate({ missionId: mission.id, status: 'cancelled', fromStatus: 'requested' }),
+        updateStatusMutate({
+          missionId: mission.id,
+          status: 'cancelled',
+          fromStatus: 'requested',
+          cancelledReason: 'timeout',
+        }),
       );
   }, [missions, updateStatusMutate]);
 
