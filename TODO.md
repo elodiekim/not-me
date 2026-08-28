@@ -145,7 +145,7 @@
     - `mission_cancellations`에는 안 섞음 — 그건 "사람이 걸어나갔나"라는 신뢰 신호고 이건 "왜 이 상태인가"라는 별개 질문이라서
     - 타임아웃 취소 호출부 3곳(`MissionScreen`/`SearchingScreen`/`MissionsTabScreen`의 opportunistic 체크) 전부 `cancelledReason: 'timeout'`, 명시적 취소 호출부 2곳(`MissionScreen.handleCancel`/`SearchingScreen.handleCancel`)은 `'requester'`로 태깅
     - `MissionScreen.tsx`: `cancelledReason === 'timeout'`일 때만 "No hero was available in time. / 시간 내에 히어로를 찾지 못했어요."로 문구 교체, 그 외(본인 취소·이 필드 생기기 전 취소된 legacy row)는 기존 문구 유지 — 과거 데이터는 사유를 사후에 알 방법이 없어서 지어내지 않고 null로 둠
-    - 검증: `npx tsc --noEmit` / `npx eslint .` 통과. 실제 cron 재실행 여부는 다음 5분 주기 실행 뒤 확인 필요(마이그레이션 적용 직후엔 미검증)
+    - 검증: `npx tsc --noEmit` / `npx eslint .` 통과. **cron 실제 동작 검증 완료(2026-08-28)** — REST로 테스트 미션 생성(`15:50:46` UTC) 후 실시간 폴링, 정확히 다음 5분 tick(`16:10:00`)에 `status: cancelled` + `cancelled_reason: "timeout"`으로 자동 전환 확인. `MissionScreen`의 새 문구 노출은 화면상 미확인(REST로만 검증)
 - [ ] **취소 패널티 — 데이터 쌓인 뒤 rate limit으로 설계** (`0013` 적용·검증 완료 2026-08-06, 이제 기록이 쌓이는 중) — 양쪽 다 이탈 가능해졌으니 책임 장치가 필요하지만, **지금 설계하면 100% 감으로 찍는 것**이라 기록만 먼저 함(`0013_mission_cancellations_log.sql`: `mission_cancellations` 테이블 + `missions` AFTER UPDATE 트리거로 요청자 취소/히어로 back-out 자동 적재, RLS 정책 0개라 클라에서 접근 불가, `from_status`가 비용 신호 — `requested`에서 이탈은 공짜, `accepted` 이후 이탈은 누군가 이미 출발한 것)
   - **하지 말 것으로 결론난 것들**: ①요청자 취소에 패널티 → 방금 안전을 위해 준 거부권에 벌금 매기는 꼴 ②히어로 back-out에 강한 패널티 → back-out 대신 **잠수**(수락하고 안 옴)로 도망감, 명시적 이탈보다 훨씬 나쁨 ③`hero_rating` 깎기 → 리뷰 기반 값이라 "일을 잘하나"와 "약속을 지키나"가 섞여 둘 다 못 읽게 됨 ④취소 수수료 → CLAUDE.md에서 결제 자체가 범위 밖
   - **실제 막아야 할 것**: 한 사람이 반복 수락→백아웃하며 미션 풀을 헤집는 것(수락된 미션은 다른 히어로 목록에서 사라짐). 평판 문제가 아니라 DoS에 가까우니 "1시간에 N번 이탈 시 일정 시간 수락 불가" 같은 **기계적 rate limit**이 맞는 해법 — 실제 이탈 빈도 보고 N과 시간을 정할 것
