@@ -1,6 +1,6 @@
 import { Feather } from '@expo/vector-icons';
-import { useRouter } from 'expo-router';
-import { useEffect } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { useCallback } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingIndicator } from '../../components/ui';
@@ -16,11 +16,22 @@ export function RequestScreen() {
   // One request at a time: if the user already has a mission in flight, send them
   // to it instead of letting them create a duplicate (only one category exists,
   // so a second request is almost always an accident).
-  useEffect(() => {
-    if (activeMission) {
-      router.replace({ pathname: '/mission-status', params: { missionId: activeMission.id } });
-    }
-  }, [activeMission, router]);
+  //
+  // useFocusEffect, not useEffect: this screen stays mounted underneath
+  // Reward → Confirm Location → Searching after the user pushes forward through
+  // that flow. Creating a request invalidates the activeMission query everywhere
+  // it's used, including here — a plain effect would fire the moment that
+  // refetch resolved and yank whoever's looking at Searching straight to
+  // Mission Status, with no interaction from them at all (same bug already
+  // found and fixed in ConfirmLocationScreen; this screen was the same class
+  // of bug, just missed at the time).
+  useFocusEffect(
+    useCallback(() => {
+      if (activeMission) {
+        router.replace({ pathname: '/mission-status', params: { missionId: activeMission.id } });
+      }
+    }, [activeMission, router]),
+  );
 
   if (isLoading || activeMission) {
     return (
