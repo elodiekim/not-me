@@ -7,7 +7,7 @@ import { Button, LoadingIndicator } from '../../components/ui';
 import { useCreateRequest } from '../../hooks/useCreateRequest';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
-import { millisUntilStale } from '../../utils/missionExpiry';
+import { elapsedMinutes, millisUntilStale } from '../../utils/missionExpiry';
 
 export function SearchingScreen() {
   const router = useRouter();
@@ -88,6 +88,8 @@ export function SearchingScreen() {
     }
   };
 
+  const minutesSearching = mission ? elapsedMinutes(mission.createdAt) : 0;
+
   if (expired) {
     return (
       <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -141,7 +143,9 @@ export function SearchingScreen() {
         />
         <LoadingIndicator message="Looking for a hero..." />
         <Text className="font-sans text-center text-sm text-text-secondary">
-          Stay calm. Help is on the way.
+          {minutesSearching >= 1
+            ? `Searching... ${minutesSearching} min\n찾는 중... ${minutesSearching}분째`
+            : 'Searching...\n찾는 중...'}
         </Text>
       </View>
       <View className="px-6 pb-6">
