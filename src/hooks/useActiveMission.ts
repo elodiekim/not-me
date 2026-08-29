@@ -1,3 +1,4 @@
+import type { useRouter } from 'expo-router';
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/useAuthStore';
@@ -38,4 +39,18 @@ export function useActiveMission() {
     queryFn: () => fetchActiveMission(userId as string),
     enabled: !!userId,
   });
+}
+
+// Both RequestScreen and ConfirmLocationScreen redirect here the same way, whenever
+// their own useActiveMission guard finds a mission already in flight — which of the
+// two catches it depends on how far the user got before the query resolved. A plain
+// router.replace only swaps the current screen, so whichever one fires leaves
+// whatever's still under it (Home, or Home -> Request -> Reward) in the back stack —
+// back from Mission Status would land on Home in one case and Reward in the other.
+// dismissTo('/') first collapses the whole Request flow down to Home regardless of
+// how deep it was, then push lands on Mission Status on top of it — so back always
+// goes to Home no matter which guard caught it.
+export function goToActiveMission(router: ReturnType<typeof useRouter>, missionId: string) {
+  router.dismissTo('/');
+  router.push({ pathname: '/mission-status', params: { missionId } });
 }
