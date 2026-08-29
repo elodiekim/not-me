@@ -4,7 +4,7 @@ import { useCallback } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { LoadingIndicator } from '../../components/ui';
-import { useActiveMission } from '../../hooks/useActiveMission';
+import { goToActiveMission, useActiveMission } from '../../hooks/useActiveMission';
 import { MainMissionCard } from './components/MainMissionCard';
 import { PromiseCard } from './components/PromiseCard';
 import { WeirdProblemsSection } from './components/WeirdProblemsSection';
@@ -28,7 +28,7 @@ export function RequestScreen() {
   useFocusEffect(
     useCallback(() => {
       if (activeMission) {
-        router.replace({ pathname: '/mission-status', params: { missionId: activeMission.id } });
+        goToActiveMission(router, activeMission.id);
       }
     }, [activeMission, router]),
   );

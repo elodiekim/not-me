@@ -5,7 +5,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Keyboard, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input, LoadingIndicator } from '../../components/ui';
-import { useActiveMission } from '../../hooks/useActiveMission';
+import { goToActiveMission, useActiveMission } from '../../hooks/useActiveMission';
 import { useCreateRequest } from '../../hooks/useCreateRequest';
 
 function formatAddress(parts: (string | null | undefined)[]): string {
@@ -69,12 +69,17 @@ export function ConfirmLocationScreen() {
   // the one-request-at-a-time rule has to hold here too: after confirming, a back
   // press lands right back on this form and Confirm would create a second mission.
   // useFocusEffect rather than useEffect — this screen stays mounted underneath
-  // /searching, and a plain effect would fire router.replace while the user is
-  // still on that screen, yanking it out from under them.
+  // /searching, and a plain effect would fire while the user is still on that
+  // screen, yanking it out from under them.
+  //
+  // goToActiveMission (not a plain replace): by the time this guard fires the
+  // stack can be as deep as Home → Request → Reward → (here), and a plain
+  // replace only swaps this screen, leaving Reward underneath — back from
+  // Mission Status would land on Reward instead of Home. See its comment.
   useFocusEffect(
     useCallback(() => {
       if (activeMission) {
-        router.replace({ pathname: '/mission-status', params: { missionId: activeMission.id } });
+        goToActiveMission(router, activeMission.id);
       }
     }, [activeMission, router]),
   );
