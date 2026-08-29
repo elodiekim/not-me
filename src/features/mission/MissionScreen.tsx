@@ -7,7 +7,7 @@ import { getCategoryInfo } from '../../constants/categoryInfo';
 import { getMissionStatusLabel } from '../../constants/mission';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
-import { isMissionStalled, isRequestStale } from '../../utils/missionExpiry';
+import { elapsedMinutes, isMissionStalled, isRequestStale } from '../../utils/missionExpiry';
 import type { MissionStatus } from '../../types/Mission';
 import { StatusTimeline } from './components/StatusTimeline';
 
@@ -130,6 +130,9 @@ export function MissionScreen() {
   const isReviewed = isCompleted && mission.hasReview;
   const isCancelled = mission.status === 'cancelled';
   const isRequested = mission.status === 'requested';
+  // Surfaced once the search has run a minute or more — see elapsedMinutes for why
+  // this is elapsed time, not a countdown to SEARCH_TIMEOUT_MS.
+  const minutesSearching = isRequested ? elapsedMinutes(mission.createdAt) : 0;
   // A stranger is on their way to the requester's home, so they keep a way out
   // even after a hero accepts — seeing who accepted (the hero card links to
   // their reviews) is worthless without being able to act on it. Confirmed
@@ -231,7 +234,9 @@ export function MissionScreen() {
                   "It's been quiet for a while.\n히어로가 한동안 응답이 없어요."
                 : isRequested
                   ? // Nobody has accepted yet, so there is no hero to be on the way.
-                    "We're looking for your hero.\n히어로를 찾고 있어요."
+                    minutesSearching >= 1
+                    ? `Still looking for your hero. ${minutesSearching} min so far.\n히어로를 계속 찾고 있어요. ${minutesSearching}분째예요.`
+                    : "We're looking for your hero.\n히어로를 찾고 있어요."
                   : (STATUS_MESSAGE[mission.status] ??
                     'Your hero is on the way.\n히어로가 오고 있어요.')}
         </Text>
