@@ -235,7 +235,7 @@ export function MissionScreen() {
                 : isRequested
                   ? // Nobody has accepted yet, so there is no hero to be on the way.
                     minutesSearching >= 1
-                    ? `Still looking for your hero. ${minutesSearching} min so far.\n히어로를 계속 찾고 있어요. ${minutesSearching}분째예요.`
+                    ? `Still looking for your hero. ${minutesSearching} min so far.\n히어로를 ${minutesSearching}분 동안 계속 찾고 있어요.`
                     : "We're looking for your hero.\n히어로를 찾고 있어요."
                   : (STATUS_MESSAGE[mission.status] ??
                     'Your hero is on the way.\n히어로가 오고 있어요.')}

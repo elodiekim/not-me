@@ -144,7 +144,7 @@ export function SearchingScreen() {
         <LoadingIndicator message="Looking for a hero..." />
         <Text className="font-sans text-center text-sm text-text-secondary">
           {minutesSearching >= 1
-            ? `Searching... ${minutesSearching} min\n찾는 중... ${minutesSearching}분째`
+            ? `Searching · ${minutesSearching} min\n찾는 중 · ${minutesSearching}분`
             : 'Searching...\n찾는 중...'}
         </Text>
       </View>
