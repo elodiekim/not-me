@@ -13,6 +13,8 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { ReactNode, useEffect } from 'react';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { useProfile } from '../src/hooks/useProfile';
+import { supabase } from '../src/services/supabase';
 import { useAuthStore } from '../src/stores/useAuthStore';
 import { useOnboardingStore } from '../src/stores/useOnboardingStore';
 
@@ -25,6 +27,20 @@ function AuthGate({ children }: { children: ReactNode }) {
   const { session, initializing } = useAuthStore();
   const hasOnboarded = useOnboardingStore((state) => state.hasOnboarded);
   const segments = useSegments();
+  // Deliberately global, not just on Settings' delete-account flow: an admin can
+  // disable someone from notme-admin at any time, not only in response to that
+  // user's own action, so this has to catch it wherever they happen to be.
+  const { data: profile } = useProfile();
+  const isDeactivated = !!session && profile?.isActive === false;
+
+  // Soft-deleting/disabling a profile (0019) doesn't revoke the Supabase Auth
+  // session by itself — this is what actually signs them out, the moment the
+  // profile fetch confirms is_active is false.
+  useEffect(() => {
+    if (isDeactivated) {
+      supabase.auth.signOut();
+    }
+  }, [isDeactivated]);
 
   if (initializing) {
     return null;
@@ -35,6 +51,13 @@ function AuthGate({ children }: { children: ReactNode }) {
   // Password-reset routes must be reachable without a session — including via a deep
   // link that lands before onboarding — so the recovery link never gets bounced away.
   const inPasswordReset = segments[0] === 'forgot-password' || segments[0] === 'reset-password';
+  const inAccountDeleted = segments[0] === 'account-deleted';
+
+  // Checked before every other rule: a deactivated account shouldn't land on
+  // onboarding or the normal sign-in bounce, just this one explanation screen.
+  if (isDeactivated && !inAccountDeleted) {
+    return <Redirect href="/account-deleted" />;
+  }
 
   // First-time, logged-out users see onboarding before anything else — even on deep links.
   if (!hasOnboarded && !session) {
@@ -49,7 +72,7 @@ function AuthGate({ children }: { children: ReactNode }) {
     return <Redirect href={session ? '/' : '/sign-in'} />;
   }
 
-  if (!session && !inAuthScreen && !inPasswordReset) {
+  if (!session && !inAuthScreen && !inPasswordReset && !inAccountDeleted) {
     return <Redirect href="/sign-in" />;
   }
 
