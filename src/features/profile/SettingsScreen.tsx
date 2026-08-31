@@ -3,7 +3,7 @@ import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { BottomSheet, Button, Card } from '../../components/ui';
+import { BottomSheet, Button, Card, SectionHeader } from '../../components/ui';
 import { COLORS } from '../../constants/colors';
 import { useDeleteAccount } from '../../hooks/useDeleteAccount';
 import { supabase } from '../../services/supabase';
@@ -70,51 +70,85 @@ export function SettingsScreen() {
         <Text className="ml-10 font-sans text-sm text-text-secondary">설정</Text>
       </View>
 
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
-        <Card>
-          <View className="gap-4">
-            {SETTINGS_ITEMS.map((item, index) => (
-              <Pressable
-                key={item.label}
-                accessibilityRole="button"
-                accessibilityLabel={item.label}
-                onPress={
-                  SETTINGS_ROUTES[item.label]
-                    ? () => router.push(SETTINGS_ROUTES[item.label] as never)
-                    : undefined
-                }
-              >
-                <View
-                  className={`flex-row items-center gap-3 ${index > 0 ? 'border-t border-surface pt-4' : ''}`}
+      <ScrollView contentContainerStyle={{ padding: 24, gap: 24 }}>
+        <View className="gap-3">
+          <SectionHeader title="Preferences" />
+          <Card>
+            <View className="gap-4">
+              {SETTINGS_ITEMS.map((item, index) => (
+                <Pressable
+                  key={item.label}
+                  accessibilityRole="button"
+                  accessibilityLabel={item.label}
+                  onPress={
+                    SETTINGS_ROUTES[item.label]
+                      ? () => router.push(SETTINGS_ROUTES[item.label] as never)
+                      : undefined
+                  }
                 >
-                  <Feather name={item.icon} size={18} color={COLORS.textSecondary} />
-                  <View className="flex-1">
-                    <Text className="text-sm font-sans-semibold text-text-primary">
-                      {item.label}
-                    </Text>
-                    <Text className="font-sans text-xs text-text-secondary">{item.koLabel}</Text>
+                  <View
+                    className={`flex-row items-center gap-3 ${index > 0 ? 'border-t border-surface pt-4' : ''}`}
+                  >
+                    <Feather name={item.icon} size={18} color={COLORS.textSecondary} />
+                    <View className="flex-1">
+                      <Text className="text-sm font-sans-semibold text-text-primary">
+                        {item.label}
+                      </Text>
+                      <Text className="font-sans text-xs text-text-secondary">{item.koLabel}</Text>
+                    </View>
+                    <Feather name="chevron-right" size={18} color={COLORS.textDisabled} />
                   </View>
-                  <Feather name="chevron-right" size={18} color={COLORS.textDisabled} />
+                </Pressable>
+              ))}
+            </View>
+          </Card>
+        </View>
+
+        <View className="gap-3">
+          <SectionHeader title="Account" />
+          <Card>
+            <View className="gap-4">
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Sign Out"
+                onPress={() => supabase.auth.signOut()}
+              >
+                <View className="flex-row items-center gap-3">
+                  <Feather name="log-out" size={18} color={COLORS.textSecondary} />
+                  <View className="flex-1">
+                    <Text className="text-sm font-sans-semibold text-text-primary">Sign Out</Text>
+                    <Text className="font-sans text-xs text-text-secondary">로그아웃</Text>
+                  </View>
                 </View>
               </Pressable>
-            ))}
-          </View>
-        </Card>
 
-        <Button label="Sign Out" variant="ghost" onPress={() => supabase.auth.signOut()} />
-
-        <Button
-          label="Delete Account · 계정 탈퇴"
-          variant="ghost"
-          onPress={() => setIsDeleteSheetOpen(true)}
-        />
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Delete Account"
+                onPress={() => setIsDeleteSheetOpen(true)}
+              >
+                <View className="flex-row items-center gap-3 border-t border-surface pt-4">
+                  <Feather name="trash-2" size={18} color={COLORS.danger} />
+                  <View className="flex-1">
+                    <Text className="text-sm font-sans-semibold text-danger">Delete Account</Text>
+                    <Text className="font-sans text-xs text-danger">계정 탈퇴</Text>
+                  </View>
+                </View>
+              </Pressable>
+            </View>
+          </Card>
+        </View>
 
         {__DEV__ && (
-          <Button
-            label="Replay Onboarding · 온보딩 다시 보기 (dev)"
-            variant="ghost"
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Replay Onboarding (dev)"
             onPress={replayOnboarding}
-          />
+          >
+            <Text className="text-center font-sans text-xs text-text-disabled">
+              Replay Onboarding · 온보딩 다시 보기 (dev)
+            </Text>
+          </Pressable>
         )}
       </ScrollView>
 
