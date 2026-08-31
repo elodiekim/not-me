@@ -1,9 +1,11 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
+import { useState } from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Card } from '../../components/ui';
+import { BottomSheet, Button, Card } from '../../components/ui';
 import { COLORS } from '../../constants/colors';
+import { useDeleteAccount } from '../../hooks/useDeleteAccount';
 import { supabase } from '../../services/supabase';
 import { useOnboardingStore } from '../../stores/useOnboardingStore';
 
@@ -30,6 +32,27 @@ const SETTINGS_ROUTES: Partial<Record<string, string>> = {
 
 export function SettingsScreen() {
   const router = useRouter();
+  const deleteAccount = useDeleteAccount();
+  const [isDeleteSheetOpen, setIsDeleteSheetOpen] = useState(false);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // AuthGate does the actual navigation once the session clears (it's watching
+  // is_active globally) — this just fires the mutation and closes the sheet so
+  // the user isn't left staring at a stale confirmation while that happens.
+  // Unlike a mission cancel, a failure here has to actually be surfaced rather
+  // than silently proceeding — nothing changed, so leaving the user thinking
+  // their account is gone when it isn't would be the worse failure.
+  const handleDeleteAccount = async () => {
+    setDeleteError(null);
+    try {
+      await deleteAccount.mutateAsync();
+      setIsDeleteSheetOpen(false);
+    } catch {
+      setDeleteError(
+        'Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.',
+      );
+    }
+  };
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
@@ -80,6 +103,12 @@ export function SettingsScreen() {
 
         <Button label="Sign Out" variant="ghost" onPress={() => supabase.auth.signOut()} />
 
+        <Button
+          label="Delete Account · 계정 탈퇴"
+          variant="ghost"
+          onPress={() => setIsDeleteSheetOpen(true)}
+        />
+
         {__DEV__ && (
           <Button
             label="Replay Onboarding · 온보딩 다시 보기 (dev)"
@@ -88,6 +117,31 @@ export function SettingsScreen() {
           />
         )}
       </ScrollView>
+
+      <BottomSheet visible={isDeleteSheetOpen} onClose={() => setIsDeleteSheetOpen(false)}>
+        <Text className="text-lg font-sans-semibold text-text-primary">
+          Delete your account?{'\n'}계정을 삭제할까요?
+        </Text>
+        <Text className="font-sans text-sm text-text-secondary">
+          This can&apos;t be undone. You&apos;ll be signed out and won&apos;t be able to sign back
+          in with this account.{'\n'}이 작업은 되돌릴 수 없어요. 로그아웃되고, 이 계정으로 다시
+          로그인할 수 없어요.
+        </Text>
+        {deleteError && <Text className="text-sm text-danger">{deleteError}</Text>}
+        <Button
+          label="Delete My Account · 삭제할게요"
+          variant="danger"
+          onPress={handleDeleteAccount}
+          loading={deleteAccount.isPending}
+          disabled={deleteAccount.isPending}
+        />
+        <Button
+          label="Cancel · 취소"
+          variant="ghost"
+          onPress={() => setIsDeleteSheetOpen(false)}
+          disabled={deleteAccount.isPending}
+        />
+      </BottomSheet>
     </SafeAreaView>
   );
 }
