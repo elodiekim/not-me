@@ -5,6 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
 import { supabase } from '../../services/supabase';
 import { EMAIL_TAKEN_ERROR, isEmailRegistered, looksLikeEmail } from './emailCheck';
+import { GoogleSignInCancelledError, signInWithGoogle } from './googleAuth';
 import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT_ERROR } from './password';
 
 type AuthMode = 'sign-in' | 'sign-up';
@@ -22,6 +23,7 @@ export function AuthScreen() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   // Checked when the email field loses focus, so a taken address is caught before
@@ -134,6 +136,24 @@ export function AuthScreen() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setMessage(null);
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      // No further action needed here: the session change flows through
+      // useAuthStore's onAuthStateChange listener, and AuthGate redirects
+      // away from this screen on its own once session is set.
+    } catch (err) {
+      if (!(err instanceof GoogleSignInCancelledError)) {
+        setError('Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-1 justify-center gap-6 px-6">
@@ -197,6 +217,20 @@ export function AuthScreen() {
           loading={loading}
           disabled={!canSubmit}
           onPress={handleSubmit}
+        />
+
+        <View className="flex-row items-center gap-3">
+          <View className="h-px flex-1 bg-surface" />
+          <Text className="font-sans text-xs text-text-secondary">or · 또는</Text>
+          <View className="h-px flex-1 bg-surface" />
+        </View>
+
+        <Button
+          label="Continue with Google"
+          variant="secondary"
+          loading={googleLoading}
+          disabled={googleLoading}
+          onPress={handleGoogleSignIn}
         />
 
         {!isSignUp && (
