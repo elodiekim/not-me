@@ -7,7 +7,7 @@ async function fetchProfile(userId: string): Promise<Profile> {
   const { data, error } = await supabase
     .from('profiles')
     .select(
-      'id, name, phone, avatar_url, hero_rating, hero_review_count, is_active, created_at, updated_at',
+      'id, name, phone, avatar_url, hero_rating, hero_review_count, is_active, hero_approved, created_at, updated_at',
     )
     .eq('id', userId)
     .single();
@@ -22,6 +22,7 @@ async function fetchProfile(userId: string): Promise<Profile> {
     heroRating: data.hero_rating,
     heroReviewCount: data.hero_review_count,
     isActive: data.is_active,
+    heroApproved: data.hero_approved,
     createdAt: data.created_at,
     updatedAt: data.updated_at,
   };

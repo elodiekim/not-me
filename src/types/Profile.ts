@@ -6,6 +6,7 @@ export interface Profile {
   heroRating: number | null;
   heroReviewCount: number;
   isActive: boolean;
+  heroApproved: boolean;
   createdAt: string;
   updatedAt: string;
 }
