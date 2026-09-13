@@ -4,8 +4,9 @@ import * as Location from 'expo-location';
 import { useEffect, useMemo, useState } from 'react';
 import { Pressable, RefreshControl, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, MissionCard, MissionCardSkeleton } from '../../components/ui';
+import { Button, LoadingIndicator, MissionCard, MissionCardSkeleton } from '../../components/ui';
 import { useNearbyMissions } from '../../hooks/useNearbyMissions';
+import { useProfile } from '../../hooks/useProfile';
 import type { MissionWithRequester } from '../../hooks/useMission';
 import { getCategoryInfo } from '../../constants/categoryInfo';
 import { COLORS } from '../../constants/colors';
@@ -79,6 +80,11 @@ function useCurrentCoords() {
 
 export function NearbyMissionsScreen() {
   const router = useRouter();
+  // Gated on hero_approved before the list query even matters — the RLS
+  // restrictive policy (0022) would return an empty/filtered result anyway,
+  // but checking here avoids firing that query for someone who can't see
+  // anything, and lets us show why instead of a bare empty state.
+  const { data: profile, isLoading: isProfileLoading } = useProfile();
   const { data: missions, isLoading, isError, refetch } = useNearbyMissions();
   const heroCoords = useCurrentCoords();
   // Tied to the pull gesture only — see ProfileScreen for why isRefetching isn't used here.
@@ -125,7 +131,24 @@ export function NearbyMissionsScreen() {
         <Text className="ml-10 font-sans text-sm text-text-secondary">근처 요청 목록</Text>
       </View>
 
-      {isLoading ? (
+      {isProfileLoading ? (
+        <View className="flex-1 items-center justify-center">
+          <LoadingIndicator />
+        </View>
+      ) : !profile?.heroApproved ? (
+        <View className="flex-1 items-center justify-center px-6">
+          <View className="items-center gap-3 rounded-card bg-surface p-8">
+            <Feather name="clock" size={28} color={COLORS.textDisabled} />
+            <Text className="text-sm font-sans-semibold text-text-primary">
+              Pending hero approval
+            </Text>
+            <Text className="font-sans text-center text-xs text-text-secondary">
+              승인 대기 중이에요.{'\n'}An admin needs to approve your account before you can see
+              nearby requests.
+            </Text>
+          </View>
+        </View>
+      ) : isLoading ? (
         <ScrollView contentContainerStyle={{ padding: 24, gap: 16 }}>
           {Array.from({ length: 4 }).map((_, i) => (
             <MissionCardSkeleton key={i} />
