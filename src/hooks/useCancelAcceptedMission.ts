@@ -15,13 +15,22 @@ export function useCancelAcceptedMission() {
     mutationFn: async (missionId: string) => {
       if (!userId) throw new Error('Not signed in.');
 
-      const { error } = await supabase
+      const { error, count } = await supabase
         .from('missions')
-        .update({ status: 'requested', hero_id: null })
+        .update({ status: 'requested', hero_id: null }, { count: 'exact' })
         .eq('id', missionId)
         .eq('hero_id', userId);
 
       if (error) throw error;
+      // 0 rows means the mission moved on before this landed — completed out from
+      // under the hero, or already reset by something else. Silently "succeeding"
+      // here was the other half of a race with ActiveMissionScreen's Complete
+      // button: both this and the completion update could fire concurrently, and
+      // without a count check either one looked like it worked regardless of
+      // which the database actually kept.
+      if (!count) {
+        throw new Error('Mission could not be backed out of (it may have already finished).');
+      }
     },
     onSuccess: (_data, missionId) => {
       queryClient.invalidateQueries({ queryKey: ['mission', missionId] });
