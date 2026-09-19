@@ -80,12 +80,12 @@ function useCurrentCoords() {
 
 export function NearbyMissionsScreen() {
   const router = useRouter();
-  // Gated on hero_approved before the list query even matters — the RLS
-  // restrictive policy (0022) would return an empty/filtered result anyway,
-  // but checking here avoids firing that query for someone who can't see
-  // anything, and lets us show why instead of a bare empty state.
   const { data: profile, isLoading: isProfileLoading } = useProfile();
-  const { data: missions, isLoading, isError, refetch } = useNearbyMissions();
+  // Gated on hero_approved: the RLS restrictive policy (0022) would filter the
+  // result to empty anyway, but skipping the query entirely avoids a wasted
+  // request for someone who can't see anything, and lets us show why instead
+  // of a bare empty state.
+  const { data: missions, isLoading, isError, refetch } = useNearbyMissions(profile?.heroApproved);
   const heroCoords = useCurrentCoords();
   // Tied to the pull gesture only — see ProfileScreen for why isRefetching isn't used here.
   const [isManualRefreshing, setIsManualRefreshing] = useState(false);
