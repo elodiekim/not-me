@@ -19,11 +19,12 @@ async function fetchNearbyMissions(userId?: string) {
   return data.map(mapMissionWithRequester);
 }
 
-export function useNearbyMissions() {
+export function useNearbyMissions(enabled = true) {
   const userId = useAuthStore((state) => state.session?.user.id);
 
   return useQuery({
     queryKey: ['nearbyMissions', userId],
     queryFn: () => fetchNearbyMissions(userId),
+    enabled,
   });
 }

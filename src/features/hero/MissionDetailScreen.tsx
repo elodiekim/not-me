@@ -32,9 +32,18 @@ export function MissionDetailScreen() {
     try {
       await acceptMission.mutateAsync(mission.id);
       router.replace({ pathname: '/hero/active', params: { id: mission.id } });
-    } catch {
+    } catch (err) {
+      // 42501 (insufficient_privilege) is the specific code
+      // enforce_hero_approval_on_claim (0023) raises when hero_approved is
+      // false — everything else (0 rows matched, RLS restrictive-policy
+      // silent rejection, network errors) collapses to the generic "someone
+      // else got it first" message, since those cases really are
+      // indistinguishable from the client's point of view.
+      const code = err && typeof err === 'object' && 'code' in err ? err.code : undefined;
       setAcceptError(
-        'This mission was already taken by another hero.\n다른 히어로가 이미 수락했어요.',
+        code === '42501'
+          ? "Your hero account isn't approved yet.\n히어로 승인 대기 중이에요."
+          : 'This mission was already taken by another hero.\n다른 히어로가 이미 수락했어요.',
       );
     }
   };

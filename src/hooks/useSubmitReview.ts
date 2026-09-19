@@ -1,4 +1,4 @@
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '../services/supabase';
 import { useAuthStore } from '../stores/useAuthStore';
 
@@ -11,6 +11,7 @@ interface SubmitReviewInput {
 
 export function useSubmitReview() {
   const userId = useAuthStore((state) => state.session?.user.id);
+  const queryClient = useQueryClient();
 
   return useMutation({
     mutationFn: async ({ missionId, heroId, rating, comment }: SubmitReviewInput) => {
@@ -25,6 +26,14 @@ export function useSubmitReview() {
       });
 
       if (error) throw error;
+    },
+    onSuccess: (_data, { missionId, heroId }) => {
+      queryClient.invalidateQueries({ queryKey: ['mission', missionId] });
+      queryClient.invalidateQueries({ queryKey: ['missionHistory'] });
+      queryClient.invalidateQueries({ queryKey: ['reviews', 'received', heroId] });
+      // hero_rating/hero_review_count are recalculated server-side by a trigger
+      // on insert, so the hero's own profile view is stale until this refetches.
+      queryClient.invalidateQueries({ queryKey: ['profile', heroId] });
     },
   });
 }
