@@ -2,9 +2,10 @@
 // Populates the Supabase project with realistic-looking mission/review/user data so
 // the admin dashboard's aggregate screens (mission list, user list, stats) have
 // something to show. All writes go through the real REST API with real accounts, so
-// this doubles as a smoke test of RLS/trigger behavior (self-accept prevention,
-// cancel rules, review rating recalculation, etc.) — a create/mutate failure here
-// usually means a real regression, not just "no data yet."
+// this doubles as a smoke test of RLS/trigger behavior: a dedicated self-accept
+// attempt must be rejected, and hero_review_count must increment after each review.
+// Any create/mutate failure, or a self-accept that unexpectedly succeeds, makes the
+// script exit non-zero — a real regression, not just "no data yet."
 //
 // Run: npm run qa:seed
 // Configure: QA_USERS=20 QA_MISSIONS=40 npm run qa:seed (both default as shown)
@@ -93,7 +94,9 @@ async function ensureUser(index) {
 async function backdateSignup(user, index) {
   const daysAgo = Math.floor(((index - 1) * 30) / NUM_USERS) + Math.floor(Math.random() * 2);
   const hoursAgo = Math.floor(Math.random() * 24);
-  const fakeCreatedAt = new Date(Date.now() - daysAgo * 86400000 - hoursAgo * 3600000).toISOString();
+  const fakeCreatedAt = new Date(
+    Date.now() - daysAgo * 86400000 - hoursAgo * 3600000,
+  ).toISOString();
   await api('PATCH', `/rest/v1/profiles?id=eq.${user.id}`, {
     token: user.token,
     body: { created_at: fakeCreatedAt },
@@ -145,6 +148,59 @@ const COMMENTS = [
   null,
 ];
 
+// Attempts the one mutation the RLS policies in 0007_prevent_self_accept.sql exist
+// to block: a requester accepting their own mission. Success here is a bug, not a
+// pass — flagged as critical so it can't get lost among ordinary seed errors.
+async function checkSelfAcceptBlocked(user) {
+  const address = `QA Seed Self-Accept Check ${TODAY} ${Date.now()}`;
+  const create = await api('POST', '/rest/v1/missions', {
+    token: user.token,
+    body: { requester_id: user.id, category: 'cockroach', reward_amount: 10, address },
+  });
+  if (![200, 201].includes(create.status)) {
+    return {
+      ok: false,
+      detail: `test mission create failed: ${create.status} ${JSON.stringify(create.data)}`,
+    };
+  }
+  let missionId = Array.isArray(create.data) ? create.data[0]?.id : undefined;
+  if (!missionId) {
+    const lookup = await api(
+      'GET',
+      `/rest/v1/missions?requester_id=eq.${user.id}&address=eq.${encodeURIComponent(address)}&select=id&order=created_at.desc&limit=1`,
+      { token: user.token },
+    );
+    missionId = lookup.data?.[0]?.id;
+  }
+  if (!missionId) {
+    return { ok: false, detail: 'could not resolve self-accept test mission id' };
+  }
+
+  const attempt = await api('PATCH', `/rest/v1/missions?id=eq.${missionId}&status=eq.requested`, {
+    token: user.token,
+    body: { hero_id: user.id, status: 'accepted' },
+  });
+
+  if ([200, 204].includes(attempt.status)) {
+    return {
+      ok: false,
+      critical: true,
+      detail: `SELF-ACCEPT WAS NOT BLOCKED (mission ${missionId}, user ${user.email}) — RLS regression`,
+    };
+  }
+  return { ok: true };
+}
+
+async function fetchReviewCounts(users, token) {
+  const ids = users.map((u) => u.id).join(',');
+  const res = await api('GET', `/rest/v1/profiles?id=in.(${ids})&select=id,hero_review_count`, {
+    token,
+  });
+  const counts = {};
+  for (const row of res.data ?? []) counts[row.id] = row.hero_review_count ?? 0;
+  return counts;
+}
+
 async function seedMissions(users, plan) {
   const results = {
     requested: 0,
@@ -154,6 +210,7 @@ async function seedMissions(users, plan) {
     completed: 0,
     cancelled: 0,
     backed_out: 0,
+    reviewsSubmitted: {},
     errors: [],
   };
 
@@ -169,7 +226,9 @@ async function seedMissions(users, plan) {
       body: { requester_id: requester.id, category: 'cockroach', reward_amount: reward, address },
     });
     if (![200, 201].includes(create.status)) {
-      results.errors.push(`#${n + 1} create failed: ${create.status} ${JSON.stringify(create.data)}`);
+      results.errors.push(
+        `#${n + 1} create failed: ${create.status} ${JSON.stringify(create.data)}`,
+      );
       continue;
     }
     let missionId = Array.isArray(create.data) ? create.data[0]?.id : undefined;
@@ -197,13 +256,22 @@ async function seedMissions(users, plan) {
     if (kind === 'cancelled_from_requested') {
       const r = await patch(requester.token, { status: 'cancelled' }, '&status=eq.requested');
       if ([200, 204].includes(r.status)) results.cancelled++;
-      else results.errors.push(`#${n + 1} cancel-from-requested failed: ${r.status} ${JSON.stringify(r.data)}`);
+      else
+        results.errors.push(
+          `#${n + 1} cancel-from-requested failed: ${r.status} ${JSON.stringify(r.data)}`,
+        );
       continue;
     }
 
-    const accept = await patch(hero.token, { hero_id: hero.id, status: 'accepted' }, '&status=eq.requested');
+    const accept = await patch(
+      hero.token,
+      { hero_id: hero.id, status: 'accepted' },
+      '&status=eq.requested',
+    );
     if (![200, 204].includes(accept.status)) {
-      results.errors.push(`#${n + 1} accept failed: ${accept.status} ${JSON.stringify(accept.data)}`);
+      results.errors.push(
+        `#${n + 1} accept failed: ${accept.status} ${JSON.stringify(accept.data)}`,
+      );
       continue;
     }
     if (kind === 'accepted') {
@@ -214,7 +282,10 @@ async function seedMissions(users, plan) {
     if (kind === 'cancelled_from_accepted') {
       const r = await patch(requester.token, { status: 'cancelled' });
       if ([200, 204].includes(r.status)) results.cancelled++;
-      else results.errors.push(`#${n + 1} cancel-from-accepted failed: ${r.status} ${JSON.stringify(r.data)}`);
+      else
+        results.errors.push(
+          `#${n + 1} cancel-from-accepted failed: ${r.status} ${JSON.stringify(r.data)}`,
+        );
       continue;
     }
 
@@ -237,7 +308,9 @@ async function seedMissions(users, plan) {
 
     const arrived = await patch(hero.token, { status: 'arrived' }, '&status=eq.on_the_way');
     if (![200, 204].includes(arrived.status)) {
-      results.errors.push(`#${n + 1} arrived failed: ${arrived.status} ${JSON.stringify(arrived.data)}`);
+      results.errors.push(
+        `#${n + 1} arrived failed: ${arrived.status} ${JSON.stringify(arrived.data)}`,
+      );
       continue;
     }
     if (kind === 'arrived') {
@@ -247,17 +320,31 @@ async function seedMissions(users, plan) {
 
     const completed = await patch(hero.token, { status: 'completed' }, '&status=eq.arrived');
     if (![200, 204].includes(completed.status)) {
-      results.errors.push(`#${n + 1} completed failed: ${completed.status} ${JSON.stringify(completed.data)}`);
+      results.errors.push(
+        `#${n + 1} completed failed: ${completed.status} ${JSON.stringify(completed.data)}`,
+      );
       continue;
     }
 
     const rating = weightedRating();
     const comment = COMMENTS[Math.floor(Math.random() * COMMENTS.length)];
-    const reviewBody = { mission_id: missionId, reviewer_id: requester.id, hero_id: hero.id, rating };
+    const reviewBody = {
+      mission_id: missionId,
+      reviewer_id: requester.id,
+      hero_id: hero.id,
+      rating,
+    };
     if (comment) reviewBody.comment = comment;
-    const review = await api('POST', '/rest/v1/reviews', { token: requester.token, body: reviewBody });
+    const review = await api('POST', '/rest/v1/reviews', {
+      token: requester.token,
+      body: reviewBody,
+    });
     if (![200, 201].includes(review.status)) {
-      results.errors.push(`#${n + 1} review failed: ${review.status} ${JSON.stringify(review.data)}`);
+      results.errors.push(
+        `#${n + 1} review failed: ${review.status} ${JSON.stringify(review.data)}`,
+      );
+    } else {
+      results.reviewsSubmitted[hero.id] = (results.reviewsSubmitted[hero.id] ?? 0) + 1;
     }
     results.completed++;
   }
@@ -279,14 +366,48 @@ async function main() {
   }
   console.log(`유저 준비 완료 (신규 ${newUsers}명 · 기존 ${NUM_USERS - newUsers}명 재사용)`);
 
+  console.log('self-accept 방지 확인 중...');
+  const selfAcceptCheck = await checkSelfAcceptBlocked(users[0]);
+  console.log(
+    selfAcceptCheck.ok
+      ? '  통과'
+      : `  ${selfAcceptCheck.critical ? '[CRITICAL]' : '[FAIL]'} ${selfAcceptCheck.detail}`,
+  );
+
+  const reviewCountsBefore = await fetchReviewCounts(users, users[0].token);
+
   const plan = shuffledPlan(NUM_MISSIONS);
   const results = await seedMissions(users, plan);
 
+  const reviewCountsAfter = await fetchReviewCounts(users, users[0].token);
+  const ratingCheckIssues = [];
+  for (const [heroId, submitted] of Object.entries(results.reviewsSubmitted)) {
+    const before = reviewCountsBefore[heroId] ?? 0;
+    const after = reviewCountsAfter[heroId] ?? 0;
+    if (after - before !== submitted) {
+      ratingCheckIssues.push(
+        `hero ${heroId}: submitted ${submitted} review(s) but hero_review_count only went ${before} -> ${after}`,
+      );
+    }
+  }
+
   console.log('=== 결과 ===');
   console.log(JSON.stringify(results, null, 2));
+  console.log(
+    ratingCheckIssues.length === 0
+      ? '레이팅 재계산 확인: 통과'
+      : `레이팅 재계산 확인 실패:\n${ratingCheckIssues.map((issue) => `  ${issue}`).join('\n')}`,
+  );
   console.log('\n정리하려면 Supabase SQL Editor에서 (DELETE RLS가 없어 REST로는 못 지움):');
-  console.log("  delete from missions where address like 'QA Seed Mission%';");
-  console.log('테스트 계정 자체를 지우려면: Authentication → Users에서 "qa-seed-" 검색 후 수동 삭제');
+  console.log("  delete from missions where address like 'QA Seed%';");
+  console.log(
+    '테스트 계정 자체를 지우려면: Authentication → Users에서 "qa-seed-" 검색 후 수동 삭제',
+  );
+
+  if (results.errors.length > 0 || !selfAcceptCheck.ok || ratingCheckIssues.length > 0) {
+    console.error('\nQA seed에서 문제를 발견했습니다 (위 로그 참고).');
+    process.exit(1);
+  }
 }
 
 main().catch((err) => {
