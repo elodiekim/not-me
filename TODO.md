@@ -75,13 +75,16 @@
 - [x] 비밀번호 찾기(재설정) 플로우 — `AuthScreen`에 "비밀번호를 잊으셨나요?" 진입점 + 이메일 입력 화면 + Supabase `resetPasswordForEmail` 연동, PKCE `exchangeCodeForSession`로 리셋 링크 딥링크 처리. redirectTo는 `Linking.createURL('reset-password')`로 환경별 자동(Expo Go는 `exp://`, 독립 빌드는 `notme://`)
   - ⚠️ **실제 이메일 링크 클릭 E2E는 개발 빌드/TestFlight에서 최종 확인 필요.** Expo Go(iOS)로는 검증 불가 — iOS Safari가 웹 302 리다이렉트를 통한 `exp://` 커스텀 스킴 오픈을 차단함(구조적 한계, 코드 문제 아님). 로직 자체(만료 코드 에러 처리 / `updateUser` 비번 변경 라운드트립 / 미존재 이메일 enumeration 방지)는 실제 Supabase 호출로 검증 완료
   - 📌 개발 빌드에서 테스트할 때: Supabase Auth → URL Configuration → Redirect URLs에 `notme://reset-password` 등록 필요. 같은 기기에서 요청+클릭해야 함(PKCE code_verifier 로컬 저장)
-- [ ] **구글 로그인 (소셜 로그인, 카카오는 보류)** — 카카오는 Supabase 지원은 되지만 개인(비사업자) 카카오 개발자 계정으론 이메일 scope를 기본으로 못 받는 제약이 있어서 이번 범위에서 제외, 나중에 필요해지면 provider 하나 더 추가하는 식으로 확장
-  - `signInWithOAuth({ provider: 'google' })` + `expo-web-browser`(`skipBrowserRedirect: true`) 조합, 비밀번호 재설정 때 만든 딥링크 처리(`Linking.createURL`, redirect URL 등록) 패턴 재사용
-  - Google Cloud Console에서 OAuth 클라이언트 ID **3개** 필요(iOS / Android / Web) — 잘못된 자리에 잘못된 ID 넣으면 `DEVELOPER_ERROR`만 뜨고 원인 파악이 어려우니 설정 단계를 꼼꼼히 문서화하며 진행할 것
-  - Supabase Dashboard의 Auth → Providers에서 Google 활성화 + 위 클라이언트 ID/시크릿 등록
-  - **구글 가입 유저는 지금 이메일 가입 폼의 필수 휴대전화 입력을 건너뜀** → `profiles.phone`이 비어있는 상태로 시작함. 별도 "가입 직후 전화번호 입력" 화면은 새로 안 만들고, 이미 계획된 Edit Profile 화면(프로필 수정 항목 참고)에서 나중에 채우는 걸로 충분 — 지금 강제할 필요 없음
-  - `handle_new_user()` 트리거가 OAuth 가입에도 그대로 타는지 확인 필요(현재는 이메일/비번 가입 기준으로 짜여 있음) — `raw_user_meta_data`에 `phone` 키가 없는 경우 정상적으로 null로 들어가는지 확인
-  - 로그인 화면에 "Continue with Google" 버튼 추가(이메일/비번 폼과 나란히), 로딩 중 상태 처리
+- [x] **구글 로그인 (소셜 로그인, 카카오는 보류)** (완료 · 2026-09-24) — 카카오는 Supabase 지원은 되지만 개인(비사업자) 카카오 개발자 계정으론 이메일 scope를 기본으로 못 받는 제약이 있어서 이번 범위에서 제외, 나중에 필요해지면 provider 하나 더 추가하는 식으로 확장
+  - 웹 기반 OAuth(`signInWithOAuth({ provider: 'google' })` + 네이티브는 `expo-web-browser`의 `openAuthSessionAsync`, 웹은 일반 풀페이지 리다이렉트) — 네이티브 SDK(`@react-native-google-signin`) 방식과 달리 클라이언트 ID **1개**(Web 타입)만 필요. 애초 계획엔 "3개 필요"라고 적혀 있었는데 그건 네이티브 SDK 방식 기준이었고, 실제 구현한 웹 리다이렉트 방식엔 해당 안 됨
+  - Google Cloud Console: OAuth 동의 화면(외부) + OAuth 클라이언트 ID(웹 애플리케이션) 1개, 승인된 리디렉션 URI = Supabase 콜백(`https://<project-ref>.supabase.co/auth/v1/callback`)
+  - Supabase Dashboard: Auth → Providers에서 Google 활성화 + 클라이언트 ID/시크릿 등록, Auth → URL Configuration에 `notme://sign-in`(네이티브)·`http://localhost:8081/sign-in`(웹 개발) 등록
+  - **실제로 발견된 진짜 버그(사전에 예상 못 했던 것)**: `@supabase/auth-js`의 실제 기본값이 `flowType: 'implicit'`이었는데 이 프로젝트가 한 번도 `'pkce'`로 명시한 적이 없었음(`ResetPasswordScreen.tsx`의 "PKCE 쓴다"는 주석은 틀린 전제였음 — 비밀번호 재설정은 이메일 복구 링크 특성상 flowType과 무관하게 항상 code 방식이라 우연히 문제없이 동작했던 것뿐). `signInWithOAuth`는 `code_challenge`를 안 보내니 Supabase가 `?code=` 대신 URL 해시(`#access_token=...`)로 응답했고, 이 앱은 `detectSessionInUrl: false`라 해시를 아예 안 읽어서 — 실제 구글 로그인은 성공해도 앱은 계속 로그인 화면에 조용히 멈춰 있었음(에러도 없고 서버 로그도 안 남음). `services/supabase.ts`에 `flowType: 'pkce'` 명시로 해결
+  - 부수적으로 발견한 버그 2건도 같이 수정: ①구글 버튼 핸들러의 `router.replace('/sign-in')`가 성공/실패 상관없이 항상 실행되면서 방금 설정한 에러 상태를 리마운트로 지우고 있었음(성공 시엔 AuthGate의 자동 리다이렉트와도 경합) → 제거 ②웹에서 AsyncStorage의 웹 구현이 Promise 기반이라, PKCE verifier를 쓰자마자 바로 리다이렉트하는 타이밍과 경합할 여지가 있어 웹만 `window.localStorage`로 분리
+  - 구글 가입 유저는 이메일 가입 폼의 필수 휴대전화 입력을 건너뜀 → `profiles.phone`이 비어있는 상태로 시작, Edit Profile에서 나중에 채우면 충분(별도 화면 안 만듦)
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npx prettier --check` 통과. Playwright로 `/authorize` 요청에 `code_challenge` 정상 포함, `code_verifier`가 리다이렉트 전에 localStorage에 정상 저장되는 것 확인. 실제 구글 계정으로 로그인 성공 확인 후 REST로 `profiles` row 확인 — 구글 계정 실명이 `name`에 정상 반영, `phone`은 null, `hero_approved`는 신규 유저 기본값 false로 정상 생성됨(`handle_new_user()` 트리거가 OAuth 가입에도 문제없이 동작)
+  - **미검증**: iOS Simulator/Expo Go에서의 네이티브 `WebBrowser.openAuthSessionAsync` 경로 — 웹 경로만 실제 로그인으로 확인함
+  - PR #89, main에 머지 예정
 - [ ] **애플 로그인 (Sign in with Apple)** (사용자 확인 · 2026-09-24) — 구글 로그인을 넣으면서 iOS에도 낼 계획이라면 사실상 필수: 애플 심사 가이드라인 4.8은 다른 서드파티/소셜 로그인을 제공하는 iOS 앱에 Sign in with Apple을 동등하게 제공하도록 요구함(안드로이드/웹은 해당 없음)
   - **완전히 막혀있는 선행 조건**: Apple Developer Program 계정($99/년) 가입 필요 — `EAS Build → TestFlight`의 "iOS는 미착수" 항목과 **같은 계정**이라 두 작업이 사실상 하나로 묶여 있음. 계정 없이는 아래 어떤 단계도 실제로 진행·테스트 불가
   - Apple Developer 쪽: App ID에 "Sign In with Apple" capability 활성화, Services ID 생성, Key(.p8) 발급 — Team ID/Key ID/Services ID/.p8 전부 Supabase 쪽 설정에 필요

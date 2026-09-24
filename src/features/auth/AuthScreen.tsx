@@ -1,10 +1,11 @@
-import { useRouter } from 'expo-router';
-import { useState } from 'react';
+import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
 import { supabase } from '../../services/supabase';
 import { EMAIL_TAKEN_ERROR, isEmailRegistered, looksLikeEmail } from './emailCheck';
+import { exchangeGoogleCode, GoogleSignInCancelledError, signInWithGoogle } from './googleAuth';
 import { MIN_PASSWORD_LENGTH, PASSWORD_TOO_SHORT_ERROR } from './password';
 
 type AuthMode = 'sign-in' | 'sign-up';
@@ -15,6 +16,7 @@ const PHONE_PATTERN = /^[0-9+\-\s()]{7,}$/;
 
 export function AuthScreen() {
   const router = useRouter();
+  const { code: googleCode } = useLocalSearchParams<{ code?: string }>();
   const [mode, setMode] = useState<AuthMode>('sign-in');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -22,11 +24,48 @@ export function AuthScreen() {
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   // Checked when the email field loses focus, so a taken address is caught before
   // the rest of the form is filled in rather than on submit.
   const [emailTaken, setEmailTaken] = useState(false);
+  // Web's Google flow is a full-page redirect (see googleAuth.ts), not the
+  // native openAuthSessionAsync popup, so it lands back here with ?code= in
+  // the URL instead of resolving in a function call. handledRef survives
+  // React StrictMode's dev double-invoke so the one-time code isn't exchanged
+  // twice; the effect fires once whether or not a code is even present.
+  const handledGoogleCodeRef = useRef(false);
+
+  useEffect(() => {
+    if (!googleCode || handledGoogleCodeRef.current) return;
+    handledGoogleCodeRef.current = true;
+    let cancelled = false;
+
+    setGoogleLoading(true);
+    exchangeGoogleCode(googleCode)
+      .catch(() => {
+        if (!cancelled) {
+          setError(
+            'Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.',
+          );
+        }
+      })
+      .finally(() => {
+        // Deliberately no router.replace here, on success or failure: on
+        // success, navigating to the exact same route remounted this screen
+        // and wiped state before AuthGate's own session-driven redirect to
+        // '/' ever got a chance to fire — the actual bug behind "still on
+        // sign-in after picking a Google account". On failure it also wiped
+        // the error message we just set, above. The stale ?code= left in the
+        // URL on failure is inert (single-use, already rejected) and harmless.
+        if (!cancelled) setGoogleLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [googleCode]);
 
   const isSignUp = mode === 'sign-up';
   const passwordsMatch = password === passwordConfirm;
@@ -134,6 +173,24 @@ export function AuthScreen() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setError(null);
+    setMessage(null);
+    setGoogleLoading(true);
+    try {
+      await signInWithGoogle();
+      // No further action needed here: the session change flows through
+      // useAuthStore's onAuthStateChange listener, and AuthGate redirects
+      // away from this screen on its own once session is set.
+    } catch (err) {
+      if (!(err instanceof GoogleSignInCancelledError)) {
+        setError('Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.');
+      }
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
+
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <View className="flex-1 justify-center gap-6 px-6">
@@ -195,8 +252,22 @@ export function AuthScreen() {
           label={isSignUp ? 'Sign Up' : 'Sign In'}
           variant="primary"
           loading={loading}
-          disabled={!canSubmit}
+          disabled={!canSubmit || googleLoading}
           onPress={handleSubmit}
+        />
+
+        <View className="flex-row items-center gap-3">
+          <View className="h-px flex-1 bg-surface" />
+          <Text className="font-sans text-xs text-text-secondary">or · 또는</Text>
+          <View className="h-px flex-1 bg-surface" />
+        </View>
+
+        <Button
+          label="Continue with Google"
+          variant="secondary"
+          loading={googleLoading}
+          disabled={loading || googleLoading}
+          onPress={handleGoogleSignIn}
         />
 
         {!isSignUp && (
