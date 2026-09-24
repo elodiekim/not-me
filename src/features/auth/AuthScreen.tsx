@@ -52,18 +52,19 @@ export function AuthScreen() {
         }
       })
       .finally(() => {
-        if (cancelled) return;
-        setGoogleLoading(false);
-        // Scrub the one-time-use code out of the URL either way — success
-        // flows through AuthGate's own redirect once session updates, this
-        // just prevents a stale ?code= sitting in the address bar.
-        router.replace('/sign-in');
+        // Deliberately no router.replace here, on success or failure: on
+        // success, navigating to the exact same route remounted this screen
+        // and wiped state before AuthGate's own session-driven redirect to
+        // '/' ever got a chance to fire — the actual bug behind "still on
+        // sign-in after picking a Google account". On failure it also wiped
+        // the error message we just set, above. The stale ?code= left in the
+        // URL on failure is inert (single-use, already rejected) and harmless.
+        if (!cancelled) setGoogleLoading(false);
       });
 
     return () => {
       cancelled = true;
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [googleCode]);
 
   const isSignUp = mode === 'sign-up';
