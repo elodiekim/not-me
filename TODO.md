@@ -82,6 +82,13 @@
   - **구글 가입 유저는 지금 이메일 가입 폼의 필수 휴대전화 입력을 건너뜀** → `profiles.phone`이 비어있는 상태로 시작함. 별도 "가입 직후 전화번호 입력" 화면은 새로 안 만들고, 이미 계획된 Edit Profile 화면(프로필 수정 항목 참고)에서 나중에 채우는 걸로 충분 — 지금 강제할 필요 없음
   - `handle_new_user()` 트리거가 OAuth 가입에도 그대로 타는지 확인 필요(현재는 이메일/비번 가입 기준으로 짜여 있음) — `raw_user_meta_data`에 `phone` 키가 없는 경우 정상적으로 null로 들어가는지 확인
   - 로그인 화면에 "Continue with Google" 버튼 추가(이메일/비번 폼과 나란히), 로딩 중 상태 처리
+- [ ] **애플 로그인 (Sign in with Apple)** (사용자 확인 · 2026-09-24) — 구글 로그인을 넣으면서 iOS에도 낼 계획이라면 사실상 필수: 애플 심사 가이드라인 4.8은 다른 서드파티/소셜 로그인을 제공하는 iOS 앱에 Sign in with Apple을 동등하게 제공하도록 요구함(안드로이드/웹은 해당 없음)
+  - **완전히 막혀있는 선행 조건**: Apple Developer Program 계정($99/년) 가입 필요 — `EAS Build → TestFlight`의 "iOS는 미착수" 항목과 **같은 계정**이라 두 작업이 사실상 하나로 묶여 있음. 계정 없이는 아래 어떤 단계도 실제로 진행·테스트 불가
+  - Apple Developer 쪽: App ID에 "Sign In with Apple" capability 활성화, Services ID 생성, Key(.p8) 발급 — Team ID/Key ID/Services ID/.p8 전부 Supabase 쪽 설정에 필요
+  - Supabase Dashboard의 Auth → Providers에서 Apple 활성화 + 위 값들 등록
+  - **iOS는 네이티브 플로우 필수**: 애플 정책상 iOS 앱에서는 `signInWithOAuth`류 웹 리다이렉트가 아니라 `expo-apple-authentication`(`AppleAuthenticationButton`, 시스템 네이티브 버튼·UI)로 아이덴티티 토큰을 받아 Supabase `signInWithIdToken({ provider: 'apple', token })`으로 넘기는 방식이어야 함 — 구글 로그인과 다른 코드 경로
+  - 구글과 동일한 이슈 재적용: 애플 가입 유저도 `profiles.phone` 없이 시작 → Edit Profile에서 나중에 채우는 것으로 충분
+  - 로그인 화면에 "Sign in with Apple" 버튼 추가 — 애플 HIG상 버튼 스타일(검정/흰색, 로고 규격)이 고정돼 있어 커스텀 디자인 여지가 거의 없음, 다른 로그인 버튼과 나란히 최소 동등한 크기로 배치
 - [ ] **`missions`/`reviews`에 DELETE RLS 정책이 아예 없음** (점검 중 발견 · 2026-07-27) — RLS는 정책 없는 커맨드를 기본 거부하므로 보안 문제는 아니지만(안전한 기본값), 그 결과 ①실제 유저도 자기 미션/리뷰 row를 삭제할 방법이 전혀 없음(취소=`status` 변경만 가능, 진짜 삭제 불가) ②이번 세션 REST 테스트 정리용 DELETE 호출들이 `Prefer: return=representation` 없이는 204로 "성공"처럼 보였지만 실제로는 0건 삭제됨 — 원격 프로젝트에 테스트 계정/미션/리뷰 잔여 데이터가 생각보다 많이 남아있을 수 있음(무해한 더미, 지금은 그대로 둠). 나중에 처리할 때: `missions`는 아마 본인 소유 + `requested`(미매칭) 상태에서만 삭제 허용이 안전(수락/완료된 건 기록 보존 목적으로 삭제 막는 게 나을 수 있음), `reviews`는 신뢰 신호라 작성자가 임의로 지울 수 있게 할지 자체를 판단 필요 — 마이그레이션은 항상 그렇듯 파일만 작성, 직접 적용 금지
 - [ ] 🚨 **메일 발송용 도메인 인증 — 출시 블로커** (2026-08-08 확인) — 현재 Resend를 커스텀 SMTP로 붙여뒀지만 도메인을 인증하지 않아서, 발신 주소가 테스트용 `onboarding@resend.dev`임. 이 상태에선 **Resend 계정 소유자 주소(`elodiekim93@gmail.com`) 딱 하나로만 발송되고 나머지는 전부 550으로 거절됨**. Gmail 별칭(`+t3`)도 다른 주소로 취급돼서 안 됨
   - **영향이 Confirm email 하나가 아님**: 비밀번호 재설정 메일도 같은 경로라 **똑같이 막힘**. 즉 지금 실사용자를 받으면 ①가입 확인 불가 ②비번 분실 시 계정 영구 복구 불가. Confirm email을 꺼도 재설정은 여전히 필요하므로 **도메인 인증은 토글과 무관하게 어차피 해야 함**
