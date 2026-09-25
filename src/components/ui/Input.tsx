@@ -29,7 +29,9 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
 
   return (
     <View>
-      {label && <Text className="mb-2 text-sm font-sans-medium text-text-primary">{label}</Text>}
+      {label && (
+        <Text className="mb-2 px-4 text-sm font-sans-medium text-text-primary">{label}</Text>
+      )}
       <View
         className={`h-14 flex-row items-center rounded-input border bg-surface px-4 ${
           error ? 'border-danger' : 'border-transparent'
