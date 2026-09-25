@@ -1,8 +1,10 @@
+import { FontAwesome6 } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
+import { COLORS } from '../../constants/colors';
 import { supabase } from '../../services/supabase';
 import { EMAIL_TAKEN_ERROR, isEmailRegistered, looksLikeEmail } from './emailCheck';
 import { exchangeGoogleCode, GoogleSignInCancelledError, signInWithGoogle } from './googleAuth';
@@ -295,13 +297,22 @@ export function AuthScreen() {
               Listed above Google per Apple's own guideline (HIG 4.8): when
               other social sign-in options are offered, Sign in with Apple
               should be at least as prominent, not below them. */}
-          <Button label="Continue with Apple" variant="secondary" disabled />
+          <Button
+            label="Continue with Apple"
+            variant="secondary"
+            disabled
+            // FontAwesome6's apple glyph sits smaller within its own box than
+            // google's does — same size prop renders visibly smaller, so this
+            // needs a larger number to actually look the same size next to it.
+            icon={<FontAwesome6 name="apple" brand size={18} color={COLORS.textPrimary} />}
+          />
           <Button
             label="Continue with Google"
             variant="secondary"
             loading={googleLoading}
             disabled={loading || googleLoading}
             onPress={handleGoogleSignIn}
+            icon={<FontAwesome6 name="google" brand size={14} color={COLORS.textPrimary} />}
           />
 
           <Pressable
