@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Image, Pressable, ScrollView, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Button, Input } from '../../components/ui';
 import { supabase } from '../../services/supabase';
@@ -193,14 +193,30 @@ export function AuthScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <View className="flex-1 justify-center gap-6 px-6">
-        <View className="items-center gap-1">
-          <Text className="text-2xl font-sans-bold text-text-primary">
-            {isSignUp ? 'Create your account' : 'Welcome back'}
-          </Text>
-          <Text className="text-sm text-text-secondary">
-            {isSignUp ? '계정을 만들어주세요' : '다시 만나서 반가워요'}
-          </Text>
+      <ScrollView
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          paddingHorizontal: 24,
+          paddingVertical: 32,
+          gap: 24,
+        }}
+        keyboardShouldPersistTaps="handled"
+      >
+        <View className="items-center gap-3">
+          <Image
+            source={require('../../../assets/logo/brand-logo.png')}
+            style={{ width: 164, height: 55 }}
+            resizeMode="contain"
+          />
+          <View className="items-center gap-1">
+            <Text className="text-2xl font-sans-bold text-text-primary">
+              {isSignUp ? 'Create your account' : 'Welcome back'}
+            </Text>
+            <Text className="text-sm text-text-secondary">
+              {isSignUp ? '계정을 만들어주세요' : '다시 만나서 반가워요'}
+            </Text>
+          </View>
         </View>
 
         <View className="gap-4">
@@ -235,6 +251,17 @@ export function AuthScreen() {
             onChangeText={setPassword}
             error={passwordTooShortError ?? error ?? undefined}
           />
+          {!isSignUp && (
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Forgot password?"
+              onPress={() => router.push('/forgot-password')}
+            >
+              <Text className="text-center text-sm text-text-secondary">
+                Forgot password? · 비밀번호를 잊으셨나요?
+              </Text>
+            </Pressable>
+          )}
           {isSignUp && (
             <Input
               label="Confirm Password"
@@ -262,32 +289,38 @@ export function AuthScreen() {
           <View className="h-px flex-1 bg-surface" />
         </View>
 
-        <Button
-          label="Continue with Google"
-          variant="secondary"
-          loading={googleLoading}
-          disabled={loading || googleLoading}
-          onPress={handleGoogleSignIn}
-        />
+        <View className="gap-3">
+          <Button
+            label="Continue with Google"
+            variant="secondary"
+            loading={googleLoading}
+            disabled={loading || googleLoading}
+            onPress={handleGoogleSignIn}
+          />
 
-        {!isSignUp && (
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Forgot password?"
-            onPress={() => router.push('/forgot-password')}
+            accessibilityLabel={
+              isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"
+            }
+            onPress={toggleMode}
           >
             <Text className="text-center text-sm text-text-secondary">
-              Forgot password? · 비밀번호를 잊으셨나요?
+              {isSignUp ? (
+                <>
+                  Already have an account?{' '}
+                  <Text className="font-sans-semibold text-primary">Sign In</Text>
+                </>
+              ) : (
+                <>
+                  Don&apos;t have an account?{' '}
+                  <Text className="font-sans-semibold text-primary">Sign Up</Text>
+                </>
+              )}
             </Text>
           </Pressable>
-        )}
-
-        <Button
-          label={isSignUp ? 'Already have an account? Sign In' : "Don't have an account? Sign Up"}
-          variant="ghost"
-          onPress={toggleMode}
-        />
-      </View>
+        </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
