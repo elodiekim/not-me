@@ -290,6 +290,12 @@ export function AuthScreen() {
         </View>
 
         <View className="gap-3">
+          {/* Placeholder only — disabled until an Apple Developer account
+              exists to register Sign in with Apple against (see TODO.md).
+              Listed above Google per Apple's own guideline (HIG 4.8): when
+              other social sign-in options are offered, Sign in with Apple
+              should be at least as prominent, not below them. */}
+          <Button label="Continue with Apple" variant="secondary" disabled />
           <Button
             label="Continue with Google"
             variant="secondary"
