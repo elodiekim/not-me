@@ -3,7 +3,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, LoadingIndicator } from '../../components/ui';
+import { Button, LoadingIndicator, Toast } from '../../components/ui';
 import { useCreateRequest } from '../../hooks/useCreateRequest';
 import { useMission } from '../../hooks/useMission';
 import { useUpdateMissionStatus } from '../../hooks/useUpdateMissionStatus';
@@ -14,10 +14,11 @@ export function SearchingScreen() {
   const { missionId, amount } = useLocalSearchParams<{ missionId?: string; amount?: string }>();
   // Realtime pushes status changes instantly; this poll is only a safety net for
   // dropped sockets, so 30s is plenty (was 2s when polling was the primary path).
-  const { data: mission } = useMission(missionId, { refetchInterval: 30000 });
+  const { data: mission, refetch } = useMission(missionId, { refetchInterval: 30000 });
   const updateStatus = useUpdateMissionStatus();
   const createRequest = useCreateRequest();
   const [expired, setExpired] = useState(false);
+  const [showCancelFailedToast, setShowCancelFailedToast] = useState(false);
 
   useEffect(() => {
     // 'cancelled' is excluded so the polling doesn't redirect to mission-status
@@ -53,6 +54,10 @@ export function SearchingScreen() {
     return () => clearTimeout(timer);
   }, [expired, mission, updateStatusMutate]);
 
+  // fromStatus guards against cancelling a mission a hero just accepted. On
+  // failure, stay put and refetch instead of bouncing home on a stale belief
+  // that it cancelled — the existing redirect effect above then takes over
+  // once the real (now 'accepted') status comes back.
   const handleCancel = async () => {
     if (missionId) {
       try {
@@ -63,7 +68,9 @@ export function SearchingScreen() {
           cancelledReason: 'requester',
         });
       } catch {
-        // Cancellation failed (e.g. offline) — never trap the user on this screen.
+        setShowCancelFailedToast(true);
+        refetch();
+        return;
       }
     }
     // One-shot signal so Home can confirm the cancel with a toast; the X (close)
@@ -157,6 +164,14 @@ export function SearchingScreen() {
           disabled={updateStatus.isPending}
         />
       </View>
+      {showCancelFailedToast && (
+        <Toast
+          message={
+            "That didn't go through — check the mission's status.\n반영되지 않았어요. 미션 상태를 확인해주세요."
+          }
+          onDismiss={() => setShowCancelFailedToast(false)}
+        />
+      )}
     </SafeAreaView>
   );
 }

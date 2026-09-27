@@ -98,6 +98,7 @@ export function MissionScreen() {
   const prevHeroIdRef = useRef<string | null | undefined>(undefined);
   const [showHeroBackedOutToast, setShowHeroBackedOutToast] = useState(false);
   const [isCancelSheetOpen, setIsCancelSheetOpen] = useState(false);
+  const [showCancelFailedToast, setShowCancelFailedToast] = useState(false);
   useEffect(() => {
     const prevHeroId = prevHeroIdRef.current;
     const heroBackedOut =
@@ -155,7 +156,9 @@ export function MissionScreen() {
   const heroId = mission.heroId;
 
   // fromStatus guards against cancelling something that moved on mid-tap — most
-  // importantly a mission the hero completed in the same moment.
+  // importantly a mission the hero completed in the same moment. On failure, stay
+  // put and refetch instead of bouncing home on a stale belief that it cancelled —
+  // the mission may actually be completed (hero paid, review pending) or still active.
   const handleCancel = async (fromStatus: MissionStatus) => {
     setIsCancelSheetOpen(false);
     try {
@@ -166,7 +169,9 @@ export function MissionScreen() {
         cancelledReason: 'requester',
       });
     } catch {
-      // Cancellation failed (e.g. offline) — never trap the user, still go home.
+      setShowCancelFailedToast(true);
+      refetch();
+      return;
     }
     // One-shot signal so Home can confirm the cancel with a toast.
     router.replace({ pathname: '/', params: { cancelled: '1' } });
@@ -308,6 +313,14 @@ export function MissionScreen() {
         <Toast
           message="Your hero had to step away · 새 히어로를 찾고 있어요"
           onDismiss={() => setShowHeroBackedOutToast(false)}
+        />
+      )}
+      {showCancelFailedToast && (
+        <Toast
+          message={
+            "That didn't go through — check the mission's status.\n반영되지 않았어요. 미션 상태를 확인해주세요."
+          }
+          onDismiss={() => setShowCancelFailedToast(false)}
         />
       )}
 
