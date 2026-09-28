@@ -23,6 +23,7 @@ export function ProfileScreen() {
   const {
     data: missions,
     isLoading: isHistoryLoading,
+    isError: isHistoryError,
     refetch: refetchHistory,
   } = useMissionHistory();
   // Tied to the pull gesture only — isRefetching also flips true for background
@@ -39,7 +40,11 @@ export function ProfileScreen() {
     return <LoadingIndicator message="Loading your profile..." />;
   }
 
-  if (isError || !profile) {
+  // isHistoryError also routes here (not just !profile) — requested/helped/earned
+  // are all derived from mission history, so a failed history fetch must not fall
+  // through to the real screen below, where missing data would render as 0/$0
+  // indistinguishable from a genuinely new user.
+  if (isError || isHistoryError || !profile) {
     return (
       <SafeAreaView
         className="flex-1 items-center justify-center gap-4 bg-background px-6"
@@ -48,7 +53,14 @@ export function ProfileScreen() {
         <Text className="text-sm text-text-secondary">
           Something went wrong.{'\n'}Please try again.
         </Text>
-        <Button label="Try Again" variant="secondary" onPress={() => refetch()} />
+        <Button
+          label="Try Again"
+          variant="secondary"
+          onPress={() => {
+            refetch();
+            refetchHistory();
+          }}
+        />
       </SafeAreaView>
     );
   }

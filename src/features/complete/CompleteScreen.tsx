@@ -10,7 +10,7 @@ import { StarRating } from './components/StarRating';
 export function CompleteScreen() {
   const router = useRouter();
   const { missionId } = useLocalSearchParams<{ missionId?: string }>();
-  const { data: mission, isLoading } = useMission(missionId);
+  const { data: mission, isLoading, isError, refetch } = useMission(missionId);
   const submitReview = useSubmitReview();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
@@ -27,6 +27,22 @@ export function CompleteScreen() {
 
   if (isLoading || mission?.hasReview) {
     return <LoadingIndicator message="Loading mission..." />;
+  }
+
+  // Without this, a failed fetch fell through to the form below with a silently
+  // disabled Submit button (mission?.heroId guard) and no explanation why.
+  if (isError || !mission) {
+    return (
+      <SafeAreaView
+        className="flex-1 items-center justify-center gap-4 bg-background px-6"
+        edges={['top']}
+      >
+        <Text className="text-sm text-text-secondary">
+          Something went wrong.{'\n'}Please try again.
+        </Text>
+        <Button label="Try Again" variant="secondary" onPress={() => refetch()} />
+      </SafeAreaView>
+    );
   }
 
   const handleSubmit = async () => {
