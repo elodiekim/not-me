@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Animated, Text, View } from 'react-native';
+import { COLORS } from '../../../constants/colors';
 
 interface TimelineStep {
   label: string;
@@ -46,7 +47,19 @@ export function StatusTimeline({ currentStep, pulseCurrentStep = false }: Status
         return (
           <View key={step.label} className="flex-row items-center gap-3">
             {isCurrent && pulseCurrentStep ? (
-              <Animated.View style={{ opacity: pulseOpacity }} className="h-3 w-3 rounded-full bg-primary" />
+              // NativeWind doesn't apply className to Animated.View (see
+              // Toast.tsx) — h-3 w-3 rounded-full bg-primary was silently
+              // dropped, rendering this dot at 0x0 (invisible) instead of
+              // pulsing. Same values, as inline style instead.
+              <Animated.View
+                style={{
+                  opacity: pulseOpacity,
+                  width: 12,
+                  height: 12,
+                  borderRadius: 9999,
+                  backgroundColor: COLORS.primary,
+                }}
+              />
             ) : (
               <View
                 className={`h-3 w-3 rounded-full ${isActive ? 'bg-primary' : 'bg-surface border border-text-disabled'}`}
