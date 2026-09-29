@@ -24,9 +24,21 @@ export function MissionCompleteScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
+      {/* NativeWind doesn't apply className to Animated.View (see Toast.tsx),
+          so the layout that centers this content and gives it room above the
+          buttons has to be inline style here instead of flex-1/items-center/
+          justify-center/gap-3/px-6 classes — those were silently dropped,
+          leaving this block sized to its own content and stuck at the top. */}
       <Animated.View
-        style={{ opacity, transform: [{ scale }] }}
-        className="flex-1 items-center justify-center gap-3 px-6"
+        style={{
+          flex: 1,
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: 12,
+          paddingHorizontal: 24,
+          opacity,
+          transform: [{ scale }],
+        }}
       >
         <Image source={CELEBRATE_CAT} style={{ width: 140, height: 140 }} resizeMode="contain" />
         <Text className="text-2xl font-sans-bold text-text-primary">Mission Complete!</Text>
