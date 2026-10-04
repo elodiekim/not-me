@@ -742,13 +742,13 @@ A one-off joke, not a real ad system. Parodies the "ad injected right after a pa
 
 ## Placement
 
-`CompleteScreen` (`/complete`), between the "Mission Complete! 바퀴벌레 문제 해결 완료!" message and the "How was your Hero?" review form. Must not cover or push down the Submit Review / Not now buttons.
+`CompleteScreen` (`/complete`), as a full-screen interstitial shown right after tapping Submit Review or Not now — not inline in the review form. Sitting inside the form (the original plan) interrupted the actual review task and undersold the joke; showing it as the next screen, right as the user is about to leave, lands the "ad right after you finish the thing" parody much more directly. "Skip in 3s" → "Skip ✕" in the top-right (a real 3-second delay, not a static label — the forced wait is the specific pattern being mocked) and a normal "Continue to NotMe" button both lead home.
 
 ## Copy
 
-"Ad" label + small card, styled with existing card tokens (rounded-card, soft shadow, surface background) so it looks like a real ad slot — the joke is in the content, not in visual clutter.
+Logo badge (the app's own cockroach illustration, with a red prohibition-circle-and-slash over it — red is the one deliberate exception to the single-accent-color rule below, since the "no pests" symbol depends on it to read instantly) + company name + fake rating + "Ad" label, then a tagline, then a CTA button — styled as an actual native-ad unit, not just a text card.
 
-Company name: **TBD**.
+Company name: **Segfault Pest Control**.
 
 Tagline:
 
@@ -758,10 +758,12 @@ Tagline:
 >
 > The bug you're looking for cannot be found.
 
+Everything inside the ad card (including the CTA button) uses the platform's default typeface rather than the app's own Poppins, and a single off-brand accent (`info` blue, not the app's yellow) for the CTA/rating/badge — both deliberately make the card read as "not designed by us," which sells the joke better than matching the app's own visual language would. All body copy inside the card is left-aligned (matching the header row), not centered — centering read as a generic quote card rather than ad copy.
+
 ## Rules
 
 - Exactly one instance, one screen. No rotation system, no other placements — a recurring bit stops being funny.
-- Not a real link. Tapping it shows a small toast ("농담이에요, 광고 없어요 🐱" or similar) instead of navigating anywhere.
+- Not a real link. Tapping the card triggers a quick panicked shake on the bug icon, then a small toast ("장난이에요, 광고 없어요 🐱") instead of navigating anywhere.
 - Never on the Hero side — this joke is specifically about the User's bug problem being "solved," which doesn't apply to the Hero's completion screen.
 
 ---
