@@ -393,9 +393,15 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] 사진은 원본 그대로(크롭 없음) `resizeMode: 'contain'` + 고정 폭(170)으로 크기만 축소, 캡션은 매거진 사진 캡션처럼 작고 이탤릭. 애니메이션 없음, `Button` 컴포넌트 재사용
 - 검증: `npx tsc --noEmit` / `npx eslint .` 통과, `expo start --web`으로 `/about/story?lang=en`, `?lang=kr` 200 응답 + Metro 번들 에러 없음 확인. **다만 이번 세션엔 브라우저 자동화 도구가 없어서 실제 화면을 클릭/스크롤해서 눈으로 확인은 못 했음 — 특히 사진 캡션 간격과 하이라이터 인용구 박스는 실기기에서 꼭 확인 필요**
 
-## 🟢 P3 · 이스터에그 (신규, `DESIGN.md`의 "Easter Egg: Fake Pest Control Ad" 참고)
-- [ ] `CompleteScreen`(`/complete`)의 "Mission Complete!" 메시지와 리뷰 폼 사이에 가짜 방역업체 광고 카드 하나 삽입. 회색 배경 + "Ad" 라벨 + 기존 카드 토큰(rounded-card/soft shadow), 탭하면 실제 링크 없이 토스트("농담이에요, 광고 없어요 🐱")만. 딱 이 화면 하나에만, 로테이션 없음. 히어로 쪽 화면엔 넣지 않음
-- [ ] 업체명 미정 — 문구("Need a permanent solution? / 404 Bugs / The bug you're looking for cannot be found.")는 확정, 업체명만 나중에 채워넣기
+## 🟢 P3 · 이스터에그 (완료 · 2026-10-05, `DESIGN.md`의 "Easter Egg: Fake Pest Control Ad" 참고)
+- [x] 업체명 확정: **Segfault Pest Control** — "404 Bugs" 펀치라인이랑 어울리게 프로그래밍 용어 패러디. Null Pointer/Stack Overflow 등도 고려했으나 가장 보편적으로 알려진 용어라 선택
+- [x] **처음 계획(완료 메시지와 리뷰 폼 사이에 인라인 카드)에서 전면 인터스티셜로 설계 변경** — 리뷰 작성 "Submit"/"Not now" 누른 직후, 홈 가기 전에 한 번 보여주는 방식으로 바꿈. 패러디 대상 자체가 "할 일 끝낸 직후 끼어드는 광고"라서, 폼 중간에 끼어있으면 리뷰 작성을 방해하면서 타이밍도 안 맞음 — 할 일(리뷰) 다 끝낸 시점에 끼어들어야 농담이 제대로 삼
+- [x] 진짜 광고처럼 보이도록 여러 차례 디자인 반복: 로고 뱃지(바퀴벌레 + 빨간 금지 표시) + 가짜 별점 + 자체 CTA 버튼("Get Protected →") 추가, 앱 폰트(Poppins) 대신 시스템 기본 폰트 사용, 앱 브랜드 색(노랑) 대신 전용 블루(`info`) 단일 포인트 컬러로 통일(초기엔 빨강+노랑+파랑 섞여서 산만했음), 본문 텍스트 왼쪽 정렬로 통일(가운데 정렬은 "인용구 카드" 같아서 광고 카피 느낌이 안 남)
+- [x] **진짜 전면광고처럼 "Skip in 3s" → "Skip ✕" 카운트다운** 추가 — 정적 라벨이 아니라 실제 3초 타이머(스킵을 강제로 기다리게 하는 것 자체가 패러디 대상인 패턴이라 진짜로 기다리게 만듦)
+- [x] 카드 탭하면 바퀴벌레 아이콘이 파르르 떨리는 애니메이션 후 토스트 표시("장난이에요, 광고 없어요 🐱")
+- [x] **발견된 버그**: `useSubmitReview`의 캐시 무효화가 `mission` 쿼리를 다시 불러오면서 `hasReview: true`로 바뀌는데, 기존에 있던 "이미 리뷰한 미션이면 홈으로 리다이렉트" 가드가 그 순간 바로 발동해서 광고 인터스티셜을 보여주기도 전에 홈으로 튕겨버림. `showAdInterstitial` 상태로 그 가드를 우회하도록 수정(실기기 테스트로 발견 — Not now 경로는 리뷰 제출이 없어서 멀쩡했고, Submit Review 경로에서만 재현됨)
+- [x] 딱 이 화면 하나에만, 로테이션 없음. 히어로 쪽 화면엔 넣지 않음(기존 규칙 그대로 유지)
+- [x] 검증: `npx tsc --noEmit`/`npx eslint .`/`npx prettier --check` 통과. Playwright로 실제 Submit Review 전체 플로우(별점→제출→인터스티셜→카운트다운→홈) 끝까지 확인, 버그 수정 전/후 비교 확인
 
 ## 🟢 P3 · 미션 완료 축하 애니메이션 (완료 · 2026-08-01, `DESIGN.md`의 "Exception: Mission Complete Celebration" 참고)
 - [x] ~~`MissionScreen` 위에 팝업 배너로 표시~~ → 히어로 쪽 `/hero/reward`(`RewardEarnedScreen`)와 대칭되는 **전용 화면**으로 재설계(사용자 요청 · 2026-08-01): `status`가 `completed`로 **실시간 전환되는 순간** `/mission-complete`(신규 `MissionCompleteScreen.tsx`)로 이동. scale-in "pop"(0.85→1.05→1.0) + fade는 새 화면 안에서 그대로 재현(RN `Animated`만 사용). 기존 `CelebrationBanner.tsx`는 로직 이식 후 삭제
