@@ -33,17 +33,20 @@ export function MissionDetailScreen() {
       await acceptMission.mutateAsync(mission.id);
       router.replace({ pathname: '/hero/active', params: { id: mission.id } });
     } catch (err) {
-      // 42501 (insufficient_privilege) is the specific code
-      // enforce_hero_approval_on_claim (0023) raises when hero_approved is
-      // false — everything else (0 rows matched, RLS restrictive-policy
-      // silent rejection, network errors) collapses to the generic "someone
-      // else got it first" message, since those cases really are
-      // indistinguishable from the client's point of view.
+      // 42501 (insufficient_privilege): enforce_hero_approval_on_claim (0023)
+      // when hero_approved is false. 23514 (check_violation): same trigger's
+      // backout rate limit (0031) — 3+ hero back-outs in the last hour.
+      // Everything else (0 rows matched, RLS restrictive-policy silent
+      // rejection, network errors) collapses to the generic "someone else got
+      // it first" message, since those cases really are indistinguishable
+      // from the client's point of view.
       const code = err && typeof err === 'object' && 'code' in err ? err.code : undefined;
       setAcceptError(
         code === '42501'
           ? "Your hero account isn't approved yet.\n히어로 승인 대기 중이에요."
-          : 'This mission was already taken by another hero.\n다른 히어로가 이미 수락했어요.',
+          : code === '23514'
+            ? "You've backed out of a few missions recently — try accepting again a bit later.\n최근에 미션을 여러 번 취소하셨어요. 잠시 후 다시 시도해주세요."
+            : 'This mission was already taken by another hero.\n다른 히어로가 이미 수락했어요.',
       );
     }
   };
