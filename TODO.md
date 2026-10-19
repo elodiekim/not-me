@@ -1,8 +1,8 @@
 # TODO
 
 > 현재 상태: **기능 MVP 거의 완성** — User↔Hero 플로우가 처음부터 끝까지 실제 Supabase 데이터로 동작(요청→매칭→완료→리뷰).
-> 인증 · Realtime · 위치/거리정렬 · 온보딩/스플래시 · Edit Profile(아바타 업로드) · Inbox 활동피드 · Total Earned · ESLint/Prettier까지 구현·검증 완료(대부분 Expo Web + Playwright 기준).
-> **남은 핵심**: 네이티브 실기기 검증(EAS Build → TestFlight) · 출시 전 이메일 인증 재활성화 · 핵심 유틸 단위 테스트 · 스토리지/비번 입력 서버측 검증 마감. 상세는 아래 미착수(`[ ]`) 항목 참고.
+> 인증 · Realtime · 위치/거리정렬 · 온보딩/스플래시 · Edit Profile(아바타 업로드) · Inbox 활동피드 · Total Earned · ESLint/Prettier · 핵심 유틸 단위 테스트(`npm test`)까지 구현·검증 완료(대부분 Expo Web + Playwright 기준).
+> **남은 핵심**: 네이티브 실기기 검증(EAS Build → TestFlight) · 출시 전 이메일 인증 재활성화 · 스토리지/비번 입력 서버측 검증 마감. 상세는 아래 미착수(`[ ]`) 항목 참고.
 
 ---
 
@@ -426,7 +426,11 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 추가된 devDependencies: `eslint`, `eslint-config-expo`, `prettier`, `eslint-config-prettier`(+ eslint 트랜지티브). 전부 devDependency라 런타임 무영향
   - 남은 lint 이슈: 처음 `react/no-unescaped-entities` 2건(ForgotPasswordScreen / MissionNotFound의 JSX 텍스트 내 `'`) — 표시상 동일한 `&apos;` 이스케이프로 안전하게 수정(로직/표시 변경 없음). **최종 lint 에러 0건**
   - 검증: `npm run lint`(에러 0), `npm run format:check`(All matched files use Prettier code style), `npx tsc --noEmit` 통과, `expo start --web` 부팅 확인(온보딩 정상 렌더 — 포맷팅이 로직 안 건드림). ※ 콘솔의 NativeWind dark-mode 경고는 이번 작업과 무관한 기존 경고
-- [ ] 핵심 훅 · 유틸 기본 테스트
+- [x] **핵심 유틸 단위 테스트** (완료 · 2026-10-20) — `jest-expo` 처음 도입(`npm test`로 실행). 서버 연결 없이 순수 계산만 하는 유틸 6개 대상 — 화면 전체(렌더링·로그인 상태 등) 테스트는 지금 단계에서 과해서 범위 밖으로 둠:
+  - `utils/distance.ts`(하버사인 거리 계산, m/km 포맷), `utils/missionExpiry.ts`(만료/정체 판정·경과 시간 — `jest.useFakeTimers()`로 시간 고정), `utils/formatEarned.ts`(금액 포맷 — 부동소수점 드리프트 케이스 포함), `features/about/lang.ts`(언어 파라미터 파싱), `features/auth/emailCheck.ts`의 `looksLikeEmail`(서버 호출하는 `isEmailRegistered`는 제외, `services/supabase` 모듈은 `jest.mock`으로 분리 — 안 그러면 import 시점에 env 체크로 throw함), `features/inbox/deriveActivityEvents.ts`(요청자/히어로 역할별 상태 분기, 리뷰 완료 시 이벤트 숨김, 정렬 — 가장 분기 많은 로직이라 비중 있게 작성)
+  - 훅(`useXxx`)들은 전부 Supabase/React Query에 강하게 결합돼 있어서 이번 범위에서 제외 — 목(mock) 비용 대비 실익이 적어서, 지금은 "서버 연결 없는 순수 로직"만 우선
+  - 테스트 작성 중 실수 하나 발견: `formatEarned(10.1 + 10.2)`가 `$20.30`인지 처음에 감으로 단정했다가 실제로 `node -e`로 돌려서 `.toFixed(2)` 반올림이 예상과 다른 케이스(`10.005` → `"10.01"`, 처음 추측한 `"10.00"`이 아님)가 있는 걸 확인 후 수정 — 부동소수점 반올림은 추측하지 말고 실제로 실행해서 확인할 것
+  - 검증: `npm test`(45개 전부 통과), `npx tsc --noEmit`/`npx eslint .`/`npx prettier --check` 통과
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
