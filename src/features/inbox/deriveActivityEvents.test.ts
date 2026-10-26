@@ -62,6 +62,18 @@ describe('deriveActivityEvents — user role', () => {
     expect(events).toHaveLength(0);
   });
 
+  it('reports a hero backing out, distinguished from a fresh request by updatedAt moving past createdAt', () => {
+    const [event] = deriveActivityEvents([
+      entry({
+        status: 'requested',
+        counterpartName: null, // hero_id is reset to null on back-out
+        createdAt: '2026-01-01T00:00:00.000Z',
+        updatedAt: '2026-01-01T00:05:00.000Z',
+      }),
+    ]);
+    expect(event.message).toBe('히어로가 수락을 취소했어요 — 다시 찾고 있어요');
+  });
+
   it('produces no event for a cancelled mission', () => {
     const events = deriveActivityEvents([entry({ status: 'cancelled' })]);
     expect(events).toHaveLength(0);

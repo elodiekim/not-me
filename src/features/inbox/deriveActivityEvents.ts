@@ -32,7 +32,20 @@ function deriveEvent(mission: MissionHistoryEntry): ActivityEvent | null {
           message: '미션이 완료됐어요 — 리뷰를 남겨주세요',
           route: { pathname: '/complete', params: { missionId: mission.id } },
         };
-      // requested (nothing happened yet) and cancelled (nothing to report) are skipped.
+      case 'requested':
+        // 'requested' covers two different histories that look identical in the
+        // current row: a request nobody has touched yet, and one a hero accepted
+        // and then backed out of (back-out resets status/hero_id right back to
+        // this same shape — see useCancelAcceptedMission). created_at and
+        // updated_at start out equal (same `now()` at insert, see 0001's
+        // set_updated_at trigger); only a later update — i.e. a back-out —
+        // moves updated_at past it. hero_id/counterpartName are already null by
+        // the time this is read, so the hero can't be named.
+        if (mission.updatedAt !== mission.createdAt) {
+          return { ...base, message: '히어로가 수락을 취소했어요 — 다시 찾고 있어요' };
+        }
+        return null;
+      // cancelled (nothing to report) is skipped.
       default:
         return null;
     }
