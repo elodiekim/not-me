@@ -431,6 +431,12 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 훅(`useXxx`)들은 전부 Supabase/React Query에 강하게 결합돼 있어서 이번 범위에서 제외 — 목(mock) 비용 대비 실익이 적어서, 지금은 "서버 연결 없는 순수 로직"만 우선
   - 테스트 작성 중 실수 하나 발견: `formatEarned(10.1 + 10.2)`가 `$20.30`인지 처음에 감으로 단정했다가 실제로 `node -e`로 돌려서 `.toFixed(2)` 반올림이 예상과 다른 케이스(`10.005` → `"10.01"`, 처음 추측한 `"10.00"`이 아님)가 있는 걸 확인 후 수정 — 부동소수점 반올림은 추측하지 말고 실제로 실행해서 확인할 것
   - 검증: `npm test`(45개 전부 통과), `npx tsc --noEmit`/`npx eslint .`/`npx prettier --check` 통과
+- [x] **전체 코드 리뷰에서 발견한 버그 2건 수정** (2026-10-26)
+  - 🔴 **미션 취소/완료 후 "활성 미션" 캐시가 안 지워짐** — `useUpdateMissionStatus`(요청자 취소·타임아웃 자동취소·히어로 완료 처리가 전부 이 훅을 씀)의 `onSuccess`가 `['activeMission']`을 무효화 안 하고 있었음(반면 `useCreateRequest`/`useCancelAcceptedMission`은 이미 하던 패턴). `RequestScreen`이 Reward→Confirm Location→Searching 아래 계속 마운트된 채로 살아있다는 기존 설계 때문에, 한 세션에서 미션을 완료/취소한 뒤 "Request Help"를 다시 누르면 **새 폼 대신 그 죽은 미션의 `/mission-status`로 튕기고, 앱 재시작 전까진 두 번째 요청을 아예 만들 수 없었음**. 한 세션에서 미션을 두 번 만들어보는 테스트가 그동안 없어서 못 잡았던 것으로 보임. `onSuccess`에 `['activeMission']` 무효화 한 줄 추가로 해결
+    - 검증: Playwright로 실제 버그 재현(수정 전 코드로 취소 후 재시도 → `/mission-status`로 튕김, 서버 status는 `cancelled` 정상 확인) → 수정 적용 후 동일 시나리오로 재시도 → `/request`에 머물며 새 폼 정상 렌더 확인(스크린샷). 클라이언트 전용 변경, DB 마이그레이션 없음
+  - 🟡 **히어로가 수락 후 취소(back-out)해도 Inbox에 아무 흔적이 안 남음** — back-out이 미션을 `requested`+`hero_id: null`로 되돌리는데, 이게 "아직 아무도 안 건드린 새 요청"과 상태값이 완전히 같아서 `deriveActivityEvents`가 `requested`를 무조건 "아직 아무 일도 없음"으로 처리하고 있었음. `created_at`/`updated_at`이 insert 시점엔 같은 `now()`라 정확히 일치하고, back-out처럼 그 뒤에 실제 UPDATE가 한 번이라도 있으면 `updated_at`만 밀린다는 점을 이용해 두 케이스를 구분 — `updatedAt !== createdAt`이면 "히어로가 수락을 취소했어요 — 다시 찾고 있어요" 이벤트 표시(hero_id가 이미 null이라 이름은 못 보여줌)
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npx prettier --check` 통과, `npm test`(46개, back-out 케이스 테스트 1건 추가) 통과
+  - PR 예정, main에 머지 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜

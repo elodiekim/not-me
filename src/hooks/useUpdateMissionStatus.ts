@@ -45,6 +45,11 @@ export function useUpdateMissionStatus() {
     onSuccess: (_data, { missionId }) => {
       queryClient.invalidateQueries({ queryKey: ['mission', missionId] });
       queryClient.invalidateQueries({ queryKey: ['missionHistory'] });
+      // Every status this hook can set (cancelled, completed, etc.) moves the
+      // mission out of ACTIVE_STATUSES — without this, RequestScreen/
+      // ConfirmLocationScreen's one-request-at-a-time guard keeps reading a
+      // stale "still active" result and blocks a genuinely new request.
+      queryClient.invalidateQueries({ queryKey: ['activeMission'] });
     },
   });
 }
