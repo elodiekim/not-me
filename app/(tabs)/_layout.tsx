@@ -9,7 +9,7 @@ export default function TabsLayout() {
         headerShown: false,
         tabBarActiveTintColor: COLORS.primary,
         tabBarInactiveTintColor: COLORS.textDisabled,
-        tabBarLabelStyle: { fontSize: 12, fontFamily: 'Poppins_500Medium' },
+        tabBarLabelStyle: { fontSize: 12, lineHeight: 16, fontFamily: 'Poppins_500Medium' },
         tabBarStyle: { borderTopColor: COLORS.surface },
       }}
     >
