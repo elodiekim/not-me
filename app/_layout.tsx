@@ -8,7 +8,7 @@ import {
   useFonts,
 } from '@expo-google-fonts/poppins';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { Redirect, Stack, useSegments } from 'expo-router';
+import { Redirect, Stack, useGlobalSearchParams, useSegments } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { ReactNode, useEffect } from 'react';
@@ -27,6 +27,18 @@ function AuthGate({ children }: { children: ReactNode }) {
   const { session, initializing } = useAuthStore();
   const hasOnboarded = useOnboardingStore((state) => state.hasOnboarded);
   const segments = useSegments();
+  // The portfolio's demo link is ?demo=1 on /sign-in, but a first-time visitor
+  // gets bounced through /onboarding first — a plain string Redirect href
+  // drops every query param, so without reattaching it here (and again in
+  // OnboardingScreen's own finish-onboarding redirect) the demo prefill never
+  // survives to the sign-in screen it was meant for. useGlobalSearchParams,
+  // not useLocalSearchParams: this runs above the Stack, outside any one
+  // screen's own route.
+  const { demo } = useGlobalSearchParams<{ demo?: string }>();
+  const onboardingHref = demo
+    ? { pathname: '/onboarding' as const, params: { demo } }
+    : '/onboarding';
+  const signInHref = demo ? { pathname: '/sign-in' as const, params: { demo } } : '/sign-in';
   // Deliberately global, not just on Settings' delete-account flow: an admin can
   // disable someone from notme-admin at any time, not only in response to that
   // user's own action, so this has to catch it wherever they happen to be.
@@ -64,16 +76,16 @@ function AuthGate({ children }: { children: ReactNode }) {
     if (inOnboarding || inPasswordReset) {
       return children;
     }
-    return <Redirect href="/onboarding" />;
+    return <Redirect href={onboardingHref} />;
   }
 
   // Onboarded or logged-in users should never land on the onboarding route.
   if (inOnboarding) {
-    return <Redirect href={session ? '/' : '/sign-in'} />;
+    return <Redirect href={session ? '/' : signInHref} />;
   }
 
   if (!session && !inAuthScreen && !inPasswordReset && !inAccountDeleted) {
-    return <Redirect href="/sign-in" />;
+    return <Redirect href={signInHref} />;
   }
 
   if (session && inAuthScreen) {
