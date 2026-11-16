@@ -1,5 +1,5 @@
 import * as Haptics from 'expo-haptics';
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import {
   AccessibilityInfo,
@@ -66,6 +66,11 @@ export function OnboardingScreen() {
   const [reduceMotion, setReduceMotion] = useState(false);
   const complete = useOnboardingStore((state) => state.complete);
   const isLastPage = page === LAST_INDEX;
+  // Carried over from AuthGate's redirect into here (see app/_layout.tsx) so
+  // the portfolio's ?demo=1 sign-in prefill still applies after onboarding,
+  // instead of silently dropping the moment a first-time visitor gets routed
+  // through this screen.
+  const { demo } = useLocalSearchParams<{ demo?: string }>();
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
@@ -75,7 +80,7 @@ export function OnboardingScreen() {
 
   const finish = async () => {
     await complete();
-    router.replace('/sign-in');
+    router.replace(demo ? { pathname: '/sign-in', params: { demo } } : '/sign-in');
   };
 
   const onLayout = (event: LayoutChangeEvent) => {
@@ -105,7 +110,12 @@ export function OnboardingScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <View className="h-12 flex-row items-center justify-end px-6">
-        <Pressable accessibilityRole="button" accessibilityLabel="Skip" onPress={finish} hitSlop={12}>
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel="Skip"
+          onPress={finish}
+          hitSlop={12}
+        >
           <Text className="text-base font-sans-medium text-text-secondary">Skip</Text>
         </Pressable>
       </View>
@@ -141,7 +151,9 @@ export function OnboardingScreen() {
                   >
                     {slide.title}
                   </Text>
-                  <Text className="text-center text-base text-text-secondary">{slide.subtitle}</Text>
+                  <Text className="text-center text-base text-text-secondary">
+                    {slide.subtitle}
+                  </Text>
                 </View>
               </View>
             ))}
@@ -219,7 +231,11 @@ function PageDot({
     extrapolate: 'clamp',
   });
 
-  return <Animated.View style={{ height: DOT_SIZE, width, borderRadius: DOT_SIZE / 2, backgroundColor }} />;
+  return (
+    <Animated.View
+      style={{ height: DOT_SIZE, width, borderRadius: DOT_SIZE / 2, backgroundColor }}
+    />
+  );
 }
 
 // Fades/rises in as the last slide approaches instead of popping into existence

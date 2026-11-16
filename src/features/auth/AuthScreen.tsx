@@ -16,13 +16,24 @@ type AuthMode = 'sign-in' | 'sign-up';
 // We only guard against obvious typos, not validate real numbers.
 const PHONE_PATTERN = /^[0-9+\-\s()]{7,}$/;
 
+// Public on purpose, same reasoning as notme-admin's demo.admin@notme.app:
+// the portfolio site links here with ?demo=1 so a visitor lands on a
+// pre-filled sign-in form instead of a dead end with no account to use —
+// but they still have to tap Sign In themselves, no auto-login. Unlike the
+// admin demo account, this one isn't read-only (it needs to actually create
+// and complete missions), so its safety comes from being tightly scoped
+// data (a pg_cron job only ever touches this one requester_id — see
+// 0033_demo_mission_bot.sql) rather than a write-blocking RLS policy.
+const DEMO_USER_CREDENTIALS = { email: 'demo.user.notme@gmail.com', password: 'notme-demo-1234' };
+
 export function AuthScreen() {
   const router = useRouter();
-  const { code: googleCode } = useLocalSearchParams<{ code?: string }>();
+  const { code: googleCode, demo } = useLocalSearchParams<{ code?: string; demo?: string }>();
+  const isDemo = demo === '1';
   const [mode, setMode] = useState<AuthMode>('sign-in');
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(isDemo ? DEMO_USER_CREDENTIALS.email : '');
+  const [password, setPassword] = useState(isDemo ? DEMO_USER_CREDENTIALS.password : '');
   const [passwordConfirm, setPasswordConfirm] = useState('');
   const [phone, setPhone] = useState('');
   const [loading, setLoading] = useState(false);
@@ -216,7 +227,11 @@ export function AuthScreen() {
               {isSignUp ? 'Create your account' : 'Welcome back'}
             </Text>
             <Text className="text-sm text-text-secondary">
-              {isSignUp ? '계정을 만들어주세요' : '다시 만나서 반가워요'}
+              {isDemo
+                ? 'Demo account filled in — just tap Sign In. · 데모 계정이 채워져 있어요 — Sign In만 눌러주세요.'
+                : isSignUp
+                  ? '계정을 만들어주세요'
+                  : '다시 만나서 반가워요'}
             </Text>
           </View>
         </View>
