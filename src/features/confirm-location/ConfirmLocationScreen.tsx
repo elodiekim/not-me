@@ -2,9 +2,9 @@ import { Feather } from '@expo/vector-icons';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import * as Location from 'expo-location';
 import { useCallback, useEffect, useState } from 'react';
-import { Keyboard, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input, LoadingIndicator } from '../../components/ui';
+import { Button, DismissKeyboardView, Input, LoadingIndicator } from '../../components/ui';
 import { goToActiveMission, useActiveMission } from '../../hooks/useActiveMission';
 import { useCreateRequest } from '../../hooks/useCreateRequest';
 
@@ -114,7 +114,7 @@ export function ConfirmLocationScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Pressable className="flex-1" onPress={Keyboard.dismiss} accessible={false}>
+      <DismissKeyboardView className="flex-1">
         <View className="flex-row items-center px-6 py-4">
           <Pressable
             accessibilityRole="button"
@@ -144,6 +144,16 @@ export function ConfirmLocationScreen() {
             </Text>
           )}
 
+          {/* Address auto-fill (reverseGeocodeAsync) isn't supported on web — this
+              is the only platform where detecting finishes with no address at all,
+              so the hint only needs to cover that case. */}
+          {!detecting && !address && (
+            <Text className="font-sans text-sm text-text-secondary">
+              Couldn&apos;t detect your location — type any address below.{'\n'}위치를 자동으로 찾지
+              못했어요 — 아무 주소나 입력해주세요.
+            </Text>
+          )}
+
           <Input
             label="Address"
             placeholder="Enter your address"
@@ -170,7 +180,7 @@ export function ConfirmLocationScreen() {
             onPress={handleConfirm}
           />
         </View>
-      </Pressable>
+      </DismissKeyboardView>
     </SafeAreaView>
   );
 }

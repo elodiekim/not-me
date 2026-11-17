@@ -1,9 +1,9 @@
 import { Ionicons } from '@expo/vector-icons';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Image, Keyboard, Pressable, Text, View } from 'react-native';
+import { Animated, Image, Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input, LoadingIndicator, Toast } from '../../components/ui';
+import { Button, DismissKeyboardView, Input, LoadingIndicator, Toast } from '../../components/ui';
 import { COLORS } from '../../constants/colors';
 import { useMission } from '../../hooks/useMission';
 import { useSubmitReview } from '../../hooks/useSubmitReview';
@@ -217,7 +217,7 @@ export function CompleteScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Pressable className="flex-1" onPress={Keyboard.dismiss} accessible={false}>
+      <DismissKeyboardView className="flex-1">
         <View className="flex-1 gap-8 px-6 pt-8">
           <View className="items-center gap-3">
             <Image
@@ -260,7 +260,7 @@ export function CompleteScreen() {
             onPress={() => setShowAdInterstitial(true)}
           />
         </View>
-      </Pressable>
+      </DismissKeyboardView>
     </SafeAreaView>
   );
 }
