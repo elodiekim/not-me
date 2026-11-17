@@ -1,9 +1,9 @@
 import { Feather } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useMemo, useState } from 'react';
-import { Keyboard, Pressable, Text, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { Button, Input } from '../../components/ui';
+import { Button, DismissKeyboardView, Input } from '../../components/ui';
 import { MAX_REWARD_AMOUNT } from '../../constants/mission';
 
 const PRESET_AMOUNTS = [10, 20];
@@ -41,7 +41,7 @@ export function RewardScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <Pressable className="flex-1" onPress={Keyboard.dismiss} accessible={false}>
+      <DismissKeyboardView className="flex-1">
         <View className="flex-row items-center px-6 py-4">
           <Pressable
             accessibilityRole="button"
@@ -104,7 +104,7 @@ export function RewardScreen() {
             onPress={handleConfirm}
           />
         </View>
-      </Pressable>
+      </DismissKeyboardView>
     </SafeAreaView>
   );
 }
