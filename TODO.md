@@ -447,7 +447,12 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
     - `dist/`는 gitignore 대상이라 `expo export`를 다시 돌릴 때마다 `vercel.json`/`.vercelignore`/`.vercel` 링크가 전부 날아감 — 재배포할 땐 `npx expo export -p web` 후 이 두 파일을 `dist/`에 다시 써넣고 `cd dist && npx vercel --prod --yes` 순서로 진행할 것 (루트의 `vercel.json`은 나중에 GitHub 연동되면 쓰일 설정이고, 지금의 수동 배포 경로와는 별개)
   - **`?demo=1` 로그인 프리필**: notme-admin의 `demo.admin@notme.app` 패턴 그대로 — `AuthScreen`에 `?demo=1`이면 데모 요청자 이메일/비번 프리필, 자동 로그인은 안 하고 Sign In은 직접 눌러야 함. **직접 재현하다 발견한 버그**: 첫 방문자는 `AuthGate`가 `/onboarding`으로 먼저 보내는데, `<Redirect href="/onboarding">`(문자열)가 쿼리 파라미터를 전부 버려서 `?demo=1`이 거기서 증발 — 온보딩 끝나고 `/sign-in`에 도착했을 땐 프리필이 전혀 안 먹음. `app/_layout.tsx`(온보딩행 리다이렉트)와 `OnboardingScreen.tsx`(온보딩 종료 시 `/sign-in`행 리다이렉트) 양쪽에서 `demo` 파라미터를 읽어 object 형태 href로 이어붙이도록 수정해서 끝까지 보존되게 함
   - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과. 실제 배포된 `not-me-app.vercel.app`에 Playwright로 `?demo=1`→온보딩 Skip→로그인 폼 프리필 확인→"Sign In" 실클릭→실제 홈 화면(아바타·탭바·실제 Supabase 데이터) 렌더까지 라이브로 직접 확인
-  - **미적용**: `0033` 마이그레이션은 아직 실행 안 됨(항상 그렇듯 SQL만 작성, 사용자가 Supabase에서 직접 실행). 그 전까진 데모 로그인은 되지만 데모 미션 요청이 영원히 "Looking for a hero..."에서 멈춤 — 마이그레이션 적용 후 실제 cron 동작 검증 필요
+  - **미적용 → 적용 완료(2026-11-17)**: `0033` 마이그레이션 실행 완료. 데모 계정으로 실제 미션 1건 생성 후 지켜봄 — `requested`(0초)→`accepted`(~6초)→`on_the_way`(~16초)→`arrived`(~26초)→`completed`(~36초)로 설계한 타이밍 그대로 정상 진행 확인
+  - **실사용 중 발견한 버그 — 웹에서 Confirm Location 주소 입력이 아예 안 됨** (사용자가 데모 플로우 직접 눌러보다 발견 · 2026-11-17): `ConfirmLocationScreen`/`RewardScreen`(custom amount)/`CompleteScreen`(리뷰 코멘트) 셋 다 화면 전체를 `<Pressable onPress={Keyboard.dismiss}>`로 감싸서 "입력창 바깥 탭하면 키보드 닫기"를 구현하고 있었는데, **웹에서는 이 감싸기 자체가 안의 모든 TextInput을 포커스 불가로 만듦** — react-native-web의 Pressable이 자기 press-state 추적용으로 pointerdown에 `preventDefault()`를 거는데, 이게 브라우저의 "클릭한 요소로 포커스 이동" 기본 동작까지 같이 막아버림(Playwright로 직접 확인: `.click()` 직후 `document.activeElement`가 계속 `BODY`). 네이티브에선 이 문제가 없어서(소프트키보드 자체가 다른 메커니즘) 여태 안 드러났던 것 — 이번에 웹 배포하면서 처음 만들어진 사용 경로라 발견됨
+    - `Keyboard.dismiss`도 웹에선 어차피 no-op(닫을 소프트키보드가 없음) — 새 공용 컴포넌트 `components/ui/DismissKeyboardView.tsx`로 뺌: 네이티브는 기존 Pressable 그대로, 웹은 그냥 평범한 `View`로 분기(할 일 자체가 없으니 감싸기를 안 함). 세 화면 전부 이걸로 교체, 중복 로직 제거
+    - 겸사겸사 Confirm Location에 웹 전용 안내 추가: 위치 자동감지가 끝났는데 주소가 비어있으면(=웹에서 reverseGeocodeAsync 미지원으로 실패한 경우) "위치를 자동으로 찾지 못했어요 — 아무 주소나 입력해주세요" 문구 표시
+    - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과. 로컬 웹에서 Playwright로 세 입력창(주소/커스텀 리워드 금액) 전부 클릭 후 타이핑이 실제로 값에 반영되는지 재확인 완료(수정 전엔 전부 빈 값으로 멈춰있었음)
+  - PR 예정
   - PR 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
