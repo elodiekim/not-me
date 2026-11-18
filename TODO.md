@@ -462,8 +462,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] **탭바가 홈 인디케이터 영역까지 내려앉아있던 버그** (시뮬레이터 복구 직후 사용자가 발견 · 2026-11-18) — 같은 날 다른 세션이 웹의 탭 라벨 잘림을 고치면서(`cab645d`) `tabBarStyle`에 `height: 64, paddingBottom: 10` 같은 고정값을 넣었는데, React Navigation의 `BottomTabBar`가 원래 `insets.bottom`(iPhone 홈 인디케이터 안전영역, 보통 34px)을 자동으로 더해주는 걸 이 고정값이 그대로 덮어써버림. 웹은 `insets.bottom`이 항상 0이라 멀쩡해 보였지만, 네이티브에선 탭바가 안전영역을 침범할 만큼 내려앉음
   - `app/(tabs)/_layout.tsx`에서 `useSafeAreaInsets()`로 `insets.bottom`을 가져와 `height`/`paddingBottom`에 더해주는 걸로 수정(`64 + insets.bottom`, `10 + insets.bottom`) — 웹은 0 더해지니 기존 수정 그대로 유지, 네이티브만 안전영역 복원됨
   - 검증: iOS 시뮬레이터에서 수정 전/후 스크린샷 비교 — 수정 전엔 탭 라벨이 홈 인디케이터 바로 위까지 붙어있었는데, 수정 후엔 정상적인 여백 확인. 웹도 재확인해서 라벨 잘림 회귀 없음 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
-- [x] **Home 화면 간격 조정 — 고양이-버튼, Hero-카드 사이 당기기** (사용자 요청 · 2026-11-18) — 고양이 이미지 wrapper에 `p-6`가 붙어있어서 바깥 `gap-6`이랑 겹쳐 Request Help 버튼 위쪽에만 48px(다른 구간의 두 배) 간격이 생기던 것 발견, 패딩 제거. Header-Hero-BecomeHero 세 섹션이 `ScrollView`의 균일한 `gap: 32`로 묶여 있던 것도 분리 — Header-Hero는 32px 그대로 유지(위쪽 여유는 괜찮다고 판단), Hero-BecomeHero만 24px로 당겨서 "Wanna be a Hero?" 카드가 더 가까이 올라오게 함
-  - 검증: Playwright 스크린샷으로 수정 전/후 비교 — Request Help가 고양이 바로 아래로 붙고, 카드까지 스크롤 없이 한 화면에 들어오는 것 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
+- [x] **Home 화면 간격 조정 — 고양이-버튼, Hero-카드 사이 재조정** (사용자 요청 · 여러 차례 스크린샷 비교로 반복 조정 · 2026-11-18) — 고양이 이미지 wrapper에 `p-6`가 붙어있어서 바깥 `gap-6`이랑 겹쳐 Request Help 버튼 위쪽에만 48px(다른 구간의 두 배) 간격이 생기던 것 발견, 패딩 제거하고 `pt-2`(8px)만 살짝 남겨서 고양이 위쪽에 최소한의 숨 쉴 공간만 유지
+  - Hero-BecomeHero 간격은 Header-Hero(32px)와 분리해서 따로 조정 가능하게 구조 변경 — 처음 24px로 당겼다가 "너무 올라갔다"는 피드백으로 32px(원래 값)로 되돌린 뒤, 버튼 쪽이 짧아진 만큼 재균형 맞추려고 최종적으로 36px(원래보다 살짝 더 내림)로 조정
+  - 검증: 각 단계마다 Playwright 스크린샷으로 직접 비교. 최종본에서 탭바 위 여백 충분히 남는 것, 스크롤 없이 카드까지 한 화면에 들어오는 것 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
   - PR 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성

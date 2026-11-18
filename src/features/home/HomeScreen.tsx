@@ -28,11 +28,11 @@ export function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      {/* Header-to-Hero keeps the wider 32px gap (gap-8); only Hero-to-BecomeHero
-          tightens to 24px (the ScrollView's own gap) — pulls the "Wanna be a
-          Hero?" card up closer to the primary action instead of leaving it as
-          far down as the top-of-screen breathing room. */}
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 24 }}>
+      {/* Header-to-Hero keeps the original 32px gap (gap-8); only Hero-to-
+          BecomeHero nudges slightly wider (36px) to rebalance against the
+          Hero section's own content shrinking a bit shorter (tighter cat-to-
+          button spacing). */}
+      <ScrollView contentContainerStyle={{ padding: 24, gap: 36 }}>
         <View className="gap-8">
           <HomeHeader onBellPress={() => setToastMessage('Coming soon · 곧 만나요')} />
           <HeroSection />
