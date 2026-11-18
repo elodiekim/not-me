@@ -19,10 +19,11 @@ export function HeroSection() {
         </Text>
       </View>
 
-      {/* No vertical padding here — the outer gap-6 already spaces this from
-          the text above and the button below; the old p-6 doubled that to
-          48px below, pushing Request Help further down than intended. */}
-      <View className="items-center justify-center self-center">
+      {/* Only a little extra space above (pt-2), none below — the outer gap-6
+          alone governs the gap to Request Help below; the old p-6 added that
+          same amount on both sides, doubling it to 48px below and pushing
+          the button further down than intended. */}
+      <View className="items-center justify-center self-center pt-2">
         <Image
           source={require('../../../../assets/characters/hero-cat.png')}
           style={{ width: 200, height: 200 }}
