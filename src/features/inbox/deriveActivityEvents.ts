@@ -16,20 +16,24 @@ function deriveEvent(mission: MissionHistoryEntry): ActivityEvent | null {
   const base = { id: mission.id, timestamp: mission.updatedAt };
 
   if (mission.role === 'user') {
-    const hero = mission.counterpartName ?? '히어로';
+    const heroEn = mission.counterpartName ?? 'Your hero';
+    const heroKo = mission.counterpartName ?? '히어로';
     switch (mission.status) {
       case 'accepted':
-        return { ...base, message: `${hero}님이 요청을 수락했어요` };
+        return {
+          ...base,
+          message: `${heroEn} accepted your request.\n${heroKo}님이 요청을 수락했어요`,
+        };
       case 'on_the_way':
-        return { ...base, message: `${hero}님이 가는 중이에요` };
+        return { ...base, message: `${heroEn} is on the way.\n${heroKo}님이 가는 중이에요` };
       case 'arrived':
-        return { ...base, message: `${hero}님이 도착했어요` };
+        return { ...base, message: `${heroEn} has arrived.\n${heroKo}님이 도착했어요` };
       case 'completed':
         // Once reviewed, the action is done — nothing left to surface.
         if (mission.hasReview) return null;
         return {
           ...base,
-          message: '미션이 완료됐어요 — 리뷰를 남겨주세요',
+          message: 'Mission complete — leave a review.\n미션이 완료됐어요 — 리뷰를 남겨주세요',
           route: { pathname: '/complete', params: { missionId: mission.id } },
         };
       case 'requested':
@@ -42,7 +46,11 @@ function deriveEvent(mission: MissionHistoryEntry): ActivityEvent | null {
         // moves updated_at past it. hero_id/counterpartName are already null by
         // the time this is read, so the hero can't be named.
         if (mission.updatedAt !== mission.createdAt) {
-          return { ...base, message: '히어로가 수락을 취소했어요 — 다시 찾고 있어요' };
+          return {
+            ...base,
+            message:
+              'Your hero backed out — searching again.\n히어로가 수락을 취소했어요 — 다시 찾고 있어요',
+          };
         }
         return null;
       // cancelled (nothing to report) is skipped.
@@ -53,9 +61,13 @@ function deriveEvent(mission: MissionHistoryEntry): ActivityEvent | null {
 
   // role === 'hero': the only thing worth notifying about is a review received.
   if (mission.hasReview) {
-    const requester = mission.counterpartName ?? '요청자';
+    const requesterEn = mission.counterpartName ?? 'The requester';
+    const requesterKo = mission.counterpartName ?? '요청자';
     const stars = mission.reviewRating ?? 0;
-    return { ...base, message: `${requester}님이 ★${stars} 리뷰를 남겼어요` };
+    return {
+      ...base,
+      message: `${requesterEn} left a ★${stars} review.\n${requesterKo}님이 ★${stars} 리뷰를 남겼어요`,
+    };
   }
 
   return null;

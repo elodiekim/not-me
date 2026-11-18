@@ -26,29 +26,31 @@ function entry(overrides: Partial<MissionHistoryEntry>): MissionHistoryEntry {
 describe('deriveActivityEvents — user role', () => {
   it('reports the hero accepting', () => {
     const [event] = deriveActivityEvents([entry({ status: 'accepted' })]);
-    expect(event.message).toBe('Minjun님이 요청을 수락했어요');
+    expect(event.message).toBe('Minjun accepted your request.\nMinjun님이 요청을 수락했어요');
   });
 
   it('reports the hero on the way', () => {
     const [event] = deriveActivityEvents([entry({ status: 'on_the_way' })]);
-    expect(event.message).toBe('Minjun님이 가는 중이에요');
+    expect(event.message).toBe('Minjun is on the way.\nMinjun님이 가는 중이에요');
   });
 
   it('reports the hero arriving', () => {
     const [event] = deriveActivityEvents([entry({ status: 'arrived' })]);
-    expect(event.message).toBe('Minjun님이 도착했어요');
+    expect(event.message).toBe('Minjun has arrived.\nMinjun님이 도착했어요');
   });
 
   it('falls back to a generic label when counterpartName is null', () => {
     const [event] = deriveActivityEvents([entry({ status: 'accepted', counterpartName: null })]);
-    expect(event.message).toBe('히어로님이 요청을 수락했어요');
+    expect(event.message).toBe('Your hero accepted your request.\n히어로님이 요청을 수락했어요');
   });
 
   it('prompts for a review once completed and not yet reviewed', () => {
     const [event] = deriveActivityEvents([
       entry({ status: 'completed', hasReview: false, id: 'm-42' }),
     ]);
-    expect(event.message).toBe('미션이 완료됐어요 — 리뷰를 남겨주세요');
+    expect(event.message).toBe(
+      'Mission complete — leave a review.\n미션이 완료됐어요 — 리뷰를 남겨주세요',
+    );
     expect(event.route).toEqual({ pathname: '/complete', params: { missionId: 'm-42' } });
   });
 
@@ -71,7 +73,9 @@ describe('deriveActivityEvents — user role', () => {
         updatedAt: '2026-01-01T00:05:00.000Z',
       }),
     ]);
-    expect(event.message).toBe('히어로가 수락을 취소했어요 — 다시 찾고 있어요');
+    expect(event.message).toBe(
+      'Your hero backed out — searching again.\n히어로가 수락을 취소했어요 — 다시 찾고 있어요',
+    );
   });
 
   it('produces no event for a cancelled mission', () => {
@@ -85,14 +89,14 @@ describe('deriveActivityEvents — hero role', () => {
     const [event] = deriveActivityEvents([
       entry({ role: 'hero', status: 'completed', hasReview: true, reviewRating: 5 }),
     ]);
-    expect(event.message).toBe('Minjun님이 ★5 리뷰를 남겼어요');
+    expect(event.message).toBe('Minjun left a ★5 review.\nMinjun님이 ★5 리뷰를 남겼어요');
   });
 
   it('treats a missing rating as ★0 rather than throwing', () => {
     const [event] = deriveActivityEvents([
       entry({ role: 'hero', status: 'completed', hasReview: true, reviewRating: null }),
     ]);
-    expect(event.message).toBe('Minjun님이 ★0 리뷰를 남겼어요');
+    expect(event.message).toBe('Minjun left a ★0 review.\nMinjun님이 ★0 리뷰를 남겼어요');
   });
 
   it('produces no event when there is no review yet', () => {
