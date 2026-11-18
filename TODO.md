@@ -452,7 +452,12 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
     - `Keyboard.dismiss`도 웹에선 어차피 no-op(닫을 소프트키보드가 없음) — 새 공용 컴포넌트 `components/ui/DismissKeyboardView.tsx`로 뺌: 네이티브는 기존 Pressable 그대로, 웹은 그냥 평범한 `View`로 분기(할 일 자체가 없으니 감싸기를 안 함). 세 화면 전부 이걸로 교체, 중복 로직 제거
     - 겸사겸사 Confirm Location에 웹 전용 안내 추가: 위치 자동감지가 끝났는데 주소가 비어있으면(=웹에서 reverseGeocodeAsync 미지원으로 실패한 경우) "위치를 자동으로 찾지 못했어요 — 아무 주소나 입력해주세요" 문구 표시
     - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과. 로컬 웹에서 Playwright로 세 입력창(주소/커스텀 리워드 금액) 전부 클릭 후 타이핑이 실제로 값에 반영되는지 재확인 완료(수정 전엔 전부 빈 값으로 멈춰있었음)
-  - PR 예정
+  - PR #108, PR #109, main에 머지 완료
+- [x] **네이티브 빌드가 아예 안 뜨던 버그 — box-shadow 쓰는 화면마다 Metro 번들링 자체가 크래시** (사용자가 iOS 시뮬레이터 연결 안 된다고 발견 · 2026-11-18) — "시뮬레이터 연결 안 됨"의 실제 원인은 네트워크/디바이스 문제가 아니라 **Metro가 번들을 만드는 중에 매번 죽고 있어서** JS가 시뮬레이터로 아예 전달이 안 되던 것이었음
+  - **원인**: NativeWind가 쓰는 `react-native-css-interop@0.2.6`의 `parseDeclaration.ts` switch문에서 `"box-shadow"` 케이스에 `return`/`break`이 빠져 있어서, box-shadow 스타일(카드의 soft shadow 등)을 처리하자마자 바로 아래 `"aspect-ratio"` 케이스로 **그대로 fallthrough** — box-shadow 값 객체를 엉뚱하게 aspect-ratio 파서에 넘겨서 `Cannot read properties of undefined (reading '0')`로 터짐. 웹은 실제 브라우저 CSS를 쓰고 이 네이티브 전용 파서 자체를 안 거쳐서 멀쩡했던 것 — 이 프로젝트 코드가 아니라 라이브러리 자체 버그. box-shadow를 쓰는 화면(카드 대부분)이 있는 한 네이티브 빌드는 이 문제를 계속 겪었을 것으로 보임
+  - 직접 디버그 로그 심어서 크래시 직전 `aspectRatio` 인자가 실제로는 box-shadow 객체(`{color, xOffset, yOffset, blur, spread, inset}`)인 걸 확인 후 원인 특정. 패치 버전(`react-native-css-interop@0.2.7`)도 이 switch문은 그대로라 버전 올리기로는 해결 안 됨
+  - `patch-package` 신규 devDependency로 추가(+ `postinstall` 스크립트) — `patches/react-native-css-interop+0.2.6.patch`에 `return;` 한 줄 추가 패치 저장, `npm install` 때마다 자동 재적용되게 함. node_modules 직접 수정은 `npm install` 한 번이면 날아가서 영구 저장이 이 방법 말고는 없음(라이브러리 자체를 포크하거나 PR 올리는 건 과함)
+  - 검증: 패치 제거 후 `npm install`로 재현 확인 → 깨끗한 상태에서 `npm install` 한 번으로 postinstall이 패치를 자동 재적용하는지 확인 → iOS 시뮬레이터에서 Metro 번들링 성공 + 로그인 화면부터 Inbox(box-shadow 카드 포함)까지 실제 렌더링 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
   - PR 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
