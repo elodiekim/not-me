@@ -26,6 +26,7 @@ const queryClient = new QueryClient();
 function AuthGate({ children }: { children: ReactNode }) {
   const { session, initializing } = useAuthStore();
   const hasOnboarded = useOnboardingStore((state) => state.hasOnboarded);
+  const resetOnboarding = useOnboardingStore((state) => state.reset);
   const segments = useSegments();
   // The portfolio's demo link is ?demo=1 on /sign-in, but a first-time visitor
   // gets bounced through /onboarding first — a plain string Redirect href
@@ -39,6 +40,17 @@ function AuthGate({ children }: { children: ReactNode }) {
     ? { pathname: '/onboarding' as const, params: { demo } }
     : '/onboarding';
   const signInHref = demo ? { pathname: '/sign-in' as const, params: { demo } } : '/sign-in';
+  // A demo visitor should see the onboarding intro on every visit, not just
+  // their first ever one — without this, a hasOnboarded flag persisted from
+  // an earlier demo session would skip straight to sign-in on a repeat visit.
+  // Mount-only: fires once per full page load, so it can't re-fire (and
+  // re-redirect) once onboarding completes later in this same session.
+  useEffect(() => {
+    if (demo) {
+      resetOnboarding();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   // Deliberately global, not just on Settings' delete-account flow: an admin can
   // disable someone from notme-admin at any time, not only in response to that
   // user's own action, so this has to catch it wherever they happen to be.
