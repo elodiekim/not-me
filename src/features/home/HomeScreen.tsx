@@ -1,6 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useState } from 'react';
-import { ScrollView } from 'react-native';
+import { ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { Toast } from '../../components/ui';
 import { BecomeHeroSection } from './components/BecomeHeroSection';
@@ -28,9 +28,15 @@ export function HomeScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
-      <ScrollView contentContainerStyle={{ padding: 24, gap: 32 }}>
-        <HomeHeader onBellPress={() => setToastMessage('Coming soon · 곧 만나요')} />
-        <HeroSection />
+      {/* Header-to-Hero keeps the wider 32px gap (gap-8); only Hero-to-BecomeHero
+          tightens to 24px (the ScrollView's own gap) — pulls the "Wanna be a
+          Hero?" card up closer to the primary action instead of leaving it as
+          far down as the top-of-screen breathing room. */}
+      <ScrollView contentContainerStyle={{ padding: 24, gap: 24 }}>
+        <View className="gap-8">
+          <HomeHeader onBellPress={() => setToastMessage('Coming soon · 곧 만나요')} />
+          <HeroSection />
+        </View>
         <BecomeHeroSection onPress={() => router.push('/hero')} />
       </ScrollView>
       {toastMessage && <Toast message={toastMessage} onDismiss={handleToastDismiss} />}

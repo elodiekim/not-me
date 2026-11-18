@@ -458,6 +458,12 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 직접 디버그 로그 심어서 크래시 직전 `aspectRatio` 인자가 실제로는 box-shadow 객체(`{color, xOffset, yOffset, blur, spread, inset}`)인 걸 확인 후 원인 특정. 패치 버전(`react-native-css-interop@0.2.7`)도 이 switch문은 그대로라 버전 올리기로는 해결 안 됨
   - `patch-package` 신규 devDependency로 추가(+ `postinstall` 스크립트) — `patches/react-native-css-interop+0.2.6.patch`에 `return;` 한 줄 추가 패치 저장, `npm install` 때마다 자동 재적용되게 함. node_modules 직접 수정은 `npm install` 한 번이면 날아가서 영구 저장이 이 방법 말고는 없음(라이브러리 자체를 포크하거나 PR 올리는 건 과함)
   - 검증: 패치 제거 후 `npm install`로 재현 확인 → 깨끗한 상태에서 `npm install` 한 번으로 postinstall이 패치를 자동 재적용하는지 확인 → iOS 시뮬레이터에서 Metro 번들링 성공 + 로그인 화면부터 Inbox(box-shadow 카드 포함)까지 실제 렌더링 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
+  - PR #110, main에 머지 완료
+- [x] **탭바가 홈 인디케이터 영역까지 내려앉아있던 버그** (시뮬레이터 복구 직후 사용자가 발견 · 2026-11-18) — 같은 날 다른 세션이 웹의 탭 라벨 잘림을 고치면서(`cab645d`) `tabBarStyle`에 `height: 64, paddingBottom: 10` 같은 고정값을 넣었는데, React Navigation의 `BottomTabBar`가 원래 `insets.bottom`(iPhone 홈 인디케이터 안전영역, 보통 34px)을 자동으로 더해주는 걸 이 고정값이 그대로 덮어써버림. 웹은 `insets.bottom`이 항상 0이라 멀쩡해 보였지만, 네이티브에선 탭바가 안전영역을 침범할 만큼 내려앉음
+  - `app/(tabs)/_layout.tsx`에서 `useSafeAreaInsets()`로 `insets.bottom`을 가져와 `height`/`paddingBottom`에 더해주는 걸로 수정(`64 + insets.bottom`, `10 + insets.bottom`) — 웹은 0 더해지니 기존 수정 그대로 유지, 네이티브만 안전영역 복원됨
+  - 검증: iOS 시뮬레이터에서 수정 전/후 스크린샷 비교 — 수정 전엔 탭 라벨이 홈 인디케이터 바로 위까지 붙어있었는데, 수정 후엔 정상적인 여백 확인. 웹도 재확인해서 라벨 잘림 회귀 없음 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
+- [x] **Home 화면 간격 조정 — 고양이-버튼, Hero-카드 사이 당기기** (사용자 요청 · 2026-11-18) — 고양이 이미지 wrapper에 `p-6`가 붙어있어서 바깥 `gap-6`이랑 겹쳐 Request Help 버튼 위쪽에만 48px(다른 구간의 두 배) 간격이 생기던 것 발견, 패딩 제거. Header-Hero-BecomeHero 세 섹션이 `ScrollView`의 균일한 `gap: 32`로 묶여 있던 것도 분리 — Header-Hero는 32px 그대로 유지(위쪽 여유는 괜찮다고 판단), Hero-BecomeHero만 24px로 당겨서 "Wanna be a Hero?" 카드가 더 가까이 올라오게 함
+  - 검증: Playwright 스크린샷으로 수정 전/후 비교 — Request Help가 고양이 바로 아래로 붙고, 카드까지 스크롤 없이 한 화면에 들어오는 것 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
   - PR 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
