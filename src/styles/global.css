@@ -1,3 +1,21 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Desktop browsers only: frame the app as a phone-width column instead of
+   stretching full-bleed. Pure CSS on the web root mount node — the React
+   Native view tree underneath is untouched, so nothing here can affect the
+   native builds or any measurement logic inside it (unlike an RN View
+   wrapper, which was tried first and threw off the tab bar's label sizing). */
+@media (min-width: 431px) {
+  body {
+    background-color: #e7e5e4;
+  }
+
+  #root {
+    max-width: 430px;
+    min-height: 100vh;
+    margin: 0 auto;
+    box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+  }
+}
