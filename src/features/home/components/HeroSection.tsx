@@ -19,28 +19,30 @@ export function HeroSection() {
         </Text>
       </View>
 
-      {/* Only a little extra space above (pt-2), none below — the outer gap-6
-          alone governs the gap to Request Help below; the old p-6 added that
-          same amount on both sides, doubling it to 48px below and pushing
-          the button further down than intended. */}
-      <View className="items-center justify-center self-center pt-2">
-        <Image
-          source={require('../../../../assets/characters/hero-cat.png')}
-          style={{ width: 200, height: 200 }}
-          resizeMode="contain"
-        />
-      </View>
+      {/* Cat-to-button is now its own tighter gap-3, split off from the
+          text-to-cat spacing above (still the outer gap-6 + this wrapper's
+          own pt-3) — pulls the cat visually closer to Request Help without
+          touching the gap above it. */}
+      <View className="gap-3">
+        <View className="items-center justify-center self-center pt-3">
+          <Image
+            source={require('../../../../assets/characters/hero-cat.png')}
+            style={{ width: 200, height: 200 }}
+            resizeMode="contain"
+          />
+        </View>
 
-      <View className="items-center gap-2">
-        <Button
-          label="Request Help"
-          variant="primary"
-          icon={<Feather name="zap" size={18} color="#111111" />}
-          onPress={() => router.push('/request')}
-        />
-        <View className="items-center">
-          <Text className="text-sm font-sans-medium text-text-primary">It takes 10 seconds</Text>
-          <Text className="font-sans text-xs text-text-secondary">요청까지 단 10초</Text>
+        <View className="items-center gap-2">
+          <Button
+            label="Request Help"
+            variant="primary"
+            icon={<Feather name="zap" size={18} color="#111111" />}
+            onPress={() => router.push('/request')}
+          />
+          <View className="items-center">
+            <Text className="text-sm font-sans-medium text-text-primary">It takes 10 seconds</Text>
+            <Text className="font-sans text-xs text-text-secondary">요청까지 단 10초</Text>
+          </View>
         </View>
       </View>
     </View>
