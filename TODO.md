@@ -474,7 +474,11 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - `OnboardingScreen.tsx`에 `scrollRef`(react-native-web에서 ScrollView에 건 ref는 실제 DOM div를 그대로 가리킴) 추가하고, 웹에서만 `wheel` 이벤트를 가로채서 세로 위주 제스처(평범한 휠)일 때 `scrollBy({ left: deltaY })`로 가로 스크롤로 변환. `pagingEnabled`의 CSS scroll-snap이 그대로 적용돼서 손을 떼면(휠을 멈추면) 가장 가까운 슬라이드로 자연스럽게 스냅됨
   - **막힐 뻔한 것**: 처음엔 마운트 한 번만 도는 `useEffect(() => {...}, [])`로 리스너를 달았는데 전혀 안 먹혔음 — `Animated.ScrollView` 자체가 `measured`(레이아웃 측정 완료) 되기 전엔 조건부로 렌더링을 안 해서, 이 마운트 시점엔 `scrollRef.current`가 항상 null이었음. `measured`를 의존성 배열에 넣어서 ScrollView가 실제로 마운트된 뒤에 리스너가 달리도록 수정
   - 검증: 로컬 웹에서 Playwright로 실제 `mouse.wheel(0, deltaY)` 2번 연속 실행 + 스크린샷으로 직접 확인 — 슬라이드 1→2→3(Get Started 노출)까지 정상 진행. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
-  - PR 예정
+  - PR #114, main에 머지 완료
+- [x] **BottomSheet가 웹에서 모바일 프레임 무시하고 브라우저 전체 폭으로 뜨던 버그** (사용자가 프로필 수정 중 발견 · 2026-11-19) — `BottomSheet.tsx`가 RN `Modal`을 쓰고 있었는데, 웹에서 `Modal`은 콘텐츠를 `document.body`에 바로 포털로 꽂아서 모든 화면이 들어있는 `#root`(데스크톱에서 430px 모바일 폭으로 제한해둔 컨테이너, `global.css`)를 완전히 벗어남 — 그래서 "Change profile photo"/취소 확인/계정 삭제 확인 시트 전부 브라우저 창 전체 폭으로 떠 있었음(스크린샷으로 확인, 다른 화면 콘텐츠는 430px 안에 있는데 시트만 밖으로 삐져나와 있는 게 명확히 보임)
+  - `Modal` 제거하고 평범한 절대위치 `View`(`position:absolute`, 화면 전체 덮음)로 교체 — 일반 컴포넌트 트리 안에 있어서 웹에서도 `#root` 프레임 안에 그대로 들어감. `Modal`이 공짜로 주던 것 2개를 직접 구현: 페이드인(`Animated`, `Toast.tsx`와 같은 패턴)과 안드로이드 하드웨어 뒤로가기(`BackHandler`)
+  - 영향받는 3곳 전부 확인: `EditProfileScreen`(프로필 사진 변경), `MissionScreen`(취소 확인), `SettingsScreen`(계정 삭제 확인)
+  - 검증: 로컬 웹 1280px 데스크톱 뷰포트로 세 곳 전부 스크린샷 비교 — 수정 전엔 시트가 전체 폭, 수정 후엔 430px 프레임 안에 정확히 들어가는 것 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
   - PR 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
