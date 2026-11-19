@@ -469,6 +469,11 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] **데모 방문 시 기존 로그인 세션 때문에 온보딩이 안 뜨던 문제** (사용자가 라이브 사이트에서 직접 확인하다 발견 · 2026-11-19) — `?demo=1`이 `hasOnboarded` 플래그는 리셋해주지만 로그인 세션 자체는 안 건드리고 있었음. 그래서 브라우저에 이전 테스트로 로그인이 남아있는 상태로 데모 링크에 들어가면, `AuthGate`의 "로그인된 사람에게 온보딩을 다시 보여줄 필요 없음" 규칙에 걸려서 온보딩을 건너뛰고 바로 홈으로 가버림 — 데모 링크는 매번 완전히 새 방문자처럼 보여주는 게 의도라 세션도 같이 끊어야 했음
   - `app/_layout.tsx`의 기존 `resetOnboarding()` 호출 옆에 `supabase.auth.signOut()` 추가 — `demo` 파라미터 있을 때 마운트 한 번만 실행(기존 패턴과 동일)
   - 검증: 로컬 웹에서 로그인 세션 + onboarded 상태를 만들어두고 `?demo=1` 방문 → 자동으로 로그아웃되고 온보딩부터 다시 뜨는 것 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
+  - PR #113, main에 머지 완료
+- [x] **웹에서 평범한 마우스 휠로는 온보딩 캐러셀이 전혀 안 넘어가던 버그** (사용자가 라이브에서 직접 겪고 발견 · 2026-11-19) — 처음엔 Playwright로 "된다"고 잘못 확인했었음(스크린샷 대신 `innerText()`로 확인했는데, 가로 스크롤 캐러셀은 안 보이는 슬라이드 텍스트도 DOM엔 그대로 있어서 실제로 안 넘어갔는데도 통과한 것처럼 보였음 — 스크린샷으로 다시 찍어보고서야 실제로 안 움직이는 걸 확인). 트랙패드 가로 스와이프·클릭드래그는 되지만 평범한 마우스 세로 휠은 안 먹힘 — 점(dot) 인디케이터는 표시 전용이라 누를 수도 없고, "Get Started" 버튼은 마지막 슬라이드에서만 마운트돼서, 마우스 휠만 쓰는 방문자는 Skip 말고는 다음 슬라이드로 갈 방법이 전혀 없었음
+  - `OnboardingScreen.tsx`에 `scrollRef`(react-native-web에서 ScrollView에 건 ref는 실제 DOM div를 그대로 가리킴) 추가하고, 웹에서만 `wheel` 이벤트를 가로채서 세로 위주 제스처(평범한 휠)일 때 `scrollBy({ left: deltaY })`로 가로 스크롤로 변환. `pagingEnabled`의 CSS scroll-snap이 그대로 적용돼서 손을 떼면(휠을 멈추면) 가장 가까운 슬라이드로 자연스럽게 스냅됨
+  - **막힐 뻔한 것**: 처음엔 마운트 한 번만 도는 `useEffect(() => {...}, [])`로 리스너를 달았는데 전혀 안 먹혔음 — `Animated.ScrollView` 자체가 `measured`(레이아웃 측정 완료) 되기 전엔 조건부로 렌더링을 안 해서, 이 마운트 시점엔 `scrollRef.current`가 항상 null이었음. `measured`를 의존성 배열에 넣어서 ScrollView가 실제로 마운트된 뒤에 리스너가 달리도록 수정
+  - 검증: 로컬 웹에서 Playwright로 실제 `mouse.wheel(0, deltaY)` 2번 연속 실행 + 스크린샷으로 직접 확인 — 슬라이드 1→2→3(Get Started 노출)까지 정상 진행. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
   - PR 예정
   - PR 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
