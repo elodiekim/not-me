@@ -43,11 +43,18 @@ function AuthGate({ children }: { children: ReactNode }) {
   // A demo visitor should see the onboarding intro on every visit, not just
   // their first ever one — without this, a hasOnboarded flag persisted from
   // an earlier demo session would skip straight to sign-in on a repeat visit.
-  // Mount-only: fires once per full page load, so it can't re-fire (and
-  // re-redirect) once onboarding completes later in this same session.
+  // Same reasoning extends to an actual leftover session: resetting
+  // hasOnboarded alone doesn't matter if `!session` is false, since the
+  // onboarding-gate condition below checks both — a still-logged-in browser
+  // would skip straight past onboarding to the home screen regardless. Sign
+  // out too, so every ?demo=1 visit replays the full visitor experience
+  // (onboarding → sign-in) from scratch. Mount-only: fires once per full
+  // page load, so it can't re-fire (and re-redirect, or sign out again mid-
+  // demo) once onboarding/sign-in completes later in this same session.
   useEffect(() => {
     if (demo) {
       resetOnboarding();
+      supabase.auth.signOut();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
