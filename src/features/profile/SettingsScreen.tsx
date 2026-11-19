@@ -47,10 +47,23 @@ export function SettingsScreen() {
     try {
       await deleteAccount.mutateAsync();
       setIsDeleteSheetOpen(false);
-    } catch {
-      setDeleteError(
-        'Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.',
-      );
+    } catch (err) {
+      // 0034: the portfolio demo's shared account is DB-blocked from
+      // self-deactivating (its credentials are public by design, so
+      // anyone could otherwise sign in and take it down for every future
+      // visitor). 42501 has no other way to reach this exact mutation —
+      // the only other self-edit rejection with that code is reactivating
+      // (new.is_active: true), which this call never sends.
+      const code = (err as { code?: string } | null)?.code;
+      if (code === '42501') {
+        setDeleteError(
+          "This is a shared demo account and can't be deleted.\n여러 사람이 함께 쓰는 데모 계정이라 삭제할 수 없어요.",
+        );
+      } else {
+        setDeleteError(
+          'Something went wrong. Please try again.\n문제가 발생했어요. 다시 시도해주세요.',
+        );
+      }
     }
   };
 
