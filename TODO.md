@@ -464,7 +464,12 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 검증: iOS 시뮬레이터에서 수정 전/후 스크린샷 비교 — 수정 전엔 탭 라벨이 홈 인디케이터 바로 위까지 붙어있었는데, 수정 후엔 정상적인 여백 확인. 웹도 재확인해서 라벨 잘림 회귀 없음 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
 - [x] **Home 화면 간격 조정 — 고양이-버튼, Hero-카드 사이 재조정** (사용자 요청 · 여러 차례 스크린샷 비교로 반복 조정 · 2026-11-18) — 고양이 이미지 wrapper에 `p-6`가 붙어있어서 바깥 `gap-6`이랑 겹쳐 Request Help 버튼 위쪽에만 48px(다른 구간의 두 배) 간격이 생기던 것 발견, 패딩 제거하고 `pt-2`(8px)만 살짝 남겨서 고양이 위쪽에 최소한의 숨 쉴 공간만 유지
   - Hero-BecomeHero 간격은 Header-Hero(32px)와 분리해서 따로 조정 가능하게 구조 변경 — 처음 24px로 당겼다가 "너무 올라갔다"는 피드백으로 32px(원래 값)로 되돌린 뒤, 버튼 쪽이 짧아진 만큼 재균형 맞추려고 최종적으로 36px(원래보다 살짝 더 내림)로 조정
+  - 고양이 위쪽 공백도 추가 피드백으로 8px→12px(pt-3)로 미세 조정. 이후 "고양이가 버튼에 더 가까웠으면" 요청으로 고양이-버튼 구간만 또 분리(gap-3, 12px)해서 텍스트-고양이 간격은 안 건드리고 고양이-버튼만 24px→12px로 추가로 당김
   - 검증: 각 단계마다 Playwright 스크린샷으로 직접 비교. 최종본에서 탭바 위 여백 충분히 남는 것, 스크롤 없이 카드까지 한 화면에 들어오는 것 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
+- [x] **데모 방문 시 기존 로그인 세션 때문에 온보딩이 안 뜨던 문제** (사용자가 라이브 사이트에서 직접 확인하다 발견 · 2026-11-19) — `?demo=1`이 `hasOnboarded` 플래그는 리셋해주지만 로그인 세션 자체는 안 건드리고 있었음. 그래서 브라우저에 이전 테스트로 로그인이 남아있는 상태로 데모 링크에 들어가면, `AuthGate`의 "로그인된 사람에게 온보딩을 다시 보여줄 필요 없음" 규칙에 걸려서 온보딩을 건너뛰고 바로 홈으로 가버림 — 데모 링크는 매번 완전히 새 방문자처럼 보여주는 게 의도라 세션도 같이 끊어야 했음
+  - `app/_layout.tsx`의 기존 `resetOnboarding()` 호출 옆에 `supabase.auth.signOut()` 추가 — `demo` 파라미터 있을 때 마운트 한 번만 실행(기존 패턴과 동일)
+  - 검증: 로컬 웹에서 로그인 세션 + onboarded 상태를 만들어두고 `?demo=1` 방문 → 자동으로 로그아웃되고 온보딩부터 다시 뜨는 것 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
+  - PR 예정
   - PR 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
