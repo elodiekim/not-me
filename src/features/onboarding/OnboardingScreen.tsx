@@ -9,6 +9,7 @@ import {
   LayoutChangeEvent,
   NativeScrollEvent,
   NativeSyntheticEvent,
+  Platform,
   Pressable,
   Text,
   View,
@@ -71,12 +72,44 @@ export function OnboardingScreen() {
   // instead of silently dropping the moment a first-time visitor gets routed
   // through this screen.
   const { demo } = useLocalSearchParams<{ demo?: string }>();
+  // react-native-web forwards a ref on ScrollView straight to the underlying
+  // scrollable <div>, so this doubles as a DOM node reference on web only.
+  // Typed `any`: its real shape differs by platform (RN ScrollView instance
+  // vs. an actual HTMLDivElement) and ScrollView's own ref type has no
+  // cross-platform way to express that.
+  const scrollRef = useRef<any>(null);
+  const measured = size.width > 0;
 
   useEffect(() => {
     AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
     const sub = AccessibilityInfo.addEventListener('reduceMotionChanged', setReduceMotion);
     return () => sub.remove();
   }, []);
+
+  // Web has no touch/trackpad-swipe equivalent for a plain mouse — without
+  // this, a mouse-wheel-only visitor has no way to advance past the first
+  // slide at all (the dots are decorative, and Get Started only mounts on
+  // the last page). pagingEnabled's CSS scroll-snap still applies to this
+  // manual scroll, so it settles on the nearest slide same as a real swipe.
+  // Depends on `measured`, not []: the ScrollView (and so scrollRef) only
+  // mounts once onLayout fires and measured flips true, so a mount-only
+  // effect here would always find scrollRef.current still null.
+  useEffect(() => {
+    if (Platform.OS !== 'web' || !measured) return;
+    const node = scrollRef.current;
+    if (!node || typeof node.scrollBy !== 'function') return;
+
+    const handleWheel = (event: WheelEvent) => {
+      // Only redirect a mostly-vertical gesture (a plain mouse wheel) —
+      // trackpad horizontal swipes already move this scroll view natively.
+      if (Math.abs(event.deltaY) <= Math.abs(event.deltaX)) return;
+      event.preventDefault();
+      node.scrollBy({ left: event.deltaY });
+    };
+
+    node.addEventListener('wheel', handleWheel, { passive: false });
+    return () => node.removeEventListener('wheel', handleWheel);
+  }, [measured]);
 
   const finish = async () => {
     await complete();
@@ -105,8 +138,6 @@ export function OnboardingScreen() {
     },
   });
 
-  const measured = size.width > 0;
-
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top', 'bottom']}>
       <View className="h-12 flex-row items-center justify-end px-6">
@@ -123,6 +154,7 @@ export function OnboardingScreen() {
       <View className="flex-1" onLayout={onLayout}>
         {measured && (
           <Animated.ScrollView
+            ref={scrollRef}
             horizontal
             pagingEnabled
             showsHorizontalScrollIndicator={false}
