@@ -484,7 +484,7 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] **데모 계정 자가탈퇴 차단** (사용자 제안 · 2026-11-19) — `?demo=1`용 데모 계정(`demo.user.notme@gmail.com`/`demo.hero.notme@gmail.com`) 비밀번호가 클라이언트 번들에 공개돼 있어서(의도된 설계), 누구든 그 계정으로 직접 로그인해서 Settings의 자가탈퇴(`0019`, `is_active=false`)를 눌러버리면 이후 모든 방문자용 데모 계정이 통째로 막혀버리는 구멍이었음
   - `0034_protect_demo_accounts_from_self_deactivation.sql`: `profiles.is_demo_protected` 플래그 추가(두 데모 계정만 true) + `0025`의 자가수정 트리거(`enforce_admin_profile_update_rules`) 확장 — 본인이 `is_active`를 true→false로 바꾸려 할 때 `is_demo_protected`면 차단. `0032`의 `is_demo_readonly`(다른 어드민 데모 계정용, 쓰기 자체를 전부 막음)와는 범위가 다름 — 이 두 계정은 미션 생성 등 정상적인 쓰기는 계속 필요해서 탈퇴 액션 하나만 좁게 막음. 관리자(notme-admin)가 이 계정을 끄는 경로는 안 건드림(그 쪽은 신뢰된 경로)
   - `SettingsScreen.tsx`: 트리거가 던지는 `42501`을 따로 잡아서 "여러 사람이 함께 쓰는 데모 계정이라 삭제할 수 없어요" 전용 문구로 분리(기존엔 전부 "Something went wrong"으로 뭉뚱그려짐)
-  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과. **마이그레이션 미적용** — 평소처럼 SQL만 작성, 사용자가 Supabase에서 직접 실행 후 실제 차단 확인 필요
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과. **마이그레이션 적용 완료(2026-11-20)** — REST로 두 데모 계정 전부 직접 `is_active: false` 시도 → 둘 다 403 `42501` "This is a shared demo account and cannot be deleted"로 거부, `is_active`는 그대로 `true` 유지 확인
   - PR 예정
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
