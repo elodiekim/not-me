@@ -7,6 +7,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Pressable,
+  ScrollView,
   Text,
   View,
 } from 'react-native';
@@ -230,48 +231,59 @@ export function CompleteScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <DismissKeyboardView className="flex-1">
-          <View className="flex-1 justify-center gap-8 px-6 pt-8">
-            <View className="items-center gap-3">
-              <Image
-                source={require('../../../assets/characters/proud-cat.png')}
-                style={{ width: 140, height: 140 }}
-                resizeMode="contain"
-              />
-              <Text className="text-2xl font-sans-bold text-text-primary">Mission Complete!</Text>
-              <Text className="font-sans text-center text-sm text-text-secondary">
-                바퀴벌레 문제 해결 완료!{'\n'}Thanks for using NotMe.
-              </Text>
-            </View>
+          {/* A ScrollView (not a fixed flex-1 + separately-pinned button row)
+              so that when KeyboardAvoidingView shrinks the available height
+              for the keyboard, content that no longer fits scrolls instead
+              of overlapping the Submit/Not-now buttons below it — the
+              previous fixed layout had no way to yield space and the input
+              would sit on top of them once the keyboard was tall enough. */}
+          <ScrollView
+            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+            keyboardShouldPersistTaps="handled"
+          >
+            <View className="gap-8 px-6 pt-8">
+              <View className="items-center gap-3">
+                <Image
+                  source={require('../../../assets/characters/proud-cat.png')}
+                  style={{ width: 140, height: 140 }}
+                  resizeMode="contain"
+                />
+                <Text className="text-2xl font-sans-bold text-text-primary">Mission Complete!</Text>
+                <Text className="font-sans text-center text-sm text-text-secondary">
+                  바퀴벌레 문제 해결 완료!{'\n'}Thanks for using NotMe.
+                </Text>
+              </View>
 
-            <View className="gap-4">
-              <Text className="text-center text-base font-sans-semibold text-text-primary">
-                How was your Hero?
-              </Text>
-              <StarRating rating={rating} onChange={setRating} />
-              <Input
-                placeholder="Leave a comment (optional)"
-                value={comment}
-                onChangeText={setComment}
-                multiline
-              />
-              {error && <Text className="text-center text-sm text-danger">{error}</Text>}
-            </View>
-          </View>
+              <View className="gap-4">
+                <Text className="text-center text-base font-sans-semibold text-text-primary">
+                  How was your Hero?
+                </Text>
+                <StarRating rating={rating} onChange={setRating} />
+                <Input
+                  placeholder="Leave a comment (optional)"
+                  value={comment}
+                  onChangeText={setComment}
+                  multiline
+                />
+                {error && <Text className="text-center text-sm text-danger">{error}</Text>}
+              </View>
 
-          <View className="gap-3 px-6 pb-6">
-            <Button
-              label="Submit Review"
-              variant="primary"
-              loading={submitReview.isPending}
-              disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
-              onPress={handleSubmit}
-            />
-            <Button
-              label="Not now · 나중에 할게요"
-              variant="ghost"
-              onPress={() => setShowAdInterstitial(true)}
-            />
-          </View>
+              <View className="gap-3 pb-6 pt-8">
+                <Button
+                  label="Submit Review"
+                  variant="primary"
+                  loading={submitReview.isPending}
+                  disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
+                  onPress={handleSubmit}
+                />
+                <Button
+                  label="Not now · 나중에 할게요"
+                  variant="ghost"
+                  onPress={() => setShowAdInterstitial(true)}
+                />
+              </View>
+            </View>
+          </ScrollView>
         </DismissKeyboardView>
       </KeyboardAvoidingView>
     </SafeAreaView>
