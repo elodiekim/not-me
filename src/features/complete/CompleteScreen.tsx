@@ -218,7 +218,7 @@ export function CompleteScreen() {
   return (
     <SafeAreaView className="flex-1 bg-background" edges={['top']}>
       <DismissKeyboardView className="flex-1">
-        <View className="flex-1 gap-8 px-6 pt-8">
+        <View className="flex-1 justify-center gap-8 px-6 pt-8">
           <View className="items-center gap-3">
             <Image
               source={require('../../../assets/characters/proud-cat.png')}
