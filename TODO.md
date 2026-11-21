@@ -488,7 +488,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - PR #116, PR #117, main에 머지 완료
 - [x] **Complete 화면(리뷰 작성) 콘텐츠가 화면 위쪽에 쏠려있던 것 조정** (사용자 지적 · 2026-11-21) — 고양이+문구+별점+입력칸을 감싸는 `View`가 `flex-1`인데 `justify-center`가 없어서 기본 정렬(위쪽 정렬)로 화면 꼭대기에 붙어있고, 그 아래 버튼까지 사이에 빈 공간이 크게 남아있었음. `justify-center` 한 줄 추가해서 세로 중앙 정렬로 변경
   - 검증: Playwright 스크린샷으로 전/후 비교, 위아래 여백이 균형 있게 분배되는 것 확인. `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
-  - PR 예정
+  - PR #118, main에 머지 완료
+- [x] **히어로 Active Mission 화면 버튼 2개 한국어 누락** (사용자 지적 · 2026-11-21) — "I've Arrived"/"Complete Mission"이 같은 화면의 다른 버튼("On my way · 이동중이에요")과 다르게 영어 단독이었음, 한국어 병기 추가
+  - PR #119, main에 머지 완료
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
