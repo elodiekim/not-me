@@ -136,7 +136,7 @@ export function ActiveMissionScreen() {
           <Button label="Back to Home" variant="secondary" onPress={() => router.replace('/')} />
         ) : arrived ? (
           <Button
-            label="Complete Mission"
+            label="Complete Mission · 완료했어요"
             variant="primary"
             loading={updateStatus.isPending}
             disabled={updateStatus.isPending || cancelMission.isPending}
@@ -144,7 +144,7 @@ export function ActiveMissionScreen() {
           />
         ) : onTheWay ? (
           <Button
-            label="I've Arrived"
+            label="I've Arrived · 도착했어요"
             variant="secondary"
             loading={updateStatus.isPending}
             disabled={updateStatus.isPending || cancelMission.isPending}
