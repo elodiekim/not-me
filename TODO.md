@@ -495,7 +495,7 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과. **실기기 확인 결과 — 입력칸이 Submit Review 버튼이랑 겹침** (Xcode 라이선스 동의 후 사용자가 직접 테스트해서 발견): `KeyboardAvoidingView`의 `padding`이 키보드만큼 높이를 줄이는데, 콘텐츠가 고정 `flex-1` 블록 + 따로 하단에 고정된 버튼 행 구조라 공간을 양보할 방법이 없어서, 키보드가 충분히 크면 입력칸이 버튼 위에 그대로 얹힘
   - PR #120, main에 머지 완료
 - [x] **위 겹침 버그 수정 — ScrollView로 구조 변경** (2026-11-21) — 콘텐츠 전체(고양이+별점+입력+버튼)를 `ScrollView` 하나로 통합(`flexGrow:1`+`justifyContent:'center'`로 평소엔 기존처럼 중앙정렬 유지, `keyboardShouldPersistTaps="handled"`) — 키보드 때문에 공간이 부족해지면 버튼과 겹치는 대신 스크롤되도록 변경
-  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright로 키보드 없는 평소 상태 레이아웃이 기존과 동일하게 보이는 것 확인. **키보드 뜬 상태 실기기 재확인 필요**
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright로 키보드 없는 평소 상태 레이아웃이 기존과 동일하게 보이는 것 확인. **실기기 재확인 완료(2026-11-21)** — 사용자가 직접 키보드 띄워서 입력칸-버튼 겹침 없이 정상 동작하는 것 확인
   - PR #122, main에 머지 완료
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
