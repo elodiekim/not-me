@@ -491,6 +491,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - PR #118, main에 머지 완료
 - [x] **히어로 Active Mission 화면 버튼 2개 한국어 누락** (사용자 지적 · 2026-11-21) — "I've Arrived"/"Complete Mission"이 같은 화면의 다른 버튼("On my way · 이동중이에요")과 다르게 영어 단독이었음, 한국어 병기 추가
   - PR #119, main에 머지 완료
+- [x] **Complete 화면 리뷰 입력칸이 키보드에 가려지던 문제** (사용자 지적 · 2026-11-21) — `/complete`에 키보드 회피 처리가 전혀 없어서, 코멘트 입력창에 포커스 주면 키보드가 그 위를 그냥 덮어버릴 수 있었음. 여러 방법 중 사용자가 선택한 `KeyboardAvoidingView` 추가(iOS `padding`/안드로이드 `height`)로 해결
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과. **실기기/시뮬레이터 확인 보류** — Xcode 라이선스 미동의(`sudo xcodebuild -license` 필요, 사용자가 직접 동의해야 함)로 시뮬레이터 CLI가 막혀서 못함. 라이선스 해결되면 코멘트 입력 시 키보드 위에 정상적으로 보이는지 확인 필요
+  - PR #120, main에 머지 완료
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
