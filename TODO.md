@@ -501,6 +501,11 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - `ScrollView`를 콘텐츠(고양이+별점+입력)만 감싸도록 좁히고 `className="flex-1"` 추가, 버튼 행은 분리해서 다른 화면들과 동일하게 하단 고정. 키보드 겹침 수정(PR #122)은 그대로 유지 — `keyboardShouldPersistTaps`/`flexGrow` 컨테이너가 이제 콘텐츠 영역에만 적용됨
   - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright 스크린샷으로 버튼이 화면 맨 아래로 고정된 것 확인
   - PR #125, main에 머지 완료
+  - **⚠️ 재발 — 실기기 확인 결과 Submit Review가 또 키보드에 가려짐** (사용자 발견 · 2026-11-22): PR #125가 버튼을 `ScrollView` 바깥 형제로 분리하면서, "스크롤뷰 + 스크롤 안 되는 고정 형제"를 `KeyboardAvoidingView`의 `padding` 방식으로 같이 감싸는 조합이 돼버렸는데, 이게 키보드 높이 계산이 불안정한 것으로 알려진 조합 — 버튼이 다시 키보드 위에 걸침
+  - **최종 수정**: 콘텐츠+버튼을 다시 `ScrollView` 하나로 합침 — 단, PR #118의 실수(버튼까지 같이 `justifyContent:'center'`로 묶어서 중앙에 뜸)는 반복하지 않음. `ScrollView`의 `contentContainerStyle`엔 `flexGrow:1`만 주고, 중앙정렬/하단고정은 안쪽 콘텐츠 블록 자체의 `flex-1 justify-center`(= `MissionCompleteScreen`과 동일 패턴)로 처리 — 키보드 없을 때 모양은 PR #125와 동일하게 유지하면서, 전체가 한 스크롤 흐름 안에 있어서 키보드가 떠도 안 겹치고 자연스럽게 스크롤됨
+  - 겸사겸사 코멘트 입력칸(`Input`의 `multiline`)도 키워줌 — 공용 `Input`이 모든 용도에 고정 `h-14`(56px) 박스를 쓰고 있어서 여러 줄 입력인데도 한 줄 높이에 갇혀있었음. `multiline`은 이 화면 하나에서만 쓰여서, `Input.tsx`에 `multiline`일 때만 `min-h-24`+상단정렬로 분기 추가(다른 사용처 영향 없음)
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright로 평소 레이아웃 동일 확인 + 입력칸에 여러 줄 타이핑해서 정상 줄바꿈/높이 확인. **실기기 키보드 재확인 필요**
+  - PR #127, main에 머지 완료
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
