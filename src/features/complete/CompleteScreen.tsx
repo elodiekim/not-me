@@ -172,9 +172,12 @@ export function CompleteScreen() {
   // The fake-ad easter egg is tuned for finishing a review right after a live
   // completion — a visitor re-entering this same screen from the Inbox feed
   // (days later, reviewing something they'd forgotten) isn't that moment, so
-  // skip straight to the ad's own destination instead of showing it.
+  // skip straight back to Inbox instead of showing it. Back to Inbox, not
+  // home: that's where they came from, and the mission they just reviewed
+  // (or skipped) naturally drops out of that feed now, a visible sign the
+  // item was handled.
   const skipAd = source === 'inbox';
-  const finish = () => (skipAd ? router.replace('/') : setShowAdInterstitial(true));
+  const finish = () => (skipAd ? router.replace('/inbox') : setShowAdInterstitial(true));
 
   // Direct/repeat entry to an already-reviewed mission (e.g. a stale link or
   // back-navigation) would otherwise show the form again and hit the DB's
