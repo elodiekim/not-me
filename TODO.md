@@ -497,6 +497,10 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
 - [x] **위 겹침 버그 수정 — ScrollView로 구조 변경** (2026-11-21) — 콘텐츠 전체(고양이+별점+입력+버튼)를 `ScrollView` 하나로 통합(`flexGrow:1`+`justifyContent:'center'`로 평소엔 기존처럼 중앙정렬 유지, `keyboardShouldPersistTaps="handled"`) — 키보드 때문에 공간이 부족해지면 버튼과 겹치는 대신 스크롤되도록 변경
   - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright로 키보드 없는 평소 상태 레이아웃이 기존과 동일하게 보이는 것 확인. **실기기 재확인 완료(2026-11-21)** — 사용자가 직접 키보드 띄워서 입력칸-버튼 겹침 없이 정상 동작하는 것 확인
   - PR #122, main에 머지 완료
+- [x] **Complete 화면 Submit Review 버튼이 화면 중앙에 떠 있던 문제** (포트폴리오 스크린샷 재촬영 중 발견, 다른 에이전트가 상세 리포트 작성 · 2026-11-22) — 바로 위 키보드 겹침 수정(PR #122) 때 콘텐츠+버튼 전체를 `ScrollView`의 `justifyContent:'center'` 하나로 묶었는데, 이게 **의도한 디자인이 아니라 실수**였음 — 바로 앞 축하 화면인 `MissionCompleteScreen`을 포함해 앱의 모든 화면이 "콘텐츠만 센터(또는 flex-1) + 버튼은 별도 형제 요소로 `px-6 pb-6` 하단 고정" 패턴을 쓰는데 이 화면만 버튼까지 같이 중앙으로 끌려가서 화면 중간에 떠 있었음
+  - `ScrollView`를 콘텐츠(고양이+별점+입력)만 감싸도록 좁히고 `className="flex-1"` 추가, 버튼 행은 분리해서 다른 화면들과 동일하게 하단 고정. 키보드 겹침 수정(PR #122)은 그대로 유지 — `keyboardShouldPersistTaps`/`flexGrow` 컨테이너가 이제 콘텐츠 영역에만 적용됨
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright 스크린샷으로 버튼이 화면 맨 아래로 고정된 것 확인
+  - PR #125, main에 머지 완료
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
