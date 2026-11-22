@@ -511,8 +511,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright로 박스 맨 아래쪽(글씨 없는 빈 공간) 탭해도 포커스+입력되는 것 확인
   - PR #129, main에 머지 완료
 - [x] **Inbox에서 리뷰 화면으로 들어갔을 때 가짜 광고 이스터에그가 안 뜨게** (사용자 요청 · 2026-11-22) — 가짜 방역업체 광고는 "방금 실시간으로 완료된 순간"의 축하 연출(`MissionCompleteScreen`의 "Leave a Review" 버튼)에 맞춰 만든 건데, Inbox 활동피드에서 며칠 지난 미션을 나중에 들어가 리뷰 남길 때도 똑같이 떴음 — 그 타이밍엔 안 어울림
-  - `deriveActivityEvents.ts`의 Inbox 라우트에 `source: 'inbox'` 파라미터 추가, `CompleteScreen`에서 이 값이 있으면 Submit Review/Not now 둘 다 광고 인터스티셜 생략하고 바로 홈으로 이동. 다른 진입 경로(MissionCompleteScreen, Mission Status, Missions 탭 History)는 안 건드림
-  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개, 라우트 파라미터 테스트 1건 업데이트) 통과. Playwright로 `?source=inbox`일 때 바로 홈 이동, 파라미터 없는 일반 경로는 광고 그대로 뜨는 것 둘 다 확인
+  - `deriveActivityEvents.ts`의 Inbox 라우트에 `source: 'inbox'` 파라미터 추가, `CompleteScreen`에서 이 값이 있으면 Submit Review/Not now 둘 다 광고 인터스티셜 생략. 다른 진입 경로(MissionCompleteScreen, Mission Status, Missions 탭 History)는 안 건드림
+  - 사용자 피드백으로 목적지도 홈 대신 **Inbox로 되돌아가게** 수정 — 어디서 왔는지에 맞는 동선이고, 방금 처리한 미션이 피드에서 자연스럽게 빠지는 게 보임
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개, 라우트 파라미터 테스트 1건 업데이트) 통과. Playwright로 `?source=inbox`일 때 Inbox로 복귀, 파라미터 없는 일반 경로는 광고 그대로 뜨는 것 둘 다 확인
   - PR #131, main에 머지 완료
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
