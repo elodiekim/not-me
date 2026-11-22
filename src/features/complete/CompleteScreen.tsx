@@ -162,13 +162,19 @@ function AdInterstitial({ onContinue }: { onContinue: () => void }) {
 
 export function CompleteScreen() {
   const router = useRouter();
-  const { missionId } = useLocalSearchParams<{ missionId?: string }>();
+  const { missionId, source } = useLocalSearchParams<{ missionId?: string; source?: string }>();
   const { data: mission, isLoading, isError, refetch } = useMission(missionId);
   const submitReview = useSubmitReview();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [showAdInterstitial, setShowAdInterstitial] = useState(false);
+  // The fake-ad easter egg is tuned for finishing a review right after a live
+  // completion — a visitor re-entering this same screen from the Inbox feed
+  // (days later, reviewing something they'd forgotten) isn't that moment, so
+  // skip straight to the ad's own destination instead of showing it.
+  const skipAd = source === 'inbox';
+  const finish = () => (skipAd ? router.replace('/') : setShowAdInterstitial(true));
 
   // Direct/repeat entry to an already-reviewed mission (e.g. a stale link or
   // back-navigation) would otherwise show the form again and hit the DB's
@@ -214,7 +220,7 @@ export function CompleteScreen() {
         rating,
         comment,
       });
-      setShowAdInterstitial(true);
+      finish();
     } catch {
       setError('Something went wrong. Please try again.');
     }
@@ -287,11 +293,7 @@ export function CompleteScreen() {
                 disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
                 onPress={handleSubmit}
               />
-              <Button
-                label="Not now · 나중에 할게요"
-                variant="ghost"
-                onPress={() => setShowAdInterstitial(true)}
-              />
+              <Button label="Not now · 나중에 할게요" variant="ghost" onPress={finish} />
             </View>
           </ScrollView>
         </DismissKeyboardView>
