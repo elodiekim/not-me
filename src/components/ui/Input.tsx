@@ -20,7 +20,7 @@ interface InputProps extends TextInputProps {
 const NUMERIC_KEYBOARD_TYPES = ['decimal-pad', 'number-pad', 'numeric'];
 
 export const Input = forwardRef<TextInput, InputProps>(function Input(
-  { label, leftIcon, error, keyboardType, returnKeyType, ...props },
+  { label, leftIcon, error, keyboardType, returnKeyType, multiline, ...props },
   ref,
 ) {
   const accessoryId = useId();
@@ -33,19 +33,24 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
         <Text className="mb-2 px-4 text-sm font-sans-medium text-text-primary">{label}</Text>
       )}
       <View
-        className={`h-14 flex-row items-center rounded-input border bg-surface px-4 ${
-          error ? 'border-danger' : 'border-transparent'
-        }`}
+        className={`flex-row rounded-input border bg-surface px-4 ${
+          multiline ? 'min-h-24 items-start py-3' : 'h-14 items-center'
+        } ${error ? 'border-danger' : 'border-transparent'}`}
       >
         {leftIcon && <View className="mr-2">{leftIcon}</View>}
         <TextInput
           ref={ref}
           placeholderTextColor={COLORS.textDisabled}
           className="flex-1 font-sans text-base text-text-primary"
-          style={{ paddingVertical: 0, textAlignVertical: 'center', includeFontPadding: false }}
+          style={{
+            paddingVertical: 0,
+            textAlignVertical: multiline ? 'top' : 'center',
+            includeFontPadding: false,
+          }}
           keyboardType={keyboardType}
           returnKeyType={showDoneAccessory ? undefined : returnKeyType}
           inputAccessoryViewID={showDoneAccessory ? accessoryId : undefined}
+          multiline={multiline}
           {...props}
         />
       </View>

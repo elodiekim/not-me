@@ -231,25 +231,27 @@ export function CompleteScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <DismissKeyboardView className="flex-1">
-          {/* Content-only ScrollView (flex-1, centered), buttons pinned as a
-              separate sibling below — matches the app-wide pattern every
-              other screen uses (MissionCompleteScreen etc: centered content
-              block + px-6 pb-6 button row underneath it, not merged into
-              one). A prior pass centered this whole block including the
-              buttons, which floated Submit Review away from the bottom edge
-              users expect it at on every other screen. className="flex-1" on
-              the ScrollView (not just its contentContainerStyle) is what
-              makes it actually take the remaining space instead of the
-              button row below — without it the two would just stack at
-              their natural heights with centering having nothing to act on.
-              keyboardShouldPersistTaps/flexGrow preserve the earlier
-              keyboard-overlap fix, now scoped to just this content area. */}
+          {/* Everything — content AND buttons — lives inside one ScrollView
+              now, not split into a ScrollView sibling plus a button row
+              pinned outside it. That split (an earlier pass) put a
+              non-scrolling sibling next to a ScrollView under the same
+              KeyboardAvoidingView, which is a known-flaky combination for
+              `padding` behavior's keyboard-height math — on device, the
+              Submit button still ended up under the keyboard. Keeping it
+              all in one scrollable flow is the combination RN actually
+              handles reliably: scrolls instead of overlapping when space
+              gets tight, no separate math for a sibling outside the scroll.
+              contentContainerStyle only grows the container (flexGrow: 1);
+              the centering + bottom-pinned-button look both come from the
+              inner content block's own flex-1 + justify-center (exactly
+              MissionCompleteScreen's pattern), not from anything on the
+              ScrollView itself. */}
           <ScrollView
             className="flex-1"
-            contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
+            contentContainerStyle={{ flexGrow: 1 }}
             keyboardShouldPersistTaps="handled"
           >
-            <View className="gap-8 px-6 pt-8">
+            <View className="flex-1 justify-center gap-8 px-6 pt-8">
               <View className="items-center gap-3">
                 <Image
                   source={require('../../../assets/characters/proud-cat.png')}
@@ -276,22 +278,22 @@ export function CompleteScreen() {
                 {error && <Text className="text-center text-sm text-danger">{error}</Text>}
               </View>
             </View>
-          </ScrollView>
 
-          <View className="gap-3 px-6 pb-6">
-            <Button
-              label="Submit Review"
-              variant="primary"
-              loading={submitReview.isPending}
-              disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
-              onPress={handleSubmit}
-            />
-            <Button
-              label="Not now · 나중에 할게요"
-              variant="ghost"
-              onPress={() => setShowAdInterstitial(true)}
-            />
-          </View>
+            <View className="gap-3 px-6 pb-6">
+              <Button
+                label="Submit Review"
+                variant="primary"
+                loading={submitReview.isPending}
+                disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
+                onPress={handleSubmit}
+              />
+              <Button
+                label="Not now · 나중에 할게요"
+                variant="ghost"
+                onPress={() => setShowAdInterstitial(true)}
+              />
+            </View>
+          </ScrollView>
         </DismissKeyboardView>
       </KeyboardAvoidingView>
     </SafeAreaView>
