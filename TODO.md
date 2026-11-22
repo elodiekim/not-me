@@ -506,6 +506,10 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - 겸사겸사 코멘트 입력칸(`Input`의 `multiline`)도 키워줌 — 공용 `Input`이 모든 용도에 고정 `h-14`(56px) 박스를 쓰고 있어서 여러 줄 입력인데도 한 줄 높이에 갇혀있었음. `multiline`은 이 화면 하나에서만 쓰여서, `Input.tsx`에 `multiline`일 때만 `min-h-24`+상단정렬로 분기 추가(다른 사용처 영향 없음)
   - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright로 평소 레이아웃 동일 확인 + 입력칸에 여러 줄 타이핑해서 정상 줄바꿈/높이 확인. **실기기 키보드 재확인 필요**
   - PR #127, main에 머지 완료
+  - **키보드 겹침 재확인 결과**: 실기기에서 겹치지는 않음 — 콘텐츠가 다 들어갈 땐 Submit Review가 키보드 위에 정상적으로 보이고, 모자랄 때만 스크롤되는 것으로 의도대로 동작 확인(2026-11-22)
+  - **이어서 발견 — 코멘트 입력칸이 글씨 있는 줄만 탭 가능** (사용자 발견 · 2026-11-22): 바로 위 수정에서 `multiline` 박스를 키우며 `items-start`를 썼는데, 이게 TextInput 자체의 높이도 한 줄로 못박아버려서 박스의 나머지 빈 공간은 눈에만 보이고 실제 탭 영역이 아니었음(그 부분 탭하면 키보드 안 뜸). `items-stretch`로 바꿔서 TextInput이 박스 전체 높이를 채우게 하고, `textAlignVertical:'top'`으로 텍스트 위치만 위쪽 유지 — 박스 어디를 눌러도 포커스되게 수정
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright로 박스 맨 아래쪽(글씨 없는 빈 공간) 탭해도 포커스+입력되는 것 확인
+  - PR #129, main에 머지 완료
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
