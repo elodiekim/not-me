@@ -34,7 +34,14 @@ function deriveEvent(mission: MissionHistoryEntry): ActivityEvent | null {
         return {
           ...base,
           message: 'Mission complete — leave a review.\n미션이 완료됐어요 — 리뷰를 남겨주세요',
-          route: { pathname: '/complete', params: { missionId: mission.id } },
+          // source: 'inbox' tells CompleteScreen to skip the fake-ad easter
+          // egg for this entry — that gag is tuned for the moment right
+          // after a live completion (MissionCompleteScreen's own "Leave a
+          // Review" button), not a delayed revisit days later from Inbox.
+          route: {
+            pathname: '/complete',
+            params: { missionId: mission.id, source: 'inbox' },
+          },
         };
       case 'requested':
         // 'requested' covers two different histories that look identical in the

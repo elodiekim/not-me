@@ -51,7 +51,10 @@ describe('deriveActivityEvents — user role', () => {
     expect(event.message).toBe(
       'Mission complete — leave a review.\n미션이 완료됐어요 — 리뷰를 남겨주세요',
     );
-    expect(event.route).toEqual({ pathname: '/complete', params: { missionId: 'm-42' } });
+    expect(event.route).toEqual({
+      pathname: '/complete',
+      params: { missionId: 'm-42', source: 'inbox' },
+    });
   });
 
   it('produces no event once a completed mission has been reviewed', () => {
