@@ -34,7 +34,15 @@ export const Input = forwardRef<TextInput, InputProps>(function Input(
       )}
       <View
         className={`flex-row rounded-input border bg-surface px-4 ${
-          multiline ? 'min-h-24 items-start py-3' : 'h-14 items-center'
+          // items-start (not items-stretch) would cap the TextInput's own
+          // height at its single line of text, instead of letting it fill
+          // this taller box — everything below that line would visually be
+          // part of the input but not actually part of it, so tapping there
+          // wouldn't focus it. items-stretch (the row's default, kept
+          // explicit here for clarity) plus textAlignVertical: 'top' below
+          // gets both: a fully tappable box with text still anchored to the
+          // top instead of vertically centered in all that extra height.
+          multiline ? 'min-h-24 items-stretch py-3' : 'h-14 items-center'
         } ${error ? 'border-danger' : 'border-transparent'}`}
       >
         {leftIcon && <View className="mr-2">{leftIcon}</View>}
