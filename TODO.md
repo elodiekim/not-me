@@ -510,6 +510,10 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - **이어서 발견 — 코멘트 입력칸이 글씨 있는 줄만 탭 가능** (사용자 발견 · 2026-11-22): 바로 위 수정에서 `multiline` 박스를 키우며 `items-start`를 썼는데, 이게 TextInput 자체의 높이도 한 줄로 못박아버려서 박스의 나머지 빈 공간은 눈에만 보이고 실제 탭 영역이 아니었음(그 부분 탭하면 키보드 안 뜸). `items-stretch`로 바꿔서 TextInput이 박스 전체 높이를 채우게 하고, `textAlignVertical:'top'`으로 텍스트 위치만 위쪽 유지 — 박스 어디를 눌러도 포커스되게 수정
   - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과, Playwright로 박스 맨 아래쪽(글씨 없는 빈 공간) 탭해도 포커스+입력되는 것 확인
   - PR #129, main에 머지 완료
+- [x] **Inbox에서 리뷰 화면으로 들어갔을 때 가짜 광고 이스터에그가 안 뜨게** (사용자 요청 · 2026-11-22) — 가짜 방역업체 광고는 "방금 실시간으로 완료된 순간"의 축하 연출(`MissionCompleteScreen`의 "Leave a Review" 버튼)에 맞춰 만든 건데, Inbox 활동피드에서 며칠 지난 미션을 나중에 들어가 리뷰 남길 때도 똑같이 떴음 — 그 타이밍엔 안 어울림
+  - `deriveActivityEvents.ts`의 Inbox 라우트에 `source: 'inbox'` 파라미터 추가, `CompleteScreen`에서 이 값이 있으면 Submit Review/Not now 둘 다 광고 인터스티셜 생략하고 바로 홈으로 이동. 다른 진입 경로(MissionCompleteScreen, Mission Status, Missions 탭 History)는 안 건드림
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개, 라우트 파라미터 테스트 1건 업데이트) 통과. Playwright로 `?source=inbox`일 때 바로 홈 이동, 파라미터 없는 일반 경로는 광고 그대로 뜨는 것 둘 다 확인
+  - PR #131, main에 머지 완료
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
