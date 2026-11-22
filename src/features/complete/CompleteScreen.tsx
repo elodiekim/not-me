@@ -231,13 +231,21 @@ export function CompleteScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       >
         <DismissKeyboardView className="flex-1">
-          {/* A ScrollView (not a fixed flex-1 + separately-pinned button row)
-              so that when KeyboardAvoidingView shrinks the available height
-              for the keyboard, content that no longer fits scrolls instead
-              of overlapping the Submit/Not-now buttons below it — the
-              previous fixed layout had no way to yield space and the input
-              would sit on top of them once the keyboard was tall enough. */}
+          {/* Content-only ScrollView (flex-1, centered), buttons pinned as a
+              separate sibling below — matches the app-wide pattern every
+              other screen uses (MissionCompleteScreen etc: centered content
+              block + px-6 pb-6 button row underneath it, not merged into
+              one). A prior pass centered this whole block including the
+              buttons, which floated Submit Review away from the bottom edge
+              users expect it at on every other screen. className="flex-1" on
+              the ScrollView (not just its contentContainerStyle) is what
+              makes it actually take the remaining space instead of the
+              button row below — without it the two would just stack at
+              their natural heights with centering having nothing to act on.
+              keyboardShouldPersistTaps/flexGrow preserve the earlier
+              keyboard-overlap fix, now scoped to just this content area. */}
           <ScrollView
+            className="flex-1"
             contentContainerStyle={{ flexGrow: 1, justifyContent: 'center' }}
             keyboardShouldPersistTaps="handled"
           >
@@ -267,23 +275,23 @@ export function CompleteScreen() {
                 />
                 {error && <Text className="text-center text-sm text-danger">{error}</Text>}
               </View>
-
-              <View className="gap-3 pb-6 pt-8">
-                <Button
-                  label="Submit Review"
-                  variant="primary"
-                  loading={submitReview.isPending}
-                  disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
-                  onPress={handleSubmit}
-                />
-                <Button
-                  label="Not now · 나중에 할게요"
-                  variant="ghost"
-                  onPress={() => setShowAdInterstitial(true)}
-                />
-              </View>
             </View>
           </ScrollView>
+
+          <View className="gap-3 px-6 pb-6">
+            <Button
+              label="Submit Review"
+              variant="primary"
+              loading={submitReview.isPending}
+              disabled={rating === 0 || submitReview.isPending || !mission?.heroId}
+              onPress={handleSubmit}
+            />
+            <Button
+              label="Not now · 나중에 할게요"
+              variant="ghost"
+              onPress={() => setShowAdInterstitial(true)}
+            />
+          </View>
         </DismissKeyboardView>
       </KeyboardAvoidingView>
     </SafeAreaView>
