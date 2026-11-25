@@ -29,10 +29,7 @@ export function useUpdateProfile() {
     mutationFn: async ({ name, phone, avatarUri, removeAvatar }: UpdateProfileInput) => {
       if (!userId) throw new Error('Not signed in.');
 
-      const fields: { name: string; phone: string | null; avatar_url?: string | null } = {
-        name,
-        phone,
-      };
+      const fields: { name: string; avatar_url?: string | null } = { name };
 
       if (removeAvatar) {
         fields.avatar_url = null;
@@ -61,6 +58,15 @@ export function useUpdateProfile() {
         .update(fields)
         .eq('id', userId);
       if (updateError) throw updateError;
+
+      // phone lives in profile_private (0035), not profiles — upsert, not
+      // update: a Google-signup user (no phone collected at sign-up) has no
+      // row there yet, so a plain update would silently match zero rows the
+      // first time they set one from Edit Profile.
+      const { error: phoneError } = await supabase
+        .from('profile_private')
+        .upsert({ id: userId, phone });
+      if (phoneError) throw phoneError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['profile', userId] });
