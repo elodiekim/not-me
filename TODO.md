@@ -520,6 +520,9 @@ DESIGN.md 화면 순서엔 Splash → Onboarding → Home 이 있으나 현재 �
   - notme-app에서 `phone`을 다른 사람 정보로 조회하는 곳은 어디에도 없었음(본인 프로필 읽기/수정에서만 사용) — 그래서 `useProfile.ts`/`useUpdateProfile.ts` 딱 두 곳만 `profile_private` 조인/upsert로 수정, 미션 목록 등 기존 `profiles` 조인(요청자/히어로 이름 표시)은 전혀 안 건드려도 됨
   - **스코프 밖 의존성 발견 — notme-admin(별도 레포)도 같이 고침**: admin 대시보드의 유저 목록/상세/전화번호 검색이 `profiles.phone`을 직접 읽고 있었음(서비스키 안 쓰고 anon key+RLS라, 지금까지 이것도 같은 허술한 공개 정책 덕에 "우연히" 동작하던 것). 사용자 확인 후 notme-admin도 같은 작업에서 같이 수정(`src/features/users/api.ts`, `src/features/missions/api.ts`, 공용 `extractPhone` 헬퍼를 `src/lib/phone.ts`에 추가)
   - 검증: notme-app `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과. notme-admin `npx tsc -b`/`npx oxlint` 통과. 마이그레이션 적용 후 REST로 재검증 완료 — QA 계정 2개 + admin 계정으로 ①본인은 자기 `phone` 조회 가능 ②admin이 아닌 다른 계정은 조회 결과가 빈 배열(차단 확인) ③admin은 아무 계정이나 조회 가능 ④`profiles.phone` 컬럼 자체가 삭제되어 더 이상 존재하지 않음(`42703`) ⑤`useProfile.ts`가 쓰는 embedded select(`profile_private(phone)`)도 object 형태로 정상 응답, 모두 기대대로 동작. notme-app PR #134, notme-admin PR #41 머지 완료
+- [x] **Home 상단 벨 아이콘, 누르면 Inbox로 이동** (사용자 요청 · 2026-11-25) — 기존엔 `onBellPress`가 "Coming soon" 토스트만 띄우는 placeholder였음. 실제 알림(unread 추적/푸시) 시스템은 지금 단계에선 오버엔지니어링이라고 판단해 보류하고, 이미 활동 피드 역할을 하는 Inbox로 바로 연결하는 가장 단순한 방식으로 처리
+  - `HomeScreen.tsx`의 `onBellPress`를 `router.push('/inbox')`로 교체, 더 이상 안 맞는 주석("bell coming soon")도 정리
+  - 검증: `npx tsc --noEmit`/`npx eslint .`/`npm test`(46개) 통과
 - [ ] **EAS Build → TestFlight 설정** (Android 진행 중 · 2026-08-09)
   - `eas-cli` devDependency로 설치, `eas login` 완료, `eas init`으로 프로젝트 연결(`@elodiekim/notme-app`), `eas build:configure`로 `eas.json`(development/preview/production 프로필) 생성
   - Bundle ID/package를 `com.notme.app`으로 통일 지정(`app.json`) — 스토어 등록 전이라 지금 정해야 나중에 안 바뀜
