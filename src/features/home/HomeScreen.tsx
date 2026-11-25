@@ -11,7 +11,7 @@ export function HomeScreen() {
   const router = useRouter();
   const { cancelled } = useLocalSearchParams<{ cancelled?: string }>();
   // A single toast slot shared by every transient banner on Home (cancel confirmation,
-  // bell "coming soon", etc). null = nothing showing. Only one shows at a time.
+  // etc). null = nothing showing. Only one shows at a time.
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // A cancel navigation arrives with ?cancelled=1. Show the toast once, then clear
@@ -34,7 +34,7 @@ export function HomeScreen() {
           button spacing). */}
       <ScrollView contentContainerStyle={{ padding: 24, gap: 36 }}>
         <View className="gap-8">
-          <HomeHeader onBellPress={() => setToastMessage('Coming soon · 곧 만나요')} />
+          <HomeHeader onBellPress={() => router.push('/inbox')} />
           <HeroSection />
         </View>
         <BecomeHeroSection onPress={() => router.push('/hero')} />
